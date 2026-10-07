@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Optimization.Operators\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Optimization.Operators-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Optimization.Operators</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Optimization.Operators</AssemblyTitle>
+    <Description>HeuristicLab operators for solving optimization problems</Description>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Data\HeuristicLab.Data.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Operators.Programmable\HeuristicLab.Operators.Programmable.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Operators\HeuristicLab.Operators.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Optimization\HeuristicLab.Optimization.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Parameters\HeuristicLab.Parameters.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Selection\HeuristicLab.Selection.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HEAL.Attic" />
+  </ItemGroup>
+
+</Project>
