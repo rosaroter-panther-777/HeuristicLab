@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>HeuristicLab.Common-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Common</RootNamespace>
+    <LegacyDir>..\..\..\HeuristicLab.Common\3.3\</LegacyDir>
+  </PropertyGroup>
+
+  <!-- Assembly identity mirrors legacy Properties/AssemblyInfo.cs.frame -->
+  <PropertyGroup>
+    <AssemblyTitle>HeuristicLab.Common</AssemblyTitle>
+    <Description>Auxiliary HeuristicLab classes</Description>
+    <Product>HeuristicLab</Product>
+    <Copyright>(c) HEAL</Copyright>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+    <FileVersion>3.3.16.0</FileVersion>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(LegacyDir)HeuristicLab.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <!-- Linked legacy sources; Plugin.cs and AssemblyInfo.cs are generated from .frame files and
+       excluded: Plugin.cs is the only PluginInfrastructure dependency (WinForms/AppDomain). -->
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(LegacyDir)**\*.cs"
+             Exclude="$(LegacyDir)bin\**;$(LegacyDir)obj\**;$(LegacyDir)Plugin.cs;$(LegacyDir)Properties\AssemblyInfo.cs"
+             LinkBase="Legacy" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HEAL.Attic" Version="1.5.0" />
+  </ItemGroup>
+
+</Project>

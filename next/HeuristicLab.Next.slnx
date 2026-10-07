@@ -2,4 +2,7 @@
   <Folder Name="/app/">
     <Project Path="app/HeuristicLab.Studio/HeuristicLab.Studio.csproj" />
   </Folder>
+  <Folder Name="/core/">
+    <Project Path="core/HeuristicLab.Common/HeuristicLab.Common.csproj" />
+  </Folder>
 </Solution>
