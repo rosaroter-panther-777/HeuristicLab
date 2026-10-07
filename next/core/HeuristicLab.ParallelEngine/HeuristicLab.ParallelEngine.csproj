@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.ParallelEngine\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.ParallelEngine-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.ParallelEngine</RootNamespace>
+    <AssemblyTitle>HeuristicLab.ParallelEngine</AssemblyTitle>
+    <Description>HeuristicLab engine for parallel processing using multiple cores on a shared memory system</Description>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HEAL.Attic" />
+  </ItemGroup>
+
+</Project>
