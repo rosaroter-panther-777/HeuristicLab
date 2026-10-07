@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.ExtLibs\HeuristicLab.AutoDiff\1.0\AutoDiff-1.0\</LegacyDir>
+    <AssemblyName>AutoDiff-1.0</AssemblyName>
+    <RootNamespace>AutoDiff</RootNamespace>
+  </PropertyGroup>
+
+</Project>
