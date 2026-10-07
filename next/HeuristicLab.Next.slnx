@@ -18,4 +18,11 @@
   <Folder Name="/tests/">
     <Project Path="tests/HeuristicLab.Tests/HeuristicLab.Tests.csproj" />
   </Folder>
+  <Folder Name="/extlibs/">
+    <Project Path="extlibs/ALGLIB-3.17.0/ALGLIB-3.17.0.csproj" />
+    <Project Path="extlibs/ALGLIB-3.7.0/ALGLIB-3.7.0.csproj" />
+    <Project Path="extlibs/AutoDiff-1.0/AutoDiff-1.0.csproj" />
+    <Project Path="extlibs/HeuristicLab.Problems.DataAnalysis.Symbolic.NativeInterpreter-0.2/HeuristicLab.Problems.DataAnalysis.Symbolic.NativeInterpreter-0.2.csproj" />
+    <Project Path="extlibs/LibSVM-3.12/LibSVM-3.12.csproj" />
+  </Folder>
 </Solution>
