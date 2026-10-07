@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Algorithms.ParameterlessPopulationPyramid\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Algorithms.ParameterlessPopulationPyramid-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Algorithms.ParameterlessPopulationPyramid</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Algorithms.ParameterlessPopulationPyramid</AssemblyTitle>
+    <Description>Binary value optimization algorithm which requires no configuration.</Description>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Analysis\HeuristicLab.Analysis.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Data\HeuristicLab.Data.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Encodings.BinaryVectorEncoding\HeuristicLab.Encodings.BinaryVectorEncoding.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Optimization\HeuristicLab.Optimization.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Parameters\HeuristicLab.Parameters.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.Binary\HeuristicLab.Problems.Binary.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Random\HeuristicLab.Random.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HEAL.Attic" />
+    <PackageReference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>
