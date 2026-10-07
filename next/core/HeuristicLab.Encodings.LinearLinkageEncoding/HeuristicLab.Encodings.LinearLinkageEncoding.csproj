@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Encodings.LinearLinkageEncoding\3.4\</LegacyDir>
+    <AssemblyName>HeuristicLab.Encodings.LinearLinkageEncoding-3.4</AssemblyName>
+    <RootNamespace>HeuristicLab.Encodings.LinearLinkageEncoding</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Encodings.LinearLinkage</AssemblyTitle>
+    <Description>Linear linkage encoding (LLE) for HeuristicLab</Description>
+    <AssemblyVersion>3.4.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Data\HeuristicLab.Data.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Operators\HeuristicLab.Operators.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Optimization.Operators\HeuristicLab.Optimization.Operators.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Optimization\HeuristicLab.Optimization.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Parameters\HeuristicLab.Parameters.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Random\HeuristicLab.Random.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HEAL.Attic" />
+    <PackageReference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>
