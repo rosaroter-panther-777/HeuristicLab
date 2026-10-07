@@ -13,6 +13,7 @@
   <ItemGroup>
     <Compile Include="AssertionsAsExceptions.cs" />
     <Compile Include="AtticRoundTripTest.cs" />
+    <Compile Include="RuntimeCompilationTest.cs" />
     <Compile Include="$(LegacyTestsDir)HeuristicLab.Collections-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Collections-3.3" />
     <Compile Include="$(LegacyTestsDir)HeuristicLab.Common-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Common-3.3" />
     <Compile Include="$(LegacyTestsDir)HeuristicLab.Random-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Random-3.3" />
@@ -23,7 +24,9 @@
     <ProjectReference Include="..\..\core\HeuristicLab.Common\HeuristicLab.Common.csproj" />
     <ProjectReference Include="..\..\core\HeuristicLab.Core\HeuristicLab.Core.csproj" />
     <ProjectReference Include="..\..\core\HeuristicLab.Data\HeuristicLab.Data.csproj" />
+    <ProjectReference Include="..\..\core\HeuristicLab.Operators.Programmable\HeuristicLab.Operators.Programmable.csproj" />
     <ProjectReference Include="..\..\core\HeuristicLab.Random\HeuristicLab.Random.csproj" />
+    <ProjectReference Include="..\..\core\HeuristicLab.Scripting\HeuristicLab.Scripting.csproj" />
   </ItemGroup>
 
   <ItemGroup>
