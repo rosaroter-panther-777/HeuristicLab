@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Collections\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Collections-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Collections</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Collections</AssemblyTitle>
+    <Description>HeuristicLab collection classes</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HEAL.Attic" />
+  </ItemGroup>
+
+</Project>
