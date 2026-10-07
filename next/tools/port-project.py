@@ -22,7 +22,7 @@ next_dir = os.path.join(repo, "next")
 # Framework references that netstandard2.0 covers or that are dropped deliberately.
 IGNORED_FRAMEWORK_REFS = {
     "System", "System.Core", "System.Data", "System.Data.DataSetExtensions", "System.Xml",
-    "System.Xml.Linq", "System.Drawing", "Microsoft.CSharp", "System.Numerics",
+    "System.Xml.Linq", "System.Drawing", "System.Numerics",
     "System.Runtime.Serialization", "System.IO.Compression", "System.IO.Compression.FileSystem",
     "System.Net.Http", "System.ComponentModel.DataAnnotations",
 }
@@ -36,6 +36,7 @@ WARN_FRAMEWORK_REFS = {
 PACKAGE_FOR_FRAMEWORK_REF = {
     "System.configuration": "System.Configuration.ConfigurationManager",
     "System.Configuration": "System.Configuration.ConfigurationManager",
+    "Microsoft.CSharp": "Microsoft.CSharp",  # runtime binder for 'dynamic'
 }
 PACKAGE_FOR_HINT = {"HEAL.Attic": "HEAL.Attic", "Google.Protobuf": "Google.Protobuf"}
 
@@ -86,7 +87,7 @@ def is_plugin_wrapper(csproj):
 
 
 def frame_attr(frame_text, attr):
-    m = re.search(r'\[assembly:\s*%s\("([^"]*)"\)\]' % attr, frame_text)
+    m = re.search(r'^\s*\[assembly:\s*%s\("([^"]*)"\)\]' % attr, frame_text, re.M)
     return m.group(1) if m else None
 
 
