@@ -3,11 +3,17 @@
     <Project Path="app/HeuristicLab.Studio/HeuristicLab.Studio.csproj" />
   </Folder>
   <Folder Name="/core/">
+    <Project Path="core/HeuristicLab.Analysis/HeuristicLab.Analysis.csproj" />
     <Project Path="core/HeuristicLab.Collections/HeuristicLab.Collections.csproj" />
     <Project Path="core/HeuristicLab.Common.Resources/HeuristicLab.Common.Resources.csproj" />
     <Project Path="core/HeuristicLab.Common/HeuristicLab.Common.csproj" />
     <Project Path="core/HeuristicLab.Core/HeuristicLab.Core.csproj" />
     <Project Path="core/HeuristicLab.Data/HeuristicLab.Data.csproj" />
+    <Project Path="core/HeuristicLab.Encodings.BinaryVectorEncoding/HeuristicLab.Encodings.BinaryVectorEncoding.csproj" />
+    <Project Path="core/HeuristicLab.Encodings.IntegerVectorEncoding/HeuristicLab.Encodings.IntegerVectorEncoding.csproj" />
+    <Project Path="core/HeuristicLab.Encodings.LinearLinkageEncoding/HeuristicLab.Encodings.LinearLinkageEncoding.csproj" />
+    <Project Path="core/HeuristicLab.Encodings.PermutationEncoding/HeuristicLab.Encodings.PermutationEncoding.csproj" />
+    <Project Path="core/HeuristicLab.Encodings.RealVectorEncoding/HeuristicLab.Encodings.RealVectorEncoding.csproj" />
     <Project Path="core/HeuristicLab.Operators.Programmable/HeuristicLab.Operators.Programmable.csproj" />
     <Project Path="core/HeuristicLab.Operators/HeuristicLab.Operators.csproj" />
     <Project Path="core/HeuristicLab.Optimization.Operators/HeuristicLab.Optimization.Operators.csproj" />
