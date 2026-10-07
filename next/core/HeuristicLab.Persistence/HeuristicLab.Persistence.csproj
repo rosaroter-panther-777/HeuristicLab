@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Persistence\3.3\</LegacyDir>
+    <!-- Dead files: present on disk but not in the legacy csproj (they target an unreleased
+         HEAL.Attic Box API with Bytes/UInts). -->
+    <LegacyExclude>
+      $(LegacyDir)Transformers\BitmapTransformer.cs;
+      $(LegacyDir)Transformers\FontTransformer.cs;
+      $(LegacyDir)Transformers\KnownStorableTypesMap.cs
+    </LegacyExclude>
+    <AssemblyName>HeuristicLab.Persistence-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Persistence</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Persistence</AssemblyTitle>
+    <Description>General Purpose Persistence Framework.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Tracing\HeuristicLab.Tracing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HEAL.Attic" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" />
+  </ItemGroup>
+
+</Project>
