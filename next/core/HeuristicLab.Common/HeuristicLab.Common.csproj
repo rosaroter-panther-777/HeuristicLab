@@ -6,7 +6,13 @@
     <RootNamespace>HeuristicLab.Common</RootNamespace>
     <AssemblyTitle>HeuristicLab.Common</AssemblyTitle>
     <Description>Auxiliary HeuristicLab classes</Description>
+    <!-- C# 9 for the module initializer in AtticRuntimeTypes.cs -->
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="AtticRuntimeTypes.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="HEAL.Attic" />
