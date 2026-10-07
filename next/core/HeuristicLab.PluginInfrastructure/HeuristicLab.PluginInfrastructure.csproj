@@ -16,7 +16,8 @@
       $(LegacyDir)Manager\PluginManager.cs;
       $(LegacyDir)Manager\PluginValidator.cs;
       $(LegacyDir)Properties\Settings.Designer.cs;
-      $(LegacyDir)Resources.Designer.cs
+      $(LegacyDir)Resources.Designer.cs;
+      $(LegacyDir)LightweightApplicationManager.cs
     </LegacyExclude>
     <AssemblyName>HeuristicLab.PluginInfrastructure-3.3</AssemblyName>
     <RootNamespace>HeuristicLab.PluginInfrastructure</RootNamespace>
@@ -30,6 +31,8 @@
 
   <ItemGroup>
     <Compile Include="ErrorHandling.cs" />
+    <!-- replacement: discovers types in deterministic assembly order -->
+    <Compile Include="LightweightApplicationManager.cs" />
   </ItemGroup>
 
 </Project>
