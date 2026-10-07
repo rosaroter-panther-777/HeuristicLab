@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.ExtLibs\HeuristicLab.ALGLIB\3.17.0\ALGLIB-3.17.0\</LegacyDir>
+    <AssemblyName>ALGLIB-3.17.0</AssemblyName>
+    <RootNamespace>ALGLIB</RootNamespace>
+  </PropertyGroup>
+
+</Project>
