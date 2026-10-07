@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Problems.TestFunctions.MultiObjective\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Problems.TestFunctions.MultiObjective-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Problems.TestFunctions.MultiObjective</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Problems.TestFunctions.MultiObjective</AssemblyTitle>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\ZDT\ParetoFronts\ZDT1.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.ZDT.ParetoFronts.ZDT1.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\DTLZ\ParetoFronts\DTLZ1.2D.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.DTLZ.ParetoFronts.DTLZ1.2D.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\DTLZ\ParetoFronts\DTLZ2.2D.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.DTLZ.ParetoFronts.DTLZ2.2D.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\DTLZ\ParetoFronts\DTLZ3.2D.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.DTLZ.ParetoFronts.DTLZ3.2D.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\DTLZ\ParetoFronts\DTLZ4.2D.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.DTLZ.ParetoFronts.DTLZ4.2D.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\DTLZ\ParetoFronts\DTLZ5.2D.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.DTLZ.ParetoFronts.DTLZ5.2D.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\DTLZ\ParetoFronts\DTLZ6.2D.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.DTLZ.ParetoFronts.DTLZ6.2D.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\DTLZ\ParetoFronts\DTLZ7.2D.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.DTLZ.ParetoFronts.DTLZ7.2D.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\Misc\ParetoFronts\Fonseca.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.Misc.ParetoFronts.Fonseca.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\Misc\ParetoFronts\Kursawe.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.Misc.ParetoFronts.Kursawe.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\Misc\ParetoFronts\SchafferN1.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.Misc.ParetoFronts.SchafferN1.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\ZDT\ParetoFronts\ZDT2.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.ZDT.ParetoFronts.ZDT2.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\ZDT\ParetoFronts\ZDT3.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.ZDT.ParetoFronts.ZDT3.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\ZDT\ParetoFronts\ZDT4.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.ZDT.ParetoFronts.ZDT4.pf" />
+    <EmbeddedResource Include="$(LegacyDir)TestFunctions\ZDT\ParetoFronts\ZDT6.pf" LogicalName="HeuristicLab.Problems.TestFunctions.MultiObjective.TestFunctions.ZDT.ParetoFronts.ZDT6.pf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common.Resources\HeuristicLab.Common.Resources.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Data\HeuristicLab.Data.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Encodings.RealVectorEncoding\HeuristicLab.Encodings.RealVectorEncoding.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Operators\HeuristicLab.Operators.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Optimization\HeuristicLab.Optimization.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Parameters\HeuristicLab.Parameters.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.Instances\HeuristicLab.Problems.Instances.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HEAL.Attic" />
+    <PackageReference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>
