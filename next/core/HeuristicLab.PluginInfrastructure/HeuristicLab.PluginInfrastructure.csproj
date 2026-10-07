@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Headless subset: plugin attributes, interfaces, base classes and the assembly-scanning
+       LightweightApplicationManager. Excluded: WinForms UI (Starter, Advanced, ErrorHandling
+       dialogs), AppDomain sandboxing and the ReflectionOnly-based plugin manager/validator. -->
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.PluginInfrastructure\3.3\</LegacyDir>
+    <LegacyExclude>
+      $(LegacyDir)Advanced\**;
+      $(LegacyDir)Starter\**;
+      $(LegacyDir)Sandboxing\**;
+      $(LegacyDir)ErrorHandling\**;
+      $(LegacyDir)Main.cs;
+      $(LegacyDir)SandboxApplicationManager.cs;
+      $(LegacyDir)DefaultApplicationManager.cs;
+      $(LegacyDir)Manager\PluginManager.cs;
+      $(LegacyDir)Manager\PluginValidator.cs;
+      $(LegacyDir)Properties\Settings.Designer.cs;
+      $(LegacyDir)Resources.Designer.cs
+    </LegacyExclude>
+    <AssemblyName>HeuristicLab.PluginInfrastructure-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.PluginInfrastructure</RootNamespace>
+    <AssemblyTitle>HeuristicLab.PluginInfrastructure</AssemblyTitle>
+    <Description>PluginInfrastructure to load and manage HeuristicLab plugins</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="ErrorHandling.cs" />
+  </ItemGroup>
+
+</Project>
