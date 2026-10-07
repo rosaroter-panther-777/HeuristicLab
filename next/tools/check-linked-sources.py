@@ -32,6 +32,9 @@ for csproj in sorted(glob.glob(os.path.join(next_dir, "core", "*", "*.csproj")) 
     if name_filter not in name:
         continue
     legacy_dir, compiled = msbuild_query(csproj)
+    if legacy_dir.startswith(next_dir + os.sep):
+        print(f"skip {name}: vendored source inside next/, no legacy csproj")
+        continue
     legacy_projs = glob.glob(os.path.join(legacy_dir, "*.csproj"))
     if len(legacy_projs) != 1:
         print(f"{name}: expected one legacy csproj in {legacy_dir}, found {len(legacy_projs)}")
