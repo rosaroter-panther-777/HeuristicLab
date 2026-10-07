@@ -8,7 +8,8 @@
 
 ## Branches and safety
 - Never touch main. Work on feature branches off deepseek-development.
-- Never commit or push without the user's explicit approval in this session.
+- Never push without the user's explicit approval. The user has authorized committing
+  finished ports in next/ on feature branches without asking (one commit per project).
 - No destructive git commands (reset --hard, clean -fd) or rm -rf, ever.
 - Before suggesting any modification, run: git status --short, git diff --stat.
 - Do not run legacy scripts: prepareProjectsForMono.sh, Build.cmd/ps1, Test.cmd/ps1,
@@ -25,11 +26,13 @@
   CommunityToolkit, runs on this machine)
 - Feasibility proven: 46 core assemblies compile with dotnet build +
   -p:FrameworkPathOverride=<mono 4.7.2-api with System.configuration case symlink>
-- Ported (next/core): PluginInfrastructure (headless subset), Tracing, Common,
-  Collections, Persistence, Common.Resources, Core, Data, Parameters, Operators, Random.
-- next/tests/HeuristicLab.Tests: legacy tests linked unchanged, run on net10.0 (MSTest 3.x).
-- Port order follows the probe chain: Common → Collections → Persistence → Core →
-  Data → Parameters/Operators → Random → Engines → Encodings → Optimization → ...
+- Ported: every non-GUI project of the 3.3 solution (next/core, ~70 projects) plus the
+  ExtLibs they need (next/extlibs: ALGLIB 3.17/3.7, LibSVM, AutoDiff, NativeInterpreter).
+  Headless subsets: PluginInfrastructure, Visualization.ChartControlsExtensions (ChartUtil).
+- Not ported yet: Problems.ExternalEvaluation* (protobuf 2.4 / Matlab COM / Scilab),
+  ExactOptimization (OR-Tools, Windows-only native runtime), all Views/GUI, Hive/OKB/Services.
+- next/tests/HeuristicLab.Tests: legacy tests linked unchanged incl. samples, run on
+  net10.0 (MSTest 3.x). Non-Run.Daily: 421 of 442 pass (see Known test failures).
 
 ## Known runtime facts (verified on Linux / net10.0)
 - HEAL.Attic must be >= 1.8.0: 1.5.0 throws on the first (de)serialization on .NET 5+
@@ -37,10 +40,37 @@
 - Item.ItemImage and VSImageLibrary throw PlatformNotSupportedException off Windows
   (System.Drawing.Common). Front-end code must never touch ItemImage until decoupled.
   The CA1416 analyzer does NOT flag this path (Bitmaps come from ResourceManager).
+- HEAL.Attic 1.8.0 does not know .NET 5+'s StringEqualityComparer (default comparer of
+  Dictionary<string,T>/HashSet<string>); next/core/HeuristicLab.Common/AtticRuntimeTypes.cs
+  registers it in a module initializer. StringComparer.Ordinal(IgnoreCase) dictionaries
+  still cannot be persisted on .NET Core (Attic re-creates comparers via Activator).
+- HEAL.Attic's StorableTypeAttribute caches are unsynchronized static collections; modern
+  .NET throws on concurrent use where .NET Framework silently raced. Concurrent
+  serialization (parallel experiments) is a real risk until Attic is fixed or forked.
 - A failed Debug.Assert/Contract.Assert kills the process on modern .NET (legacy suite ran
   Release). next/tests turns them into exceptions (AssertionsAsExceptions.cs).
+- CSharpCodeProvider cannot compile on .NET Core. Scripting and Operators.Programmable use
+  replacement files that compile with Roslyn (next/core/Shared/RoslynCompiler.cs).
+- Library code calls ErrorHandling.ShowErrorDialog; the headless version forwards to the
+  settable ErrorHandling.ErrorDisplay hook (front ends set it), else writes to Trace.
+- Decision (2026-10-07): ItemImage decoupling is deferred until a view needs per-type
+  icons; Studio uses its own icons and must not call ItemImage.
+
+## Known test failures (Linux / net10.0, non-Run.Daily)
+- Windows-only by nature: Bitmap/Font persistence tests (System.Drawing), native
+  interpreter tests (hl-native-interpreter.dll is a Windows DLL).
+- Cross-runtime numeric/format differences: IntervalInterpreterTan, DeriveExpressions
+  (double formatting), TestTypeStringConversion (CoreLib vs mscorlib type names);
+  Run.Daily GaussianProcessRegression sample converges to another local optimum.
+- Legacy XML persistence: ConcurrencyTest (RuntimeType lives in System.Private.CoreLib),
+  TestAssemblyVersionCheck.
+- Not yet investigated: ILEmittingInterpreterTestEvaluation (Bad IL format),
+  CreateVnsTspSampleTest (Sequence contains no elements), StorableTest race (Attic caches).
 
 ## Porting conventions
+- Generate projects with next/tools/port-project.py <legacy csproj>: it maps references to
+  ported projects (unported ones are an error), resources, aliases, InternalsVisibleTo,
+  packages, dead files, and reports what it drops. Hand-tune only what it reports.
 - Port via linked files — never copy files; legacy tree stays source of truth until a
   file needs changes. next/core/Directory.Build.props/.targets do the linking: a project
   sets LegacyDir, AssemblyName, RootNamespace, AssemblyTitle, Description, and
@@ -57,4 +87,6 @@
 - Keep original assembly names (HEAL.Attic .hl compatibility depends on it).
 - Decouple as you go: Item.ItemImage → icon registry; AppDomain plugin loading →
   assembly scanning; native dlls → optional providers with managed fallbacks.
-- One ported project = one commit, only with user approval.
+- Compile against direct references only (DisableTransitiveProjectReferences), as the
+  legacy build did.
+- One ported project = one commit.
