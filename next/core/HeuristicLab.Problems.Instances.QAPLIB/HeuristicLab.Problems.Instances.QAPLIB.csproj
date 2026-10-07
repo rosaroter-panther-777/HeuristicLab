@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Problems.Instances.QAPLIB\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Problems.Instances.QAPLIB-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Problems.Instances.QAPLIB</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Problems.Instances.QAPLIB</AssemblyTitle>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(LegacyDir)Data\qap.dat.zip" LogicalName="HeuristicLab.Problems.Instances.QAPLIB.Data.qap.dat.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\qap.sln.zip" LogicalName="HeuristicLab.Problems.Instances.QAPLIB.Data.qap.sln.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\microarray.dat.zip" LogicalName="HeuristicLab.Problems.Instances.QAPLIB.Data.microarray.dat.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\microarray.sln.zip" LogicalName="HeuristicLab.Problems.Instances.QAPLIB.Data.microarray.sln.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\drezner.dat.zip" LogicalName="HeuristicLab.Problems.Instances.QAPLIB.Data.drezner.dat.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\drezner.sln.zip" LogicalName="HeuristicLab.Problems.Instances.QAPLIB.Data.drezner.sln.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\taillard.dat.zip" LogicalName="HeuristicLab.Problems.Instances.QAPLIB.Data.taillard.dat.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\taillard.sln.zip" LogicalName="HeuristicLab.Problems.Instances.QAPLIB.Data.taillard.sln.zip" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.Instances\HeuristicLab.Problems.Instances.csproj" />
+  </ItemGroup>
+
+</Project>
