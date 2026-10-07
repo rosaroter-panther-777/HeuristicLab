@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>$(LegacyDir)HeuristicLab.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <!-- Linked legacy sources. Plugin.cs and Properties/AssemblyInfo.cs are generated from .frame
+       files in the legacy build and are replaced by SDK assembly attributes here. Projects add
+       further exclusions via LegacyExclude (semicolon-separated, each prefixed with $(LegacyDir)). -->
+  <ItemGroup>
+    <Compile Include="$(LegacyDir)**\*.cs"
+             Exclude="$(LegacyDir)bin\**;$(LegacyDir)obj\**;$(LegacyDir)Plugin.cs;$(LegacyDir)Properties\AssemblyInfo.cs;$(LegacyExclude)"
+             LinkBase="Legacy" />
+  </ItemGroup>
+</Project>

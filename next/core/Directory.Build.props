@@ -1,0 +1,28 @@
+<Project>
+  <!-- Shared settings for ported legacy libraries. Each project sets LegacyDir (path to the
+       legacy project folder, with trailing slash) plus its own name, title and references. -->
+
+  <!-- -p:HlPlatformCheck=true builds net10.0 instead, which enables the platform compatibility
+       analyzer (CA1416) to flag Windows-only APIs. Separate bin/obj keep it from clobbering
+       the regular netstandard2.0 build. -->
+  <PropertyGroup Condition="'$(HlPlatformCheck)' != 'true'">
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(HlPlatformCheck)' == 'true'">
+    <TargetFramework>net10.0</TargetFramework>
+    <BaseIntermediateOutputPath>obj\platformcheck\</BaseIntermediateOutputPath>
+    <BaseOutputPath>bin\platformcheck\</BaseOutputPath>
+  </PropertyGroup>
+
+  <!-- Assembly identity mirrors the legacy Properties/AssemblyInfo.cs.frame files -->
+  <PropertyGroup>
+    <Product>HeuristicLab</Product>
+    <Copyright>(c) HEAL</Copyright>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+    <FileVersion>3.3.16.0</FileVersion>
+    <SignAssembly>true</SignAssembly>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+  </PropertyGroup>
+</Project>

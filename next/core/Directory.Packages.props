@@ -1,0 +1,16 @@
+<Project>
+  <!-- Central package versions for ported libraries. Transitive pinning lifts vulnerable
+       dependencies of old packages (HEAL.Attic pulls System.Drawing.Common 4.x). -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- 1.8.0: 1.5.0 fails on .NET 5+ (registers removed LongEnumEqualityComparer`1) -->
+    <PackageVersion Include="HEAL.Attic" Version="1.8.0" />
+    <PackageVersion Include="System.Configuration.ConfigurationManager" Version="8.0.1" />
+    <PackageVersion Include="System.Drawing.Common" Version="8.0.0" />
+    <PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+    <PackageVersion Include="System.Resources.Extensions" Version="8.0.0" />
+  </ItemGroup>
+</Project>
