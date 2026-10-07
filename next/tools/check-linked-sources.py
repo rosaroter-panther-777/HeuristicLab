@@ -3,11 +3,11 @@
 
 The ports link legacy sources with a **\\*.cs glob, but legacy csproj files list their
 Compile items explicitly, so dead files on disk (not in the legacy csproj) would be picked
-up silently. For every project under next/core this reports:
+up silently. For every project under next/core and next/extlibs this reports:
   EXTRA    - compiled in the port but not listed in the legacy csproj (must be excluded)
   OMITTED  - listed in the legacy csproj but not compiled in the port (intentional
-             exclusions or replaced files - review). The generated Plugin.cs and
-             Properties/AssemblyInfo.cs are always omitted and not reported.
+             exclusions or replaced files - review). Plugin.cs and Properties/AssemblyInfo.cs
+             generated from .frame files are omitted by design and not reported.
 Exit code is 1 if any EXTRA file is found.
 
 Usage: next/tools/check-linked-sources.py [project-name-filter]
@@ -25,10 +25,9 @@ def msbuild_query(csproj):
     compiled = {os.path.normpath(i["FullPath"]) for i in data["Items"]["Compile"]}
     return legacy_dir, compiled
 
-ALWAYS_OMITTED = {"Plugin.cs", os.path.join("Properties", "AssemblyInfo.cs")}
-
 failed = False
-for csproj in sorted(glob.glob(os.path.join(next_dir, "core", "*", "*.csproj"))):
+for csproj in sorted(glob.glob(os.path.join(next_dir, "core", "*", "*.csproj")) +
+                     glob.glob(os.path.join(next_dir, "extlibs", "*", "*.csproj"))):
     name = os.path.basename(csproj)[:-len(".csproj")]
     if name_filter not in name:
         continue
@@ -44,8 +43,10 @@ for csproj in sorted(glob.glob(os.path.join(next_dir, "core", "*", "*.csproj")))
     compiled_legacy = {f for f in compiled if f.startswith(legacy_dir + os.sep)}
     own = sorted(os.path.relpath(f, os.path.dirname(csproj)) for f in compiled - compiled_legacy)
     extra = sorted(os.path.relpath(f, legacy_dir) for f in compiled_legacy - listed)
+    generated = {f for f in ("Plugin.cs", os.path.join("Properties", "AssemblyInfo.cs"))
+                 if os.path.exists(os.path.join(legacy_dir, f + ".frame"))}
     omitted = sorted(os.path.relpath(f, legacy_dir) for f in listed - compiled_legacy
-                     if os.path.relpath(f, legacy_dir) not in ALWAYS_OMITTED)
+                     if os.path.relpath(f, legacy_dir) not in generated)
     status = "FAIL" if extra else "ok"
     print(f"{status:4} {name}: {len(compiled_legacy)} linked, {len(own)} own"
           + (f", own: {', '.join(own)}" if own else ""))

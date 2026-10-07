@@ -1,14 +1,19 @@
 <Project>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>$(LegacyDir)HeuristicLab.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile Condition="'$(AssemblyOriginatorKeyFile)' == ''">$(LegacyDir)HeuristicLab.snk</AssemblyOriginatorKeyFile>
+    <!-- Plugin.cs and Properties/AssemblyInfo.cs generated from .frame files by the legacy build are
+         replaced by SDK assembly attributes. Projects without frames (most ExtLibs) keep their real
+         AssemblyInfo.cs and Plugin.cs as ordinary sources. -->
+    <_HlGeneratedFiles Condition="Exists('$(LegacyDir)Plugin.cs.frame')">$(LegacyDir)Plugin.cs</_HlGeneratedFiles>
+    <_HlGeneratedFiles Condition="Exists('$(LegacyDir)Properties\AssemblyInfo.cs.frame')">$(_HlGeneratedFiles);$(LegacyDir)Properties\AssemblyInfo.cs</_HlGeneratedFiles>
+    <GenerateAssemblyInfo Condition="!Exists('$(LegacyDir)Properties\AssemblyInfo.cs.frame') And Exists('$(LegacyDir)Properties\AssemblyInfo.cs')">false</GenerateAssemblyInfo>
   </PropertyGroup>
 
-  <!-- Linked legacy sources. Plugin.cs and Properties/AssemblyInfo.cs are generated from .frame
-       files in the legacy build and are replaced by SDK assembly attributes here. Projects add
-       further exclusions via LegacyExclude (semicolon-separated, each prefixed with $(LegacyDir)). -->
+  <!-- Linked legacy sources. Projects add further exclusions via LegacyExclude
+       (semicolon-separated, each prefixed with $(LegacyDir)). -->
   <ItemGroup>
     <Compile Include="$(LegacyDir)**\*.cs"
-             Exclude="$(LegacyDir)bin\**;$(LegacyDir)obj\**;$(LegacyDir)Plugin.cs;$(LegacyDir)Properties\AssemblyInfo.cs;$(LegacyExclude)"
+             Exclude="$(LegacyDir)bin\**;$(LegacyDir)obj\**;$(_HlGeneratedFiles);$(LegacyExclude)"
              LinkBase="Legacy" />
   </ItemGroup>
 </Project>
