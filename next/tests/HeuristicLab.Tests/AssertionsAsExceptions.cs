@@ -10,10 +10,8 @@ namespace HeuristicLab.Tests {
   /// compiled out; here the libraries are built in Debug, so failures are turned into exceptions
   /// that surface as ordinary test failures (or satisfy tests expecting an exception).
   /// </summary>
-  [TestClass]
   public static class AssertionsAsExceptions {
-    [AssemblyInitialize]
-    public static void AssemblyInitialize(TestContext testContext) {
+    public static void Install() {
       Contract.ContractFailed += (sender, e) => e.SetUnwind();
       Trace.Listeners.Clear();
       Trace.Listeners.Add(new ThrowingTraceListener());

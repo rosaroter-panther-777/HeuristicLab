@@ -2,31 +2,70 @@
 
   <!-- Legacy MSTest v1 tests, linked unchanged and run against the ported libraries on net10.0.
        MSTest 3.x keeps [ExpectedException] (removed in 4.x), which several legacy tests use.
-       Test folders are added as the projects they depend on get ported. -->
+       Test folders are added as soon as all projects they depend on are ported. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <LegacyTestsDir>..\..\..\HeuristicLab.Tests\</LegacyTestsDir>
+    <!-- same name and key as the legacy tests: PluginInfrastructure grants InternalsVisibleTo -->
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(LegacyTestsDir)HeuristicLab.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="AssertionsAsExceptions.cs" />
+    <Compile Include="$(LegacyTestsDir)TestRandom.cs" Link="Legacy\TestRandom.cs" />
     <Compile Include="AtticRoundTripTest.cs" />
+    <Compile Include="GlobalUsings.cs" />
+    <Compile Include="TestHostInitializer.cs" />
     <Compile Include="RuntimeCompilationTest.cs" />
+    <!-- samples and general tests; ContentViewTests needs the WinForms MainForm -->
+    <Compile Include="$(LegacyTestsDir)HeuristicLab-3.3\**\*.cs" Exclude="$(LegacyTestsDir)HeuristicLab-3.3\ContentViewTests.cs" LinkBase="Legacy\HeuristicLab-3.3" />
+    <!-- GUI automation script needs the WinForms MainForm -->
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Scripting-3.3\**\*.cs" Exclude="$(LegacyTestsDir)HeuristicLab.Scripting-3.3\GUIAutomationScriptTest.cs;$(LegacyTestsDir)HeuristicLab.Scripting-3.3\Script Sources\GUIAutomationScriptSource.cs" LinkBase="Legacy\HeuristicLab.Scripting-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Algorithms.DataAnalysis-3.4\**\*.cs" LinkBase="Legacy\HeuristicLab.Algorithms.DataAnalysis-3.4" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Algorithms.ParameterlessPopulationPyramid-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Algorithms.ParameterlessPopulationPyramid-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Analysis-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Analysis-3.3" />
     <Compile Include="$(LegacyTestsDir)HeuristicLab.Collections-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Collections-3.3" />
     <Compile Include="$(LegacyTestsDir)HeuristicLab.Common-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Common-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Encodings.BinaryVectorEncoding-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Encodings.BinaryVectorEncoding-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Encodings.IntegerVectorEncoding-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Encodings.IntegerVectorEncoding-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Encodings.LinearLinkageEncoding-3.4\**\*.cs" LinkBase="Legacy\HeuristicLab.Encodings.LinearLinkageEncoding-3.4" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Encodings.PermutationEncoding-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Encodings.PermutationEncoding-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Encodings.RealVectorEncoding-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Encodings.RealVectorEncoding-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Encodings.ScheduleEncoding-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Encodings.ScheduleEncoding-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Encodings.SymbolicExpressionTreeEncoding-3.4\**\*.cs" LinkBase="Legacy\HeuristicLab.Encodings.SymbolicExpressionTreeEncoding-3.4" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Optimization-3.4\**\*.cs" LinkBase="Legacy\HeuristicLab.Optimization-3.4" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Persistence-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Persistence-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Persistence.Attic\**\*.cs" LinkBase="Legacy\HeuristicLab.Persistence.Attic" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.PluginInfraStructure-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.PluginInfraStructure-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.DataAnalysis-3.4\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.DataAnalysis-3.4" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.DataAnalysis.Symbolic-3.4\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.DataAnalysis.Symbolic-3.4" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.DataAnalysis.Symbolic.TimeSeriesPrognosis-3.4\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.DataAnalysis.Symbolic.TimeSeriesPrognosis-3.4" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.Instances-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.Instances-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.Instances.DataAnalysis-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.Instances.DataAnalysis-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.LinearAssignment-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.LinearAssignment-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.PTSP-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.PTSP-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.QuadraticAssignment-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.QuadraticAssignment-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.TestFunctions-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.TestFunctions-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.TestFunctions.MultiObjective-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.TestFunctions.MultiObjective-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.TravelingSalesman-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.TravelingSalesman-3.3" />
+    <Compile Include="$(LegacyTestsDir)HeuristicLab.Problems.VehicleRouting-3.4\**\*.cs" LinkBase="Legacy\HeuristicLab.Problems.VehicleRouting-3.4" />
     <Compile Include="$(LegacyTestsDir)HeuristicLab.Random-3.3\**\*.cs" LinkBase="Legacy\HeuristicLab.Random-3.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\core\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
-    <ProjectReference Include="..\..\core\HeuristicLab.Common\HeuristicLab.Common.csproj" />
-    <ProjectReference Include="..\..\core\HeuristicLab.Core\HeuristicLab.Core.csproj" />
-    <ProjectReference Include="..\..\core\HeuristicLab.Data\HeuristicLab.Data.csproj" />
-    <ProjectReference Include="..\..\core\HeuristicLab.Operators.Programmable\HeuristicLab.Operators.Programmable.csproj" />
-    <ProjectReference Include="..\..\core\HeuristicLab.Random\HeuristicLab.Random.csproj" />
-    <ProjectReference Include="..\..\core\HeuristicLab.Scripting\HeuristicLab.Scripting.csproj" />
+    <!-- all ported libraries; legacy tests reference whatever they need -->
+    <ProjectReference Include="..\..\core\*\*.csproj" />
+    <ProjectReference Include="..\..\extlibs\*\*.csproj" />
+    <ProjectReference Update="..\..\extlibs\ALGLIB-3.7.0\ALGLIB-3.7.0.csproj" Aliases="alglib_3_7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="ScriptSources.resx" LogicalName="HeuristicLab.Tests.HeuristicLab.Scripting_3._3.Script_Sources.ScriptSources.resources" />
+    <None Include="$(LegacyTestsDir)Test Resources\**" Link="Test Resources\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(LegacyTestsDir)HeuristicLab.Scripting-3.3\Script Sources\*.cs" Link="Test Resources\Script Sources\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
