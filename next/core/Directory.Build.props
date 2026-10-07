@@ -24,5 +24,8 @@
     <SignAssembly>true</SignAssembly>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <!-- Like the legacy build, compile only against direct references: transitive ones can
+         clash (ALGLIB 3.7 is referenced under an extern alias next to ALGLIB 3.17). -->
+    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
   </PropertyGroup>
 </Project>

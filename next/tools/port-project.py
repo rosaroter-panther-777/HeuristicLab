@@ -139,7 +139,9 @@ def main():
             v = frame_attr(ft, attr)
             if v:
                 props.append((prop, v))
+        friends = re.findall(r'^\s*\[assembly:\s*InternalsVisibleTo\("([^",]+)(?:,\s*PublicKey=([0-9a-fA-F]+))?"\)\]', ft, re.M)
     else:
+        friends = []
         notes.append("no AssemblyInfo frame: legacy Properties/AssemblyInfo.cs is compiled as is")
 
     if not re.search(r"<SignAssembly>true</SignAssembly>", text):
@@ -160,11 +162,13 @@ def main():
     ported, legacy = ported_projects(), legacy_projects()
     project_refs, packages = set(), set()
 
-    def add_assembly_ref(name, source):
+    def add_assembly_ref(name, source, aliases=None):
         if name in PACKAGE_FOR_HINT:
             packages.add(PACKAGE_FOR_HINT[name])
         elif name in ported:
-            project_refs.add(os.path.relpath(ported[name], out_dir).replace("/", "\\"))
+            ref = os.path.relpath(ported[name], out_dir).replace("/", "\\")
+            # extern aliases (e.g. alglib_3_7 next to ALGLIB 3.17) are carried over as metadata
+            project_refs.add(ref + (f'" Aliases="{aliases}' if aliases and aliases != "global" else ""))
         elif name in legacy and is_plugin_wrapper(legacy[name]):
             pass
         else:
@@ -176,8 +180,10 @@ def main():
     for m in re.finditer(r'<Reference Include="([^"]+)"\s*(/>|>(.*?)</Reference>)', text, re.S):
         ref, body = m.group(1).split(",")[0], m.group(3) or ""
         hint = re.search(r"<HintPath>([^<]+)</HintPath>", body)
+        aliases = re.search(r"<Aliases>\s*([^<]+?)\s*</Aliases>", body)
         if hint:
-            add_assembly_ref(os.path.splitext(os.path.basename(hint.group(1).replace("\\", "/")))[0], "binary reference")
+            add_assembly_ref(os.path.splitext(os.path.basename(hint.group(1).replace("\\", "/")))[0], "binary reference",
+                             aliases.group(1) if aliases else None)
             continue
         if ref in IGNORED_FRAMEWORK_REFS:
             continue
@@ -236,6 +242,10 @@ def main():
     lines = ['<Project Sdk="Microsoft.NET.Sdk">', "", "  <PropertyGroup>"]
     lines += [f"    <{k}>{escape(v)}</{k}>" for k, v in props]
     lines += ["  </PropertyGroup>"]
+    if friends:
+        lines += ["", "  <ItemGroup>"]
+        lines += [f'    <InternalsVisibleTo Include="{n}"' + (f' Key="{k}"' if k else "") + " />" for n, k in friends]
+        lines += ["  </ItemGroup>"]
     if resources:
         lines += ["", "  <ItemGroup>"]
         lines += [f'    <EmbeddedResource Include="$(LegacyDir){r}" LogicalName="{n}" />' for r, n in resources]
