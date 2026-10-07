@@ -3,11 +3,17 @@
   <PropertyGroup>
     <LegacyDir>..\..\..\HeuristicLab.Problems.DataAnalysis.Symbolic\3.4\</LegacyDir>
     <AssemblyName>HeuristicLab.Problems.DataAnalysis.Symbolic-3.4</AssemblyName>
+    <!-- replaced: emits callvirt for IList<double>.get_Item (CoreCLR rejects call on interface methods) -->
+    <LegacyExclude>$(LegacyDir)Interpreter\SymbolicDataAnalysisExpressionTreeILEmittingInterpreter.cs</LegacyExclude>
     <RootNamespace>HeuristicLab.Problems.DataAnalysis.Symbolic</RootNamespace>
     <AssemblyTitle>HeuristicLab.Problems.DataAnalysis.Symbolic</AssemblyTitle>
     <Description>Provides base classes for symbolic data analysis tasks.</Description>
     <AssemblyVersion>3.4.0.0</AssemblyVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="SymbolicDataAnalysisExpressionTreeILEmittingInterpreter.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\extlibs\ALGLIB-3.17.0\ALGLIB-3.17.0.csproj" />
