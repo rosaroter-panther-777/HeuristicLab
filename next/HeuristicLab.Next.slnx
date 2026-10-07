@@ -4,15 +4,28 @@
   </Folder>
   <Folder Name="/core/">
     <Project Path="core/HeuristicLab.Collections/HeuristicLab.Collections.csproj" />
-    <Project Path="core/HeuristicLab.Common/HeuristicLab.Common.csproj" />
     <Project Path="core/HeuristicLab.Common.Resources/HeuristicLab.Common.Resources.csproj" />
+    <Project Path="core/HeuristicLab.Common/HeuristicLab.Common.csproj" />
     <Project Path="core/HeuristicLab.Core/HeuristicLab.Core.csproj" />
     <Project Path="core/HeuristicLab.Data/HeuristicLab.Data.csproj" />
     <Project Path="core/HeuristicLab.Operators/HeuristicLab.Operators.csproj" />
+    <Project Path="core/HeuristicLab.Optimization/HeuristicLab.Optimization.csproj" />
+    <Project Path="core/HeuristicLab.ParallelEngine/HeuristicLab.ParallelEngine.csproj" />
     <Project Path="core/HeuristicLab.Parameters/HeuristicLab.Parameters.csproj" />
     <Project Path="core/HeuristicLab.Persistence/HeuristicLab.Persistence.csproj" />
     <Project Path="core/HeuristicLab.PluginInfrastructure/HeuristicLab.PluginInfrastructure.csproj" />
+    <Project Path="core/HeuristicLab.Problems.DataAnalysis/HeuristicLab.Problems.DataAnalysis.csproj" />
+    <Project Path="core/HeuristicLab.Problems.Instances.CordeauGQAP/HeuristicLab.Problems.Instances.CordeauGQAP.csproj" />
+    <Project Path="core/HeuristicLab.Problems.Instances.DIMACS/HeuristicLab.Problems.Instances.DIMACS.csproj" />
+    <Project Path="core/HeuristicLab.Problems.Instances.ElloumiCTAP/HeuristicLab.Problems.Instances.ElloumiCTAP.csproj" />
+    <Project Path="core/HeuristicLab.Problems.Instances.Orienteering/HeuristicLab.Problems.Instances.Orienteering.csproj" />
+    <Project Path="core/HeuristicLab.Problems.Instances.QAPLIB/HeuristicLab.Problems.Instances.QAPLIB.csproj" />
+    <Project Path="core/HeuristicLab.Problems.Instances.Scheduling/HeuristicLab.Problems.Instances.Scheduling.csproj" />
+    <Project Path="core/HeuristicLab.Problems.Instances.TSPLIB/HeuristicLab.Problems.Instances.TSPLIB.csproj" />
+    <Project Path="core/HeuristicLab.Problems.Instances/HeuristicLab.Problems.Instances.csproj" />
     <Project Path="core/HeuristicLab.Random/HeuristicLab.Random.csproj" />
+    <Project Path="core/HeuristicLab.Selection/HeuristicLab.Selection.csproj" />
+    <Project Path="core/HeuristicLab.SequentialEngine/HeuristicLab.SequentialEngine.csproj" />
     <Project Path="core/HeuristicLab.Tracing/HeuristicLab.Tracing.csproj" />
   </Folder>
   <Folder Name="/tests/">
