@@ -208,9 +208,19 @@ def main():
     if any("System.Reflection.Emit" in read(f) for f in sources):
         packages.add("System.Reflection.Emit.Lightweight")
         packages.add("System.Reflection.Emit.ILGeneration")
-    if any("System.CodeDom" in read(f) for f in sources):
+    if any(re.search(r"CSharpCodeProvider|CompilerParameters|CompileAssemblyFrom", read(f)) for f in sources):
         packages.add("System.CodeDom")
         notes.append("uses CodeDom: CSharpCodeProvider compilation throws PlatformNotSupportedException on .NET Core")
+
+    # dead files: on disk but not in the legacy csproj (the linked-source glob would pick them up)
+    listed = {os.path.normpath(os.path.join(legacy_dir, c.replace("\\", "/")))
+              for c in re.findall(r'<Compile Include="([^"]+)"', text)}
+    dead = sorted(os.path.relpath(f, legacy_dir) for f in sources
+                  if os.path.normpath(f) not in listed and os.sep + "bin" + os.sep not in f
+                  and not os.path.exists(f + ".frame"))
+    if dead:
+        props.insert(3, ("LegacyExclude", ";".join("$(LegacyDir)" + d.replace("/", "\\") for d in dead)))
+        notes.append("excluded dead files (on disk, not in legacy csproj): " + ", ".join(dead))
 
     copies = []
     for m in re.finditer(r'<(None|Content) Include="([^"]+)"\s*>(.*?)</\1>', text, re.S):

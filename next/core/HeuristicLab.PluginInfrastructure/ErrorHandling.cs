@@ -21,13 +21,27 @@
 
 
 using System;
+using System.Diagnostics;
 
 namespace HeuristicLab.PluginInfrastructure {
   /// <summary>
-  /// Headless replacement for the legacy ErrorHandling class: keeps BuildErrorMessage,
-  /// drops the WinForms ShowErrorDialog overloads (error display belongs to the front end).
+  /// Headless replacement for the legacy ErrorHandling class. ShowErrorDialog keeps the
+  /// non-WinForms overloads that library code calls, but hands the error to ErrorDisplay,
+  /// which a front end sets; without one the error is written to Trace.
   /// </summary>
   public static class ErrorHandling {
+    public static Action<string, Exception> ErrorDisplay { get; set; }
+
+    public static void ShowErrorDialog(Exception exception) {
+      ShowErrorDialog(string.Empty, exception);
+    }
+
+    public static void ShowErrorDialog(string message, Exception exception) {
+      var display = ErrorDisplay;
+      if (display != null) display(message, exception);
+      else Trace.TraceError("{0}{1}{2}", message, string.IsNullOrEmpty(message) ? "" : Environment.NewLine, BuildErrorMessage(exception));
+    }
+
     public static string BuildErrorMessage(Exception exception) {
       if (exception == null) {
         return string.Empty;
