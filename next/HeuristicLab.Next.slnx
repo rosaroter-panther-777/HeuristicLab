@@ -3,6 +3,19 @@
     <Project Path="app/HeuristicLab.Studio/HeuristicLab.Studio.csproj" />
   </Folder>
   <Folder Name="/core/">
+    <Project Path="core/HeuristicLab.Collections/HeuristicLab.Collections.csproj" />
     <Project Path="core/HeuristicLab.Common/HeuristicLab.Common.csproj" />
+    <Project Path="core/HeuristicLab.Common.Resources/HeuristicLab.Common.Resources.csproj" />
+    <Project Path="core/HeuristicLab.Core/HeuristicLab.Core.csproj" />
+    <Project Path="core/HeuristicLab.Data/HeuristicLab.Data.csproj" />
+    <Project Path="core/HeuristicLab.Operators/HeuristicLab.Operators.csproj" />
+    <Project Path="core/HeuristicLab.Parameters/HeuristicLab.Parameters.csproj" />
+    <Project Path="core/HeuristicLab.Persistence/HeuristicLab.Persistence.csproj" />
+    <Project Path="core/HeuristicLab.PluginInfrastructure/HeuristicLab.PluginInfrastructure.csproj" />
+    <Project Path="core/HeuristicLab.Random/HeuristicLab.Random.csproj" />
+    <Project Path="core/HeuristicLab.Tracing/HeuristicLab.Tracing.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HeuristicLab.Tests/HeuristicLab.Tests.csproj" />
   </Folder>
 </Solution>
