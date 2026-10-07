@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/app/">
+    <Project Path="app/HeuristicLab.Studio/HeuristicLab.Studio.csproj" />
+  </Folder>
+</Solution>
