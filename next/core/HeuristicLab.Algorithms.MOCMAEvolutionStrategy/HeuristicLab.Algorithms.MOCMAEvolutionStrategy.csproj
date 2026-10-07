@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Algorithms.MOCMAEvolutionStrategy\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Algorithms.MOCMAEvolutionStrategy-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Algorithms.MOCMAEvolutionStrategy</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Algorithms.MOCMAEvolutionStrategy</AssemblyTitle>
+    <Description>HeuristicLab implementation of Multi-Objective CMA Evolution Strategy (MO-CMA-ES)</Description>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\extlibs\ALGLIB-3.17.0\ALGLIB-3.17.0.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Analysis\HeuristicLab.Analysis.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Data\HeuristicLab.Data.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Encodings.RealVectorEncoding\HeuristicLab.Encodings.RealVectorEncoding.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Operators\HeuristicLab.Operators.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Optimization\HeuristicLab.Optimization.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Parameters\HeuristicLab.Parameters.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.Instances\HeuristicLab.Problems.Instances.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.TestFunctions.MultiObjective\HeuristicLab.Problems.TestFunctions.MultiObjective.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Random\HeuristicLab.Random.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HEAL.Attic" />
+  </ItemGroup>
+
+</Project>
