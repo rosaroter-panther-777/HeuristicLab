@@ -39,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HEAL.Attic" />
+    <ProjectReference Include="..\..\extlibs\HEAL.Attic\HEAL.Attic.csproj" />
     <PackageReference Include="System.Reflection.Emit.ILGeneration" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" />
   </ItemGroup>

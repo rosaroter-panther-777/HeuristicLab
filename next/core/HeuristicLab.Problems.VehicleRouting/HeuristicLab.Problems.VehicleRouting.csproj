@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HEAL.Attic" />
+    <ProjectReference Include="..\..\extlibs\HEAL.Attic\HEAL.Attic.csproj" />
   </ItemGroup>
 
 </Project>

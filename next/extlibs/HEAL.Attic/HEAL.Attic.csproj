@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Vendored HEAL.Attic 1.8.0 (see VENDORED.md). Identity matches the NuGet package. -->
+  <PropertyGroup>
+    <LegacyDir>src\</LegacyDir>
+    <AssemblyName>HEAL.Attic</AssemblyName>
+    <RootNamespace>HEAL.Attic</RootNamespace>
+    <Product>HEAL.Attic</Product>
+    <Company>University of Applied Sciences Upper Austria</Company>
+    <GenerateAssemblyCompanyAttribute>true</GenerateAssemblyCompanyAttribute>
+    <Copyright>(c) Heuristic and Evolutionary Algorithms Laboratory (HEAL)</Copyright>
+    <Description>HEAL.Attic is a serialization and persistence framework for .NET. It serializes and deserializes complete object graphs and uses Google Protocol Buffers for compact storage.</Description>
+    <AssemblyVersion>1.8.0.0</AssemblyVersion>
+    <FileVersion>1.8.0.0</FileVersion>
+    <InformationalVersion>1.8.0+heuristiclab-next</InformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="System.Drawing.Common" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package HEAL.Attic;
+
+message Bundle {
+  repeated bytes transformer_guids = 1;
+  repeated bytes type_guids = 2;
+
+  uint32 root_box_id = 3; // index into boxes
+  repeated Box boxes = 4;
+  repeated string strings = 5;
+  repeated StorableTypeMetadata storable_type_metadata = 6;
+  repeated TypeMetadata type_metadata = 7;
+  repeated ArrayMetadata array_metadata = 8;
+}
+
+// each box represents an object in the object graph
+message Box {
+  uint32 type_metadata_id = 1; // index within Bundle.type_metadata for the type of the object
+
+  ScalarValueBox value = 2;
+  RepeatedValueBox values = 3;
+  StorableTypeMembersBox members = 4;
+}
+
+message TypeMetadata {
+  uint32 type_id = 1;                             // index into Bundle.type_guids
+  repeated uint32 generic_type_metadata_ids = 2;  // index into Bundle.type_metadata (for each generic type argument)
+  uint32 transformer_id = 3;                      // index into Bundle.transformer_guids
+}
+
+message ScalarValueBox {
+  int64 long = 1;    // on the wire there is no difference between int64, int32 and bool. The encoding uses only as much space as necessary
+  uint64 u_long = 2; // on the wire there is no difference between uint64 and uint32
+  float float = 3;
+  double double = 4;
+  bytes bytes = 5;
+  sint64 s_long = 6; // on the wire there is no different between sint32 and sint64
+}
+
+// for collection types and arrays
+message RepeatedValueBox {
+  RepeatedBoolBox bools = 1;
+  RepeatedIntBox ints = 2;
+  RepeatedLongBox longs = 3;
+  RepeatedUIntBox u_ints = 4;
+  RepeatedULongBox u_longs = 5;
+  RepeatedFloatBox floats = 6;
+  RepeatedDoubleBox doubles = 7;
+  RepeatedSIntBox s_ints = 8;
+  RepeatedSLongBox s_longs = 9;
+  RepeatedKeyValuePairsBox kvps = 10;
+
+  uint32 comparer_id = 11;                 // some collections have a StorableType comparer (index into Bundle.boxes)
+  uint32 comparer_type_id = 12;            // other collection only have a comparer type (index into Bundle.type_metadata)
+
+  uint32 array_metadata_id = 13;           // index into Boxes.array_metadata
+}
+
+message ArrayMetadata {                 
+  int32 rank = 1;
+  repeated int32 lengths = 2;
+  repeated int32 lower_bounds = 3;
+}
+
+message StorableTypeMembersBox {
+  uint32 storable_type_metadata_id = 1;         // index into Bundle.storable_type_metadata
+  repeated uint32 value_box_id = 2;
+}
+
+message RepeatedBoolBox {
+  repeated bool values = 1;
+}
+
+message RepeatedIntBox {
+  repeated int32 values = 1;
+}
+
+message RepeatedLongBox {
+  repeated int64 values = 1;
+}
+
+message RepeatedUIntBox {
+  repeated uint32 values = 1;
+}
+
+message RepeatedULongBox {
+  repeated uint64 values = 1;
+}
+
+message RepeatedFloatBox {
+  repeated float values = 1;
+}
+
+message RepeatedDoubleBox {
+  repeated double values = 1;
+}
+
+message RepeatedSIntBox {
+  repeated sint32 values = 1;
+}
+
+message RepeatedSLongBox {
+  repeated sint64 values = 1;
+}
+
+message RepeatedKeyValuePairsBox {
+  repeated uint32 keys = 1;
+  repeated uint32 values = 2;
+}
+
+message StorableTypeMetadata {
+  uint32 type_guid = 1;      // index into Bundle.type_guids
+  uint32 parent = 2; 
+  repeated uint32 names = 3; // index into Bundle.strings
+}
+

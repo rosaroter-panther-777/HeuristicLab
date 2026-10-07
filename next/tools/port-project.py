@@ -38,7 +38,8 @@ PACKAGE_FOR_FRAMEWORK_REF = {
     "System.Configuration": "System.Configuration.ConfigurationManager",
     "Microsoft.CSharp": "Microsoft.CSharp",  # runtime binder for 'dynamic'
 }
-PACKAGE_FOR_HINT = {"HEAL.Attic": "HEAL.Attic", "Google.Protobuf": "Google.Protobuf"}
+# HEAL.Attic is vendored in next/extlibs and resolved as a ported project
+PACKAGE_FOR_HINT = {"Google.Protobuf": "Google.Protobuf"}
 
 
 def read(path):

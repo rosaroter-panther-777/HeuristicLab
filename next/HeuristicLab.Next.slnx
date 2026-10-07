@@ -93,6 +93,7 @@
     <Project Path="tests/HeuristicLab.Tests/HeuristicLab.Tests.csproj" />
   </Folder>
   <Folder Name="/extlibs/">
+    <Project Path="extlibs/HEAL.Attic/HEAL.Attic.csproj" />
     <Project Path="extlibs/ALGLIB-3.17.0/ALGLIB-3.17.0.csproj" />
     <Project Path="extlibs/ALGLIB-3.7.0/ALGLIB-3.7.0.csproj" />
     <Project Path="extlibs/AutoDiff-1.0/AutoDiff-1.0.csproj" />
