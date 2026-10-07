@@ -6,6 +6,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,8 +20,9 @@ namespace HEAL.Attic {
     AllowMultiple = false
   )]
   public sealed class StorableTypeAttribute : Attribute {
-    private static IDictionary<Type, StorableTypeAttribute> attributeCache = new Dictionary<Type, StorableTypeAttribute>();
-    private static HashSet<Type> nonStorableTypes = new HashSet<Type>();
+    // heuristiclab-next: concurrent collection, the cache is shared by all threads
+    private static IDictionary<Type, StorableTypeAttribute> attributeCache = new ConcurrentDictionary<Type, StorableTypeAttribute>();
+    private static ConcurrentDictionary<Type, bool> nonStorableTypes = new ConcurrentDictionary<Type, bool>();
 
     #region Properties
     /// <summary>
@@ -85,10 +87,10 @@ namespace HEAL.Attic {
     public static StorableTypeAttribute GetStorableTypeAttribute(Type type) {
       StorableTypeAttribute attrib = null;
 
-      if (!nonStorableTypes.Contains(type) && !attributeCache.TryGetValue(type, out attrib)) {
+      if (!nonStorableTypes.ContainsKey(type) && !attributeCache.TryGetValue(type, out attrib)) {
         attrib = (StorableTypeAttribute)GetCustomAttribute(type, typeof(StorableTypeAttribute), false);
         if (attrib != null) attributeCache[type] = attrib;
-        else nonStorableTypes.Add(type);
+        else nonStorableTypes.TryAdd(type, true);
       }
 
       return attrib;

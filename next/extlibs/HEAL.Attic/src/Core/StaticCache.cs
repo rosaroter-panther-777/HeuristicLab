@@ -137,29 +137,32 @@ namespace HEAL.Attic {
     }
 
     public void UpdateRegisteredTypes() {
-      foreach (var asm in AppDomain.CurrentDomain.GetAssemblies()) {
-        if (asm.IsDynamic) continue;
-        if (cachedAssemblies.Contains(asm.FullName)) continue;
-        cachedAssemblies.Add(asm.FullName);
+      // heuristiclab-next: runs on every (de)serialization and mutates shared dictionaries
+      lock (locker) {
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies()) {
+          if (asm.IsDynamic) continue;
+          if (cachedAssemblies.Contains(asm.FullName)) continue;
+          cachedAssemblies.Add(asm.FullName);
 
-        foreach (var t in asm.GetTypes()) {
-          if (typeof(ITransformer).IsAssignableFrom(t) && !t.IsAbstract) {
-            var transformer = (ITransformer)Activator.CreateInstance(t);
-            RegisterTransformer(transformer);
-          }
-        }
-
-        foreach (var t in asm.GetTypes()) {
-          if (StorableTypeAttribute.IsStorableType(t)) {
-            type2Guid.Add(t, StorableTypeAttribute.GetStorableTypeAttribute(t).Guid);
-            foreach (var guid in StorableTypeAttribute.GetStorableTypeAttribute(t).Guids) {
-              if (guid2Type.ContainsKey(guid)) throw new PersistenceException($"The GUID {guid} is already used by type {guid2Type[guid]}.", t);
-              guid2Type.Add(guid, t);
+          foreach (var t in asm.GetTypes()) {
+            if (typeof(ITransformer).IsAssignableFrom(t) && !t.IsAbstract) {
+              var transformer = (ITransformer)Activator.CreateInstance(t);
+              RegisterTransformer(transformer);
             }
-          } else if (typeof(IStorableTypeMap).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract) {
-            var knownTypeMap = (IStorableTypeMap)Activator.CreateInstance(t);
-            foreach (var tup in knownTypeMap.KnownStorableTypes) {
-              RegisterType(tup.Item1, tup.Item2);
+          }
+
+          foreach (var t in asm.GetTypes()) {
+            if (StorableTypeAttribute.IsStorableType(t)) {
+              type2Guid.Add(t, StorableTypeAttribute.GetStorableTypeAttribute(t).Guid);
+              foreach (var guid in StorableTypeAttribute.GetStorableTypeAttribute(t).Guids) {
+                if (guid2Type.ContainsKey(guid)) throw new PersistenceException($"The GUID {guid} is already used by type {guid2Type[guid]}.", t);
+                guid2Type.Add(guid, t);
+              }
+            } else if (typeof(IStorableTypeMap).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract) {
+              var knownTypeMap = (IStorableTypeMap)Activator.CreateInstance(t);
+              foreach (var tup in knownTypeMap.KnownStorableTypes) {
+                RegisterType(tup.Item1, tup.Item2);
+              }
             }
           }
         }
@@ -189,26 +192,29 @@ namespace HEAL.Attic {
     }
 
     public ITransformer GetTransformer(Guid guid) {
-      return guid2Transformer[guid];
+      lock (locker) return guid2Transformer[guid];  // heuristiclab-next: readers lock too
     }
 
     public Guid GetGuid(ITransformer transformer) {
-      return transformer2Guid[transformer];
+      lock (locker) return transformer2Guid[transformer];
     }
 
     public Type GetType(Guid guid) {
-      if (!guid2Type.TryGetValue(guid, out Type value)) {
+      if (!TryGetType(guid, out Type value)) {
         throw new PersistenceException($"Unknown StorableType with GUID {guid}");
       }
       return value;
     }
 
     public bool TryGetType(Guid guid, out Type type) {
-      return guid2Type.TryGetValue(guid, out type);
+      lock (locker) return guid2Type.TryGetValue(guid, out type);
     }
 
     public Guid GetGuid(Type type) {
-      if (!type2Guid.TryGetValue(type, out Guid guid)) {
+      bool found;
+      Guid guid;
+      lock (locker) found = type2Guid.TryGetValue(type, out guid);
+      if (!found) {
         throw new PersistenceException($"Type {type.FullName} is not registered as StorableType.");
       }
       return guid;

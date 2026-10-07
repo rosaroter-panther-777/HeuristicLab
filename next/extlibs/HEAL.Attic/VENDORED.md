@@ -12,3 +12,13 @@ surface on modern .NET can be fixed here.
   the HEAL key (public key token ba48961d6f65dcec). The file format is unchanged.
 
 ## Patches
+1. Thread-safe attribute caches (src/Core/StorableTypeAttribute.cs, StorableAttribute.cs,
+   StorableHookAttribute.cs): the static caches were plain Dictionary/HashSet instances
+   shared by all threads. Concurrent (de)serialization could corrupt them; .NET Framework
+   failed silently, .NET Core throws "Operations that change non-concurrent collections
+   must have exclusive access" and the corrupted cache then breaks every later
+   serialization in the process. They are now ConcurrentDictionary instances.
+2. Thread-safe type registry (src/Core/StaticCache.cs): UpdateRegisteredTypes(), called on
+   every serialization and deserialization, mutated the shared type/GUID dictionaries without
+   the lock that RegisterType uses, and the lookups read them unlocked. Both now hold the
+   existing lock. Same symptom as patch 1.

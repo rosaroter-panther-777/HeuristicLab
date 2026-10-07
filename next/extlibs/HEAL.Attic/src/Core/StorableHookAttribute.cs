@@ -6,6 +6,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -35,7 +36,8 @@ namespace HEAL.Attic {
   [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
   [StorableType("983bf558-1458-4129-b018-7e121ac3840e")]
   public sealed class StorableHookAttribute : Attribute {
-    private static IDictionary<MethodInfo, StorableHookAttribute[]> attributeCache = new Dictionary<MethodInfo, StorableHookAttribute[]>();
+    // heuristiclab-next: concurrent collection, the cache is shared by all threads
+    private static IDictionary<MethodInfo, StorableHookAttribute[]> attributeCache = new ConcurrentDictionary<MethodInfo, StorableHookAttribute[]>();
 
     #region Properties
     /// <summary>

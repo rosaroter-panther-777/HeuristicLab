@@ -6,6 +6,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -22,7 +23,8 @@ namespace HEAL.Attic {
     Inherited = false
   )]
   public sealed class StorableAttribute : Attribute {
-    private static IDictionary<MemberInfo, StorableAttribute> attributeCache = new Dictionary<MemberInfo, StorableAttribute>();
+    // heuristiclab-next: concurrent collection, the cache is shared by all threads
+    private static IDictionary<MemberInfo, StorableAttribute> attributeCache = new ConcurrentDictionary<MemberInfo, StorableAttribute>();
 
     #region Properties
     /// <summary>
