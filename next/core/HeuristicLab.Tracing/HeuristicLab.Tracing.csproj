@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Tracing\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Tracing-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Tracing</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Tracing</AssemblyTitle>
+    <Description>General tracing facility.</Description>
+  </PropertyGroup>
+
+</Project>
