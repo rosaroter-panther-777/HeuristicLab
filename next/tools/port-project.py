@@ -208,6 +208,9 @@ def main():
     if any("System.Reflection.Emit" in read(f) for f in sources):
         packages.add("System.Reflection.Emit.Lightweight")
         packages.add("System.Reflection.Emit.ILGeneration")
+    if any("System.CodeDom" in read(f) for f in sources):
+        packages.add("System.CodeDom")
+        notes.append("uses CodeDom: CSharpCodeProvider compilation throws PlatformNotSupportedException on .NET Core")
 
     copies = []
     for m in re.finditer(r'<(None|Content) Include="([^"]+)"\s*>(.*?)</\1>', text, re.S):
