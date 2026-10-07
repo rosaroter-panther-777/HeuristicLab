@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.ExtLibs\HeuristicLab.LibSVM\3.12\LibSVM-3.12\</LegacyDir>
+    <AssemblyName>LibSVM-3.12</AssemblyName>
+    <RootNamespace>LibSVM</RootNamespace>
+  </PropertyGroup>
+
+</Project>
