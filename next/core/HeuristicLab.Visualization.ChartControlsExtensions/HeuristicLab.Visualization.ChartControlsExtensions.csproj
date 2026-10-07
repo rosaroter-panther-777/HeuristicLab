@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Headless subset: only the axis math in ChartUtil.cs (used by DataPreprocessing).
+       The WinForms chart controls and dialogs are excluded. -->
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Visualization.ChartControlsExtensions\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Visualization.ChartControlsExtensions-3.3</AssemblyName>
+    <LegacyExclude>
+      $(LegacyDir)EnhancedChart*.cs;
+      $(LegacyDir)GanttChart*.cs;
+      $(LegacyDir)ImageExportDialog*.cs
+    </LegacyExclude>
+    <RootNamespace>HeuristicLab.Visualization.ChartControlsExtensions</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Visualization.ChartControlsExtensions</AssemblyTitle>
+    <Description>Extensions for the Microsoft Chart Controls.</Description>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
