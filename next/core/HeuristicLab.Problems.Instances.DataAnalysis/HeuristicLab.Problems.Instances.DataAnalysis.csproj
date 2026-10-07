@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Problems.Instances.DataAnalysis\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Problems.Instances.DataAnalysis-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Problems.Instances.DataAnalysis</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Problems.Instances.DataAnalysis-3.3</AssemblyTitle>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(LegacyDir)Classification\Data\UCI.zip" LogicalName="HeuristicLab.Problems.Instances.DataAnalysis.Classification.Data.UCI.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Regression\Data\RegressionRealWorld.zip" LogicalName="HeuristicLab.Problems.Instances.DataAnalysis.Regression.Data.RegressionRealWorld.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Regression\Data\MibaFriction.zip" LogicalName="HeuristicLab.Problems.Instances.DataAnalysis.Regression.Data.MibaFriction.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Regression\Data\PennML.zip" LogicalName="HeuristicLab.Problems.Instances.DataAnalysis.Regression.Data.PennML.zip" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\extlibs\ALGLIB-3.17.0\ALGLIB-3.17.0.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Data\HeuristicLab.Data.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Parameters\HeuristicLab.Parameters.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.DataAnalysis\HeuristicLab.Problems.DataAnalysis.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.Instances\HeuristicLab.Problems.Instances.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Random\HeuristicLab.Random.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HEAL.Attic" />
+    <PackageReference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>
