@@ -5,6 +5,10 @@
        Test folders are added as soon as all projects they depend on are ported. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <!-- -p:HlFramework=true adds net472 (run on Windows): the ported netstandard2.0 libraries on
+         .NET Framework, to tell port defects from .NET Framework vs .NET differences -->
+    <TargetFrameworks Condition="'$(HlFramework)' == 'true'">net10.0;net472</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <LegacyTestsDir>..\..\..\HeuristicLab.Tests\</LegacyTestsDir>

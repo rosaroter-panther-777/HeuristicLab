@@ -32,8 +32,10 @@ namespace HeuristicLab.Tests {
       if (!Directory.Exists(dir)) return;
       foreach (var file in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories)) {
         var literalName = file.Replace('/', '\\');
+#if NET
         if (!File.Exists(literalName))
           File.CreateSymbolicLink(literalName, Path.GetFullPath(file));
+#endif
       }
     }
   }
