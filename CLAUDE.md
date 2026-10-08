@@ -62,8 +62,12 @@
 ## Running tests
 - next/tools/run-tests.sh [quick|daily|all]: quick skips the long Run.Daily category.
 - On Linux it excludes next/tests/known-failures-linux.txt (each entry with its reason:
-  Windows-only GDI+/native DLL, or Framework-specific expectations). Any other failure
-  is a regression. Keep the list short and justified.
+  Windows-only GDI+/native DLL, Framework-specific expectations, or seeded Run.Daily
+  results recorded on .NET Framework). Any other failure is a regression. Keep the list
+  short and justified.
+- Status 2026-10-08 on Linux/net10.0: quick 427/427, daily 73/73 (442 + 82 tests; 24
+  excluded). The 7 seeded Run.Daily deviations are deterministic and independent of the
+  port's discovery order; exact cause (libm vs BCL) still needs a Windows baseline run.
 
 ## Porting conventions
 - Generate projects with next/tools/port-project.py <legacy csproj>: it maps references to
