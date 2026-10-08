@@ -1,0 +1,24 @@
+# Legacy tests that cannot pass on Linux / .NET 10, excluded by next/tools/run-tests.sh.
+# Format: fully qualified test name, then '#' and the reason. Keep this list short and
+# justified: anything failing that is not listed here is a regression.
+
+# Windows-only: System.Drawing.Common (GDI+) is not supported off Windows
+HeuristicLab.Persistence.Tests.UseCases.BitmapTest                 # System.Drawing Bitmap
+HeuristicLab.Persistence.Tests.UseCases.ConcurrentBitmapTest       # System.Drawing Bitmap
+HeuristicLab.Persistence.Tests.UseCases.FontTest                   # System.Drawing Font
+HeuristicLab.Persistence.Attic.Tests.UseCases.BitmapTest           # System.Drawing Bitmap
+HeuristicLab.Persistence.Attic.Tests.UseCases.ConcurrentBitmapTest # System.Drawing Bitmap
+HeuristicLab.Persistence.Attic.Tests.UseCases.FontTest             # System.Drawing Font
+
+# Windows-only: hl-native-interpreter.dll is a Windows binary (no Linux build exists)
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.NativeInterpreterTestParameterOptimization
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.NativeInterpreterTestParameterOptimizationVarPro
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.NativeInterpreterTestParameterOptimizationVarProNoParameters
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.ParameterOptimizationConsistency
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.TestInterpretersEstimatedValuesConsistency  # includes the native interpreter
+
+# .NET Core runtime semantics differ from .NET Framework (behavior is correct, expectation is Framework-specific)
+HeuristicLab.Persistence.Tests.UseCases.TestTypeStringConversion   # core types live in System.Private.CoreLib, not mscorlib
+HeuristicLab.Persistence.Tests.UseCases.TestAssemblyVersionCheck   # Core binder ignores assembly version mismatches
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.DerivativeTest.DeriveExpressions  # double.ToString prints shortest round-trip (16 digits)
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.IntervalInterpreterTest.TestIntervalInterpreterTan  # hard-codes .NET Framework's tan(pi/2)

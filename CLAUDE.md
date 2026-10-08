@@ -32,40 +32,38 @@
 - Not ported yet: Problems.ExternalEvaluation* (protobuf 2.4 / Matlab COM / Scilab),
   ExactOptimization (OR-Tools, Windows-only native runtime), all Views/GUI, Hive/OKB/Services.
 - next/tests/HeuristicLab.Tests: legacy tests linked unchanged incl. samples, run on
-  net10.0 (MSTest 3.x). Non-Run.Daily: 421 of 442 pass (see Known test failures).
+  net10.0 (MSTest 3.x). See "Running tests".
 
 ## Known runtime facts (verified on Linux / net10.0)
-- HEAL.Attic must be >= 1.8.0: 1.5.0 throws on the first (de)serialization on .NET 5+
-  (registers removed CoreLib type LongEnumEqualityComparer`1). .hl round trip works on 1.8.0.
-- Item.ItemImage and VSImageLibrary throw PlatformNotSupportedException off Windows
-  (System.Drawing.Common). Front-end code must never touch ItemImage until decoupled.
-  The CA1416 analyzer does NOT flag this path (Bitmaps come from ResourceManager).
-- HEAL.Attic 1.8.0 does not know .NET 5+'s StringEqualityComparer (default comparer of
+- HEAL.Attic is vendored (next/extlibs/HEAL.Attic, upstream v1.8 + patches in VENDORED.md):
+  thread-safe caches/type registry. Same assembly identity as the NuGet package, same format.
+- HEAL.Attic does not know .NET 5+'s StringEqualityComparer (default comparer of
   Dictionary<string,T>/HashSet<string>); next/core/HeuristicLab.Common/AtticRuntimeTypes.cs
   registers it in a module initializer. StringComparer.Ordinal(IgnoreCase) dictionaries
   still cannot be persisted on .NET Core (Attic re-creates comparers via Activator).
-- HEAL.Attic's StorableTypeAttribute caches are unsynchronized static collections; modern
-  .NET throws on concurrent use where .NET Framework silently raced. Concurrent
-  serialization (parallel experiments) is a real risk until Attic is fixed or forked.
+- Item.ItemImage and VSImageLibrary throw PlatformNotSupportedException off Windows
+  (System.Drawing.Common). Front-end code must never touch ItemImage until decoupled.
+  The CA1416 analyzer does NOT flag this path (Bitmaps come from ResourceManager).
+  Decision (2026-10-07): decoupling deferred until a view needs per-type icons.
 - A failed Debug.Assert/Contract.Assert kills the process on modern .NET (legacy suite ran
   Release). next/tests turns them into exceptions (AssertionsAsExceptions.cs).
 - CSharpCodeProvider cannot compile on .NET Core. Scripting and Operators.Programmable use
   replacement files that compile with Roslyn (next/core/Shared/RoslynCompiler.cs).
 - Library code calls ErrorHandling.ShowErrorDialog; the headless version forwards to the
   settable ErrorHandling.ErrorDisplay hook (front ends set it), else writes to Trace.
-- Decision (2026-10-07): ItemImage decoupling is deferred until a view needs per-type
-  icons; Studio uses its own icons and must not call ItemImage.
+- Plugin type discovery (LightweightApplicationManager replacement) scans assemblies in
+  name order: AppDomain order differs between runtimes, and defaults are picked from the
+  first discovered type.
+- Floating point: Math.Log/Exp/Tan come from the platform libm on Linux, so results can
+  differ in the last bit from .NET Framework (and from .NET on Windows). Algorithms with
+  near-ties (P3 linkage clustering, GP regression hyperparameter fits) may take a different
+  but equally valid trajectory; seeded runs are reproducible per platform, not across.
 
-## Known test failures (Linux / net10.0, non-Run.Daily)
-- Windows-only by nature: Bitmap/Font persistence tests (System.Drawing), native
-  interpreter tests (hl-native-interpreter.dll is a Windows DLL).
-- Cross-runtime numeric/format differences: IntervalInterpreterTan, DeriveExpressions
-  (double formatting), TestTypeStringConversion (CoreLib vs mscorlib type names);
-  Run.Daily GaussianProcessRegression sample converges to another local optimum.
-- Legacy XML persistence: ConcurrencyTest (RuntimeType lives in System.Private.CoreLib),
-  TestAssemblyVersionCheck.
-- Not yet investigated: ILEmittingInterpreterTestEvaluation (Bad IL format),
-  CreateVnsTspSampleTest (Sequence contains no elements), StorableTest race (Attic caches).
+## Running tests
+- next/tools/run-tests.sh [quick|daily|all]: quick skips the long Run.Daily category.
+- On Linux it excludes next/tests/known-failures-linux.txt (each entry with its reason:
+  Windows-only GDI+/native DLL, or Framework-specific expectations). Any other failure
+  is a regression. Keep the list short and justified.
 
 ## Porting conventions
 - Generate projects with next/tools/port-project.py <legacy csproj>: it maps references to
