@@ -65,9 +65,12 @@
   Windows-only GDI+/native DLL, Framework-specific expectations, or seeded Run.Daily
   results recorded on .NET Framework). Any other failure is a regression. Keep the list
   short and justified.
-- Status 2026-10-08 on Linux/net10.0: quick 427/427, daily 73/73 (442 + 82 tests; 24
-  excluded). The 7 seeded Run.Daily deviations are deterministic and independent of the
-  port's discovery order; exact cause (libm vs BCL) still needs a Windows baseline run.
+- Status 2026-10-08 on Linux/net10.0: quick 427/427, daily 75/75 (442 + 82 tests; 22
+  excluded). Windows .NET 10 baseline: P3HIFF and GP regression pass there (Linux libm).
+  Compile order fix (legacy csproj order) made GA grouping and PSO reproduce .NET Framework.
+  Open: GP-with-OS, shape-constrained and structure-template samples also differ on Windows
+  .NET 10. Decide with the port on .NET Framework, on Windows:
+  dotnet test next/tests/HeuristicLab.Tests -f net472 -p:HlFramework=true --filter <tests>
 
 ## Porting conventions
 - Generate projects with next/tools/port-project.py <legacy csproj>: it maps references to

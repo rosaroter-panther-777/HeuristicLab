@@ -27,14 +27,12 @@ HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.IntervalInterpreterTest.TestIn
 HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.NativeInterpreterTestTypeCoherentGrammarPerformance
 HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.NativeInterpreterTestArithmeticGrammarPerformance
 
-# Run.Daily: final results of seeded runs, recorded on .NET Framework/Windows. On Linux/.NET 10
-# the runs complete but end elsewhere. Verified deterministic (bit-identical across runs) and
-# independent of the ported discovery order; most likely platform floating point (glibc libm
-# vs Windows CRT) amplified by the search. Exact cause unconfirmed: needs a Windows baseline.
-ParameterlessPopulationPyramid.Test.ParameterlessPopulationPyramidTest.P3HIFF                             # same best quality, found later
-HeuristicLab.Tests.GaussianProcessRegressionSampleTest.RunGaussianProcessRegressionSample                 # other local optimum of the likelihood
-HeuristicLab.Tests.GAGroupingProblemSampleTest.RunGaGroupingProblemSampleTest                             # 129 vs 127
-HeuristicLab.Tests.GPSymbolicRegressionSampleWithOSTest.RunGPSymbolicRegressionSampleWithOSTest           # R² 0.912 vs 0.996
-HeuristicLab.Tests.PsoRastriginSampleTest.RunPsoRastriginSampleTest                                       # 0.002 vs 3.965 (better)
-HeuristicLab.Tests.ShapeConstrainedRegressionSampleTest.RunShapeConstrainedRegressionSampleTest           # 0.451 vs 0.036
-HeuristicLab.Tests.StructureTemplateRegressionSampleTest.RunStructureTemplateRegressionSampleTest         # 1.3e-5 vs 5.0e-7
+# Run.Daily: final results of seeded runs, recorded on .NET Framework. The runs complete but end
+# elsewhere; deterministic (bit-identical across runs). Windows .NET 10 baseline (2026-10-08):
+# P3HIFF and the Gaussian process sample pass there, so those two are Linux libm. The other three
+# differ on Windows .NET 10 as well; to be decided by the net472 run of the port (see CLAUDE.md).
+ParameterlessPopulationPyramid.Test.ParameterlessPopulationPyramidTest.P3HIFF                             # Linux libm: same best quality, found later
+HeuristicLab.Tests.GaussianProcessRegressionSampleTest.RunGaussianProcessRegressionSample                 # Linux libm: other local optimum
+HeuristicLab.Tests.GPSymbolicRegressionSampleWithOSTest.RunGPSymbolicRegressionSampleWithOSTest           # open: R² 0.912 vs 0.996
+HeuristicLab.Tests.ShapeConstrainedRegressionSampleTest.RunShapeConstrainedRegressionSampleTest           # open: 0.451 vs 0.036
+HeuristicLab.Tests.StructureTemplateRegressionSampleTest.RunStructureTemplateRegressionSampleTest         # open: 8.6e-5 vs 5.0e-7
