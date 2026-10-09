@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Image resources (VSImageLibrary) behind Item.ItemImage. Bitmaps are passed through as
+       preserialized resources and materialized via System.Drawing.Common, which is Windows-only
+       at runtime on modern .NET: only touch these from a Windows front end until ItemImage is
+       replaced by a view-side icon registry. -->
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Common.Resources\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Common.Resources-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Common.Resources</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Common.Resources</AssemblyTitle>
+    <Description>This assembly contains common resources</Description>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(LegacyDir)VSImageLibrary.resx" LogicalName="HeuristicLab.Common.Resources.VSImageLibrary.resources" />
+    <EmbeddedResource Include="$(LegacyDir)HeuristicLab.resx" LogicalName="HeuristicLab.Common.Resources.HeuristicLab.resources" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="System.Resources.Extensions" />
+  </ItemGroup>
+
+</Project>

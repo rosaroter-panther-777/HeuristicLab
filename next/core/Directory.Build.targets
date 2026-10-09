@@ -1,0 +1,40 @@
+<Project>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile Condition="'$(AssemblyOriginatorKeyFile)' == ''">$(LegacyDir)HeuristicLab.snk</AssemblyOriginatorKeyFile>
+    <!-- Plugin.cs and Properties/AssemblyInfo.cs generated from .frame files by the legacy build are
+         replaced by SDK assembly attributes. Projects without frames (most ExtLibs) keep their real
+         AssemblyInfo.cs and Plugin.cs as ordinary sources. -->
+    <_HlGeneratedFiles Condition="Exists('$(LegacyDir)Plugin.cs.frame')">$(LegacyDir)Plugin.cs</_HlGeneratedFiles>
+    <_HlGeneratedFiles Condition="Exists('$(LegacyDir)Properties\AssemblyInfo.cs.frame')">$(_HlGeneratedFiles);$(LegacyDir)Properties\AssemblyInfo.cs</_HlGeneratedFiles>
+    <GenerateAssemblyInfo Condition="!Exists('$(LegacyDir)Properties\AssemblyInfo.cs.frame') And Exists('$(LegacyDir)Properties\AssemblyInfo.cs')">false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <!-- Linked legacy sources: exactly the Compile items of the legacy csproj, in its order. The order
+       matters: it is the type order of the assembly, which plugin discovery follows, and callers take
+       defaults from the first discovered type. Projects add exclusions via LegacyExclude
+       (semicolon-separated, each prefixed with $(LegacyDir)). -->
+  <PropertyGroup>
+    <_HlLegacyDirFull>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(LegacyDir)'))</_HlLegacyDirFull>
+    <_HlLegacyProject Condition="Exists('$(_HlLegacyDirFull)')">$([System.IO.Directory]::GetFiles('$(_HlLegacyDirFull)', '*.csproj'))</_HlLegacyProject>
+    <!-- every <Compile Include="x"> of the legacy project, in document order, as "x;x;..." -->
+    <_HlLegacyCompileList Condition="'$(_HlLegacyProject)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.File]::ReadAllText('$(_HlLegacyProject)')), '(?s)(?:.*?&lt;Compile\s+Include="([^"]+)")|(?:.+)', '$1;'))</_HlLegacyCompileList>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(_HlLegacyProject)' != ''">
+    <!-- property function results come back escaped; unescape to split at the semicolons -->
+    <_HlLegacyCompile Include="$([MSBuild]::Unescape($(_HlLegacyCompileList)))" />
+    <Compile Include="@(_HlLegacyCompile->'$(LegacyDir)%(Identity)')"
+             Exclude="$(_HlGeneratedFiles);$(LegacyExclude)" />
+  </ItemGroup>
+
+  <!-- Vendored sources without a legacy csproj (next/extlibs/HEAL.Attic): all files. -->
+  <ItemGroup Condition="'$(_HlLegacyProject)' == ''">
+    <Compile Include="$(LegacyDir)**\*.cs"
+             Exclude="$(LegacyDir)bin\**;$(LegacyDir)obj\**;$(_HlGeneratedFiles);$(LegacyExclude)"
+             LinkBase="Legacy" />
+  </ItemGroup>
+
+  <Target Name="_HlCheckLegacyProject" BeforeTargets="CoreCompile" Condition="$(_HlLegacyProject.Contains(';'))">
+    <Error Text="More than one legacy csproj in $(LegacyDir): $(_HlLegacyProject)" />
+  </Target>
+</Project>

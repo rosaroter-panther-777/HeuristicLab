@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Algorithms.DataAnalysis.DecisionTrees\3.4\</LegacyDir>
+    <AssemblyName>HeuristicLab.Algorithms.DataAnalysis.DecisionTrees-3.4</AssemblyName>
+    <RootNamespace>HeuristicLab.Algorithms.DataAnalysis</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Algorithms.DataAnalysis.DecisionTrees</AssemblyTitle>
+    <Description>Provides algorithms for learning decision trees for regression.</Description>
+    <AssemblyVersion>3.4.0</AssemblyVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\extlibs\ALGLIB-3.17.0\ALGLIB-3.17.0.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Algorithms.DataAnalysis.Glmnet\HeuristicLab.Algorithms.DataAnalysis.Glmnet.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Algorithms.DataAnalysis\HeuristicLab.Algorithms.DataAnalysis.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Analysis\HeuristicLab.Analysis.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Data\HeuristicLab.Data.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Encodings.PermutationEncoding\HeuristicLab.Encodings.PermutationEncoding.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Encodings.SymbolicExpressionTreeEncoding\HeuristicLab.Encodings.SymbolicExpressionTreeEncoding.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Optimization\HeuristicLab.Optimization.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Parameters\HeuristicLab.Parameters.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.DataAnalysis\HeuristicLab.Problems.DataAnalysis.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.Instances\HeuristicLab.Problems.Instances.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Random\HeuristicLab.Random.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\extlibs\HEAL.Attic\HEAL.Attic.csproj" />
+    <PackageReference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>

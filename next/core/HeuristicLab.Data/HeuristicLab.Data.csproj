@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Data\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Data-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Data</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Data</AssemblyTitle>
+    <Description>HeuristicLab data classes</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Common.Resources\HeuristicLab.Common.Resources.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\extlibs\HEAL.Attic\HEAL.Attic.csproj" />
+  </ItemGroup>
+
+</Project>

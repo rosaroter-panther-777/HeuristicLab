@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Problems.Instances.VehicleRouting\3.4\</LegacyDir>
+    <AssemblyName>HeuristicLab.Problems.Instances.VehicleRouting-3.4</AssemblyName>
+    <RootNamespace>HeuristicLab.Problems.Instances.VehicleRouting</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Problems.Instances.VehicleRouting</AssemblyTitle>
+    <AssemblyVersion>3.4.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(LegacyDir)Data\Augerat.opt.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Augerat.opt.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\Augerat.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Augerat.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\ChristofidesEilon.opt.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.ChristofidesEilon.opt.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\ChristofidesEilon.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.ChristofidesEilon.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\Solomon.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Solomon.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\Homberger.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Homberger.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\LiLim.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.LiLim.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\Golden.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Golden.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\Christofides.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Christofides.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\Kytojoki.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Kytojoki.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\Taillard.opt.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Taillard.opt.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\Taillard.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Taillard.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\CordeauMD.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.CordeauMD.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\CordeauMDTW.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.CordeauMDTW.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\CordeauMD.opt.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.CordeauMD.opt.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\CordeauMDTW.opt.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.CordeauMDTW.opt.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\Homberger.opt.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Homberger.opt.zip" />
+    <EmbeddedResource Include="$(LegacyDir)Data\Solomon.opt.zip" LogicalName="HeuristicLab.Problems.Instances.VehicleRouting.Data.Solomon.opt.zip" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.Instances.TSPLIB\HeuristicLab.Problems.Instances.TSPLIB.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.Instances\HeuristicLab.Problems.Instances.csproj" />
+  </ItemGroup>
+
+</Project>

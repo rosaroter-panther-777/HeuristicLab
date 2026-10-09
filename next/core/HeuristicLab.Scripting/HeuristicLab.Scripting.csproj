@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Scripting\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Scripting-3.3</AssemblyName>
+    <!-- Script.cs is replaced: compiles with Roslyn (CSharpCodeProvider cannot compile on .NET Core) -->
+    <LegacyExclude>$(LegacyDir)Script.cs</LegacyExclude>
+    <RootNamespace>HeuristicLab.Scripting</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Scripting</AssemblyTitle>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(LegacyDir)Scripts\Templates\ScriptTemplates.resx" LogicalName="HeuristicLab.Scripting.Scripts.Templates.ScriptTemplates.resources" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Script.cs" />
+    <Compile Include="..\Shared\RoslynCompiler.cs" Link="Shared\RoslynCompiler.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common.Resources\HeuristicLab.Common.Resources.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\extlibs\HEAL.Attic\HEAL.Attic.csproj" />
+    <PackageReference Include="Microsoft.CSharp" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="System.CodeDom" />
+    <PackageReference Include="System.Resources.Extensions" />
+  </ItemGroup>
+
+</Project>

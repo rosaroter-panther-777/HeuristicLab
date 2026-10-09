@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Problems.Instances.DIMACS\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Problems.Instances.DIMACS-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Problems.Instances.DIMACS</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Problems.Instances.DIMACS</AssemblyTitle>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(LegacyDir)Data\col.zip" LogicalName="HeuristicLab.Problems.Instances.DIMACS.Data.col.zip" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.Instances\HeuristicLab.Problems.Instances.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Persistence\3.3\</LegacyDir>
+    <!-- Transformers\*: dead files, on disk but not in the legacy csproj (they target an
+         unreleased HEAL.Attic Box API). TypeSerializer.cs: replaced, see below. -->
+    <LegacyExclude>
+      $(LegacyDir)Transformers\BitmapTransformer.cs;
+      $(LegacyDir)Transformers\FontTransformer.cs;
+      $(LegacyDir)Transformers\KnownStorableTypesMap.cs;
+      $(LegacyDir)Default\CompositeSerializers\TypeSerializer.cs
+    </LegacyExclude>
+    <AssemblyName>HeuristicLab.Persistence-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Persistence</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Persistence</AssemblyTitle>
+    <Description>General Purpose Persistence Framework.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- replacement: also accepts System.RuntimeType from System.Private.CoreLib -->
+    <Compile Include="TypeSerializer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Tracing\HeuristicLab.Tracing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\extlibs\HEAL.Attic\HEAL.Attic.csproj" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" />
+  </ItemGroup>
+
+</Project>

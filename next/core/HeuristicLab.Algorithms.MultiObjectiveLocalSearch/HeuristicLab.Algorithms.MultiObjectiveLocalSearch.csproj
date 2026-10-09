@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Algorithms.MultiObjectiveLocalSearch\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Algorithms.MultiObjectiveLocalSearch-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Algorithms.MultiObjectiveLocalSearch</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Algorithms.MultiObjectiveLocalSearch</AssemblyTitle>
+    <Description>Local search algorithms for multi-objective problems</Description>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Analysis\HeuristicLab.Analysis.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Data\HeuristicLab.Data.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Operators\HeuristicLab.Operators.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Optimization.Operators\HeuristicLab.Optimization.Operators.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Optimization\HeuristicLab.Optimization.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Parameters\HeuristicLab.Parameters.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Random\HeuristicLab.Random.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Selection\HeuristicLab.Selection.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\extlibs\HEAL.Attic\HEAL.Attic.csproj" />
+    <PackageReference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>

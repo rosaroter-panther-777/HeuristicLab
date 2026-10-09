@@ -1,0 +1,4 @@
+<Project>
+  <!-- ExtLibs ports share the settings of next/core. -->
+  <Import Project="..\core\Directory.Build.targets" />
+</Project>

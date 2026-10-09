@@ -1,0 +1,39 @@
+# Legacy tests that cannot pass on Linux / .NET 10, excluded by next/tools/run-tests.sh.
+# Format: fully qualified test name, then '#' and the reason. Keep this list short and
+# justified: anything failing that is not listed here is a regression.
+
+# Windows-only: System.Drawing.Common (GDI+) is not supported off Windows
+HeuristicLab.Persistence.Tests.UseCases.BitmapTest                 # System.Drawing Bitmap
+HeuristicLab.Persistence.Tests.UseCases.ConcurrentBitmapTest       # System.Drawing Bitmap
+HeuristicLab.Persistence.Tests.UseCases.FontTest                   # System.Drawing Font
+HeuristicLab.Persistence.Attic.Tests.UseCases.BitmapTest           # System.Drawing Bitmap
+HeuristicLab.Persistence.Attic.Tests.UseCases.ConcurrentBitmapTest # System.Drawing Bitmap
+HeuristicLab.Persistence.Attic.Tests.UseCases.FontTest             # System.Drawing Font
+
+# Windows-only: hl-native-interpreter.dll is a Windows binary (no Linux build exists)
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.NativeInterpreterTestParameterOptimization
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.NativeInterpreterTestParameterOptimizationVarPro
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.NativeInterpreterTestParameterOptimizationVarProNoParameters
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.ParameterOptimizationConsistency
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.TestInterpretersEstimatedValuesConsistency  # includes the native interpreter
+
+# .NET Core runtime semantics differ from .NET Framework (behavior is correct, expectation is Framework-specific)
+HeuristicLab.Persistence.Tests.UseCases.TestTypeStringConversion   # core types live in System.Private.CoreLib, not mscorlib
+HeuristicLab.Persistence.Tests.UseCases.TestAssemblyVersionCheck   # Core binder ignores assembly version mismatches
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.DerivativeTest.DeriveExpressions  # double.ToString prints shortest round-trip (16 digits)
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.IntervalInterpreterTest.TestIntervalInterpreterTan  # hard-codes .NET Framework's tan(pi/2)
+
+# Run.Daily, Windows-only: hl-native-interpreter.dll performance tests
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.NativeInterpreterTestTypeCoherentGrammarPerformance
+HeuristicLab.Problems.DataAnalysis.Symbolic.Tests.SymbolicDataAnalysisExpressionTreeInterpreterTest.NativeInterpreterTestArithmeticGrammarPerformance
+
+# Run.Daily: final results of seeded runs, recorded on .NET Framework. The runs complete but end
+# elsewhere; deterministic (bit-identical across runs). Verified on Windows (docs/windows-baseline.md):
+# the port on .NET Framework 4.7.2 reproduces all recorded values, so these are runtime differences,
+# not port defects. P3HIFF and the Gaussian process sample also pass on Windows .NET 10 (Linux libm);
+# the other three differ on .NET 10 on both OSes (.NET Framework vs .NET runtime).
+ParameterlessPopulationPyramid.Test.ParameterlessPopulationPyramidTest.P3HIFF                             # Linux libm: same best quality, found later
+HeuristicLab.Tests.GaussianProcessRegressionSampleTest.RunGaussianProcessRegressionSample                 # Linux libm: other local optimum
+HeuristicLab.Tests.GPSymbolicRegressionSampleWithOSTest.RunGPSymbolicRegressionSampleWithOSTest           # .NET runtime: R² 0.912 (Win .NET 10: 0.993) vs 0.996
+HeuristicLab.Tests.ShapeConstrainedRegressionSampleTest.RunShapeConstrainedRegressionSampleTest           # .NET runtime: 0.451 vs 0.036
+HeuristicLab.Tests.StructureTemplateRegressionSampleTest.RunStructureTemplateRegressionSampleTest         # .NET runtime: 8.6e-5 (Win .NET 10: 4.2e-7) vs 5.0e-7

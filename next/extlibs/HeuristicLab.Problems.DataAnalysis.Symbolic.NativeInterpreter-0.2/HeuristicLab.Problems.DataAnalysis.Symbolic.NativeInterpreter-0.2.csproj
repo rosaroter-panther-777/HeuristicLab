@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.ExtLibs\HeuristicLab.NativeInterpreter\0.2\HeuristicLab.NativeInterpreter-0.2\</LegacyDir>
+    <AssemblyName>HeuristicLab.Problems.DataAnalysis.Symbolic.NativeInterpreter-0.2</AssemblyName>
+    <RootNamespace>HeuristicLab.Problems.DataAnalysis.Symbolic.NativeInterpreter</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(LegacyDir)hl-native-interpreter.dll" Link="hl-native-interpreter.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

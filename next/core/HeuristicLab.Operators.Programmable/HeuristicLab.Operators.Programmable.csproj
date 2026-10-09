@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Operators.Programmable\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Operators.Programmable-3.3</AssemblyName>
+    <!-- ProgrammableOperator.cs is replaced: compiles with Roslyn (CSharpCodeProvider cannot compile on .NET Core) -->
+    <LegacyExclude>$(LegacyDir)ProgrammableOperator.cs</LegacyExclude>
+    <RootNamespace>HeuristicLab.Operators.Programmable</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Operators.Programmable</AssemblyTitle>
+    <Description>HeuristicLab programmable operator classes</Description>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="ProgrammableOperator.cs" />
+    <Compile Include="..\Shared\RoslynCompiler.cs" Link="Shared\RoslynCompiler.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Collections\HeuristicLab.Collections.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common.Resources\HeuristicLab.Common.Resources.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Core\HeuristicLab.Core.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Data\HeuristicLab.Data.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Operators\HeuristicLab.Operators.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Parameters\HeuristicLab.Parameters.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Persistence\HeuristicLab.Persistence.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\extlibs\HEAL.Attic\HEAL.Attic.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="System.CodeDom" />
+  </ItemGroup>
+
+</Project>

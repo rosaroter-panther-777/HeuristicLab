@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <LegacyDir>..\..\..\HeuristicLab.Problems.Instances.Orienteering\3.3\</LegacyDir>
+    <AssemblyName>HeuristicLab.Problems.Instances.Orienteering-3.3</AssemblyName>
+    <RootNamespace>HeuristicLab.Problems.Instances.Orienteering</RootNamespace>
+    <AssemblyTitle>HeuristicLab.Problems.Instances.Orienteering</AssemblyTitle>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(LegacyDir)Data\Schilde.zip" LogicalName="HeuristicLab.Problems.Instances.Orienteering.Data.Schilde.zip" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HeuristicLab.Common\HeuristicLab.Common.csproj" />
+    <ProjectReference Include="..\HeuristicLab.PluginInfrastructure\HeuristicLab.PluginInfrastructure.csproj" />
+    <ProjectReference Include="..\HeuristicLab.Problems.Instances\HeuristicLab.Problems.Instances.csproj" />
+  </ItemGroup>
+
+</Project>
