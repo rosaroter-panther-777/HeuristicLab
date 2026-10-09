@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             x:Class="HeuristicLab.Studio.Views.ParameterListView"
+             x:DataType="vm:ParameterListViewModel">
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="No parameters" Opacity="0.6" IsVisible="{Binding IsEmpty}" />
+        <ListBox DockPanel.Dock="{Binding ListDock}" Width="{Binding ListWidth}" MaxHeight="{Binding ListMaxHeight}"
+                 ItemsSource="{Binding Parameters}" SelectedItem="{Binding Selected}" Margin="0,0,10,8"
+                 IsVisible="{Binding !IsEmpty}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:ParameterNodeViewModel">
+                    <Grid ColumnDefinitions="*,Auto" ToolTip.Tip="{Binding Description}">
+                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="1" Text="{Binding Summary}" Opacity="0.65" MaxWidth="150"
+                                   TextTrimming="CharacterEllipsis" Margin="8,0,0,0" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <ContentControl Content="{Binding Selected}" />
+    </DockPanel>
+</UserControl>

@@ -49,12 +49,37 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
   partial void OnSelectedChanged(BlockViewModel? oldValue, BlockViewModel? newValue) {
     if (oldValue != null) { oldValue.IsSelected = false; oldValue.IsEditingName = false; }
     if (newValue != null) newValue.IsSelected = true;
+    Detail = newValue switch {
+      AlgorithmBlockViewModel a => a.ShowDetail(AlgorithmDetailViewModel.AlgorithmTab),
+      ProblemBlockViewModel p => p.Owner.ShowDetail(AlgorithmDetailViewModel.ProblemTab),
+      _ => newValue
+    };
   }
 
+  /// <summary>What the right-hand side shows: an algorithm's detail (tabs) or a container's settings.</summary>
+  [ObservableProperty]
+  public partial ViewModelBase? Detail { get; set; }
+
+  /// <summary>Experiments or a single algorithm are running (or paused): the tree cannot change.</summary>
   [ObservableProperty]
   [NotifyCanExecuteChangedFor(nameof(StartAllCommand), nameof(StartSelectedCommand), nameof(StopCommand))]
   [NotifyPropertyChangedFor(nameof(IsEditable))]
   public partial bool IsRunning { get; set; }
+
+  /// <summary>Experiments started with the start buttons are running.</summary>
+  [ObservableProperty]
+  [NotifyCanExecuteChangedFor(nameof(StopCommand))]
+  public partial bool IsRunningExperiments { get; set; }
+
+  private bool algorithmRunning;
+
+  /// <summary>An algorithm started from its detail view runs or is paused.</summary>
+  public void SetAlgorithmRunning(bool running) {
+    algorithmRunning = running;
+    IsRunning = IsRunningExperiments || algorithmRunning;
+  }
+
+  partial void OnIsRunningChanged(bool value) => (Detail as AlgorithmDetailViewModel)?.Refresh();
 
   /// <summary>Building blocks cannot change while experiments run.</summary>
   public bool IsEditable => !IsRunning;
@@ -174,6 +199,7 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
   }
 
   public void SetProblem(AlgorithmBlockViewModel block, IProblem? problem) {
+    if (IsRunning) return;
     block.SetProblem(problem);
     if (block.Problem != null) Selected = block.Problem;
     RefreshState();
@@ -235,7 +261,7 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
   private bool CanStart(System.Collections.Generic.IReadOnlyList<ExperimentBlockViewModel> experiments) =>
     !IsRunning && !busyElsewhere() && experiments.Count > 0 && experiments.All(e => e.IsReady);
 
-  [RelayCommand(CanExecute = nameof(IsRunning))]
+  [RelayCommand(CanExecute = nameof(IsRunningExperiments))]
   private void Stop() => stopSource?.Cancel();
 
   /// <summary>
@@ -244,8 +270,8 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
   /// its own seed setting (random by default).
   /// </summary>
   private async Task StartAsync(System.Collections.Generic.IReadOnlyList<ExperimentBlockViewModel> experiments) {
+    IsRunningExperiments = true;
     IsRunning = true;
-    Selected = null;
     stopSource = new CancellationTokenSource();
     var folder = resultsFolder();
     var store = folder == null ? null : new ResultStore(folder);
@@ -270,12 +296,18 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
       Status = $"{reports.Count(r => r.Outcome == RunOutcome.Completed)} of {reports.Length} experiments completed, " +
                $"{reports.Sum(r => r.Runs.Count)} runs" + (store != null ? $", stored in {store.Directory}" : "");
     } finally {
-      IsRunning = false;
+      IsRunningExperiments = false;
+      IsRunning = algorithmRunning;
+      (Detail as AlgorithmDetailViewModel)?.Refresh();
+      foreach (var a in AllBlocks(Experiments).OfType<AlgorithmBlockViewModel>()) a.RefreshCounts();
       stopSource.Dispose();
       stopSource = null;
       RefreshState();
     }
   }
+
+  private static System.Collections.Generic.IEnumerable<BlockViewModel> AllBlocks(System.Collections.Generic.IEnumerable<BlockViewModel> blocks) =>
+    blocks.SelectMany(b => b is ContainerBlockViewModel c ? AllBlocks(c.Children).Prepend(b) : [b]);
 
   // ---- formatting
 

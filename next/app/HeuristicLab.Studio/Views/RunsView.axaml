@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             x:Class="HeuristicLab.Studio.Views.RunsView"
+             x:DataType="vm:RunsViewModel">
+    <Grid RowDefinitions="Auto,*,Auto" >
+        <TextBlock Text="No runs yet." Opacity="0.6" IsVisible="{Binding IsEmpty}" />
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" IsVisible="{Binding !IsEmpty}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="12,0,0,4">
+                    <TextBlock Text="Run" Width="160" FontWeight="SemiBold" />
+                    <ItemsControl ItemsSource="{Binding Columns}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBlock Text="{Binding}" Width="140" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding}" Margin="0,0,6,0" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Rows}" SelectedItem="{Binding Selected}" MaxHeight="300">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:RunTableRow">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Name}" Width="160" TextTrimming="CharacterEllipsis" />
+                                <ItemsControl ItemsSource="{Binding Cells}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <TextBlock Text="{Binding}" Width="140" TextTrimming="CharacterEllipsis" Margin="0,0,6,0" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </ScrollViewer>
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding SelectedDetails}" Margin="0,10,0,0">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:NameValue">
+                    <Grid ColumnDefinitions="300,*" Margin="0,1">
+                        <TextBlock Text="{Binding Name}" Opacity="0.75" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="1" Text="{Binding Value}" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</UserControl>

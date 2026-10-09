@@ -88,6 +88,16 @@ public partial class ContainerBlockViewModel : BlockViewModel {
 
   public IOptimizer Optimizer { get; }
   public override INamedItem Item => Optimizer;
+
+  private RunsViewModel? runs;
+  /// <summary>Runs collected by this experiment, batch run or time-limit run.</summary>
+  public RunsViewModel Runs {
+    get {
+      runs ??= new RunsViewModel(Optimizer.Runs);
+      runs.Refresh();
+      return runs;
+    }
+  }
   public ObservableCollection<BlockViewModel> Children { get; } = [];
   public IReadOnlyList<MenuChoice> AddChoices { get; }
 
@@ -197,6 +207,41 @@ public partial class AlgorithmBlockViewModel : BlockViewModel {
   [RelayCommand]
   private Task ChooseProblemAsync() => Workspace.ChooseProblemAsync(this);
 
+  private AlgorithmDetailViewModel? detail;
+
+  /// <summary>The detail view (kept per block, so tabs and selections stay while switching blocks).</summary>
+  public AlgorithmDetailViewModel Detail => detail ??= new AlgorithmDetailViewModel(this);
+
+  public AlgorithmDetailViewModel ShowDetail(int tab) {
+    Detail.SelectedTab = tab;
+    return Detail;
+  }
+
+  /// <summary>Tree expansion as in HeuristicLab: problem, parameters, results and runs below the algorithm.</summary>
+  [ObservableProperty]
+  public partial bool IsExpanded { get; set; }
+
+  [RelayCommand]
+  private void ToggleExpanded() => IsExpanded = !IsExpanded;
+
+  public string ParametersText => $"Parameters ({ItemInspector.Parameters(Algorithm).Count})";
+  public string ResultsText => $"Results ({Algorithm.Results.Count})";
+  public string RunsText => $"Runs ({Algorithm.Runs.Count})";
+
+  partial void OnIsExpandedChanged(bool value) => RefreshCounts();
+
+  public void RefreshCounts() {
+    OnPropertyChanged(nameof(ParametersText));
+    OnPropertyChanged(nameof(ResultsText));
+    OnPropertyChanged(nameof(RunsText));
+  }
+
+  [RelayCommand]
+  private void OpenTab(string tab) {
+    Workspace.Selected = this;
+    Detail.SelectedTab = int.Parse(tab, System.Globalization.CultureInfo.InvariantCulture);
+  }
+
   [RelayCommand]
   private void ShowInRunTab() => Workspace.ShowInRunTab(this);
 
@@ -217,6 +262,7 @@ public partial class AlgorithmBlockViewModel : BlockViewModel {
       }
     }
     Problem = problem == null ? null : new ProblemBlockViewModel(Workspace, this, problem);
+    detail?.RefreshProblem();
   }
 }
 

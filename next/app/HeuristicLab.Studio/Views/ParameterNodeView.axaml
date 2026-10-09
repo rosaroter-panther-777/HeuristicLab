@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             x:Class="HeuristicLab.Studio.Views.ParameterNodeView"
+             x:DataType="vm:ParameterNodeViewModel">
+    <Border BorderThickness="1" CornerRadius="4" Padding="10"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <StackPanel Spacing="6">
+            <Grid ColumnDefinitions="90,*" RowDefinitions="Auto,Auto" RowSpacing="4">
+                <TextBlock Text="Name" Opacity="0.7" />
+                <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock Grid.Row="1" Text="Data type" Opacity="0.7" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DataType}" TextWrapping="Wrap" />
+            </Grid>
+            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" />
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <CheckBox Content="Show in Run" IsChecked="{Binding ShowInRun}" IsVisible="{Binding HasShowInRun}"
+                          ToolTip.Tip="Record this value in every run" />
+                <Button Content="Clear value" Command="{Binding ClearCommand}" IsVisible="{Binding CanClear}" />
+            </StackPanel>
+            <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding SelectedChoice}" IsVisible="{Binding IsChoice}"
+                      HorizontalAlignment="Stretch" DisplayMemberBinding="{Binding Display, x:DataType=vm:ChoiceItem}" />
+            <ContentControl Content="{Binding Editor}" />
+        </StackPanel>
+    </Border>
+</UserControl>

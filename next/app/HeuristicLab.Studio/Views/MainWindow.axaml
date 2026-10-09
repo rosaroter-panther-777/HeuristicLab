@@ -10,7 +10,7 @@
         x:Class="HeuristicLab.Studio.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Width="1100" Height="700" MinWidth="720" MinHeight="460"
+        Width="1440" Height="880" MinWidth="900" MinHeight="560"
         Title="{Binding Title}">
 
     <Design.DataContext>

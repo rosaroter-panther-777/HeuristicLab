@@ -34,6 +34,16 @@
   when complete; no seed is imposed (a fixed seed would make batch repetitions identical).
   Legacy algorithms crash on Problem = null (OnProblemChanged): clone problems instead of
   detaching them; "Remove problem" tolerates exactly that crash.
+  Algorithm detail (click an algorithm or its problem): tabs Problem (library/instance, typed
+  parameters, coordinates + best known tour), Algorithm, Results (live, tables as charts), Runs,
+  Operator Graph (layered from the initial operator, nested graphs, breakpoints), Engine (choice,
+  log); Start/Pause/Stop/Prepare. Parameter editing via runtime ItemInspector/CheckedList:
+  bool, text, choices with nested parameters, arrays/matrices, checked lists (analyzers), Show in
+  Run (GetsCollected). Views are found by ViewLocator (XyzViewModel -> XyzView), so nested
+  editors recurse.
+  HeuristicLab facts behind it: only the Debug Engine honors breakpoints; Prepare() gives an
+  algorithm a new Results collection (never cache it); an algorithm's valid operators (move
+  generators, ...) come from its problem, so rebuild parameter views after a problem change.
   New dialog (algorithm -> compatible problem -> benchmark instance or CSV/Parquet data, via
   Setups.Create like "hl new"), open/save .hl, editable parameters (text or operator choice,
   via ParameterEditor; invalid input reverted), run with seed or batches (runs, parallel,

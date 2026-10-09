@@ -21,6 +21,18 @@ public static class ProblemInstances {
         .Select(d => new ProblemInstance(p.Provider.Name, d.Name, d.Description ?? "")))
       .ToList();
 
+  /// <summary>
+  /// The library instance a problem was loaded from, found by its name (problems take the
+  /// instance's name when loaded); null for problems not from a library (or renamed ones).
+  /// </summary>
+  public static ProblemInstance? Origin(IProblem problem) {
+    var name = problem.Name;
+    return Providers(problem)
+      .SelectMany(p => Descriptors(p.Provider, p.DataType).Where(d => d.Name == name)
+        .Select(d => new ProblemInstance(p.Provider.Name, d.Name, d.Description ?? "")))
+      .FirstOrDefault();
+  }
+
   /// <summary>Loads an instance by name or "Provider/Name" into the problem.</summary>
   public static ProblemInstance Load(IProblem problem, string name) {
     var matches = Providers(problem)

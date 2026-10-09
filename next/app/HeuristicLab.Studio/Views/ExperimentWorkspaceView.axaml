@@ -78,6 +78,16 @@
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="TextElement.Foreground" Value="{StaticResource InkBrush}" />
         </Style>
+        <Style Selector="Button.toggle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="2,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="4,1" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
         <Style Selector="Border.block.selected">
             <Setter Property="BorderBrush" Value="{StaticResource BlockSelectedBrush}" />
         </Style>
@@ -86,14 +96,24 @@
     <UserControl.DataTemplates>
         <!-- algorithm row: algorithm left, its problem (or the add-problem button) right -->
         <DataTemplate DataType="vm:AlgorithmBlockViewModel">
-            <Grid ColumnDefinitions="260,20,300">
-                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource Block}" HorizontalAlignment="Stretch" />
-                <Rectangle Grid.Column="1" Height="1" Fill="{StaticResource BlockBrush}" VerticalAlignment="Center" />
-                <ContentControl Grid.Column="2" Content="{Binding Problem}" ContentTemplate="{StaticResource Block}"
-                                IsVisible="{Binding HasProblem}" HorizontalAlignment="Stretch" />
-                <Button Grid.Column="2" Classes="action" Content="+ Add problem" Command="{Binding ChooseProblemCommand}"
-                        IsVisible="{Binding !HasProblem}" />
-            </Grid>
+            <StackPanel Spacing="3">
+                <Grid ColumnDefinitions="22,236,20,280">
+                    <Button Classes="toggle" Content="&#x25B8;" Command="{Binding ToggleExpandedCommand}" IsVisible="{Binding !IsExpanded}"
+                            ToolTip.Tip="Show parameters, results and runs" />
+                    <Button Classes="toggle" Content="&#x25BE;" Command="{Binding ToggleExpandedCommand}" IsVisible="{Binding IsExpanded}" />
+                    <ContentControl Grid.Column="1" Content="{Binding}" ContentTemplate="{StaticResource Block}" HorizontalAlignment="Stretch" />
+                    <Rectangle Grid.Column="2" Height="1" Fill="{StaticResource BlockBrush}" VerticalAlignment="Center" />
+                    <ContentControl Grid.Column="3" Content="{Binding Problem}" ContentTemplate="{StaticResource Block}"
+                                    IsVisible="{Binding HasProblem}" HorizontalAlignment="Stretch" />
+                    <Button Grid.Column="3" Classes="action" Content="+ Add problem" Command="{Binding ChooseProblemCommand}"
+                            IsVisible="{Binding !HasProblem}" />
+                </Grid>
+                <StackPanel Margin="40,0,0,2" Spacing="0" IsVisible="{Binding IsExpanded}">
+                    <Button Classes="link" Content="{Binding ParametersText}" Command="{Binding OpenTabCommand}" CommandParameter="1" />
+                    <Button Classes="link" Content="{Binding ResultsText}" Command="{Binding OpenTabCommand}" CommandParameter="2" />
+                    <Button Classes="link" Content="{Binding RunsText}" Command="{Binding OpenTabCommand}" CommandParameter="3" />
+                </StackPanel>
+            </StackPanel>
         </DataTemplate>
         <!-- batch run / time-limit run: heading, indented children, own add button -->
         <DataTemplate DataType="vm:ContainerBlockViewModel">
@@ -111,7 +131,7 @@
         </DataTemplate>
     </UserControl.DataTemplates>
 
-    <Grid ColumnDefinitions="*,4,360">
+    <Grid ColumnDefinitions="640,4,*">
         <DockPanel Margin="12">
             <!-- global start controls -->
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
@@ -167,12 +187,12 @@
 
         <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
 
-        <!-- details of the selected block -->
-        <ScrollViewer Grid.Column="2" Margin="12" IsEnabled="{Binding IsEditable}">
-            <ContentControl Content="{Binding Selected}">
-                <ContentControl.DataTemplates>
-                    <DataTemplate DataType="vm:ExperimentBlockViewModel">
-                        <StackPanel Spacing="8">
+        <!-- details of the selected block: algorithm tabs, or a container's settings and runs -->
+        <ContentControl Grid.Column="2" Margin="12" Content="{Binding Detail}">
+            <ContentControl.DataTemplates>
+                <DataTemplate DataType="vm:ExperimentBlockViewModel">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Spacing="8" IsEnabled="{Binding $parent[UserControl].((vm:ExperimentWorkspaceViewModel)DataContext).IsEditable}">
                             <TextBlock Text="{Binding Kind}" Opacity="0.7" />
                             <TextBox Text="{Binding Name}" />
                             <TextBlock Text="{Binding FilePath, FallbackValue='', TargetNullValue='Not saved yet'}" Opacity="0.7" TextWrapping="Wrap" />
@@ -183,10 +203,14 @@
                             </StackPanel>
                             <TextBlock Text="Runs keep their own seed settings (random by default), so repetitions differ."
                                        TextWrapping="Wrap" FontSize="12" Opacity="0.7" />
+                            <TextBlock Text="Runs" FontWeight="SemiBold" Margin="0,8,0,0" />
                         </StackPanel>
-                    </DataTemplate>
-                    <DataTemplate DataType="vm:ContainerBlockViewModel">
-                        <StackPanel Spacing="8">
+                        <ContentControl Content="{Binding Runs}" />
+                    </DockPanel>
+                </DataTemplate>
+                <DataTemplate DataType="vm:ContainerBlockViewModel">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Spacing="8" IsEnabled="{Binding $parent[UserControl].((vm:ExperimentWorkspaceViewModel)DataContext).IsEditable}">
                             <TextBlock Text="{Binding Kind}" Opacity="0.7" />
                             <TextBox Text="{Binding Name}" />
                             <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsBatchRun}">
@@ -199,30 +223,12 @@
                                 <TextBlock Text="Time limit" VerticalAlignment="Center" Width="100" />
                                 <TextBox Text="{Binding TimeLimitText, UpdateSourceTrigger=LostFocus}" Width="100" PlaceholderText="e.g. 5m" />
                             </StackPanel>
+                            <TextBlock Text="Runs" FontWeight="SemiBold" Margin="0,8,0,0" />
                         </StackPanel>
-                    </DataTemplate>
-                    <DataTemplate DataType="vm:BlockViewModel">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="{Binding Kind}" Opacity="0.7" />
-                            <TextBox Text="{Binding Name}" />
-                            <TextBlock Text="Parameters" FontWeight="SemiBold" IsVisible="{Binding HasParameters}" />
-                            <ItemsControl ItemsSource="{Binding Parameters}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:ParameterRowViewModel">
-                                        <Grid ColumnDefinitions="140,*" Margin="0,1" ToolTip.Tip="{Binding Description}">
-                                            <TextBlock Text="{Binding Name}" Opacity="0.75" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                                            <TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=LostFocus}" IsVisible="{Binding IsText}"
-                                                     IsReadOnly="{Binding !Editable}" MinHeight="26" Padding="6,2" />
-                                            <ComboBox Grid.Column="1" ItemsSource="{Binding Choices}" SelectedItem="{Binding Value}" IsVisible="{Binding IsChoice}"
-                                                      HorizontalAlignment="Stretch" MinHeight="26" Padding="6,2" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </DataTemplate>
-                </ContentControl.DataTemplates>
-            </ContentControl>
-        </ScrollViewer>
+                        <ContentControl Content="{Binding Runs}" />
+                    </DockPanel>
+                </DataTemplate>
+            </ContentControl.DataTemplates>
+        </ContentControl>
     </Grid>
 </UserControl>

@@ -1,0 +1,97 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             x:Class="HeuristicLab.Studio.Views.ValueEditorView"
+             x:DataType="vm:ValueEditorViewModel">
+    <UserControl.Styles>
+        <Style Selector="ListBox.cells ListBoxItem">
+            <Setter Property="Padding" Value="4,1" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </UserControl.Styles>
+    <StackPanel Spacing="6">
+        <StackPanel Orientation="Horizontal" Spacing="12" IsVisible="{Binding ObjectName, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBlock Text="{Binding ObjectName}" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding TypeName}" Opacity="0.65" VerticalAlignment="Center" />
+            <CheckBox Content="Breakpoint" IsChecked="{Binding Breakpoint}" IsVisible="{Binding HasBreakpoint}"
+                      ToolTip.Tip="Pause before this operator executes (with the Debug Engine)" />
+        </StackPanel>
+
+        <TextBlock Text="(no value)" Opacity="0.6" IsVisible="{Binding IsNone}" />
+        <CheckBox Content="True" IsChecked="{Binding Bool}" IsVisible="{Binding IsBool}" IsEnabled="{Binding !ReadOnly}" />
+        <TextBox Text="{Binding Text, UpdateSourceTrigger=LostFocus}" IsVisible="{Binding IsText}" IsReadOnly="{Binding ReadOnly}" />
+        <TextBlock Text="{Binding Text}" IsVisible="{Binding IsOther}" TextWrapping="Wrap" Opacity="0.8" />
+
+        <!-- arrays and matrices -->
+        <StackPanel Spacing="4" IsVisible="{Binding IsTable}">
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <TextBlock Text="{Binding TableInfo}" Opacity="0.75" />
+                <TextBlock Text="{Binding Details}" Opacity="0.75" />
+            </StackPanel>
+            <ListBox Classes="cells" ItemsSource="{Binding Rows}" MaxHeight="360" IsVisible="{Binding IsGrid}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CellRowViewModel">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding Index}" Width="44" Opacity="0.6" VerticalAlignment="Center" />
+                            <ItemsControl ItemsSource="{Binding Cells}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="4" /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CellViewModel">
+                                        <TextBox Text="{Binding Text, UpdateSourceTrigger=LostFocus}" Width="96" MinHeight="24" Padding="4,1" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <ListBox Classes="cells" ItemsSource="{Binding TextRows}" MaxHeight="360" IsVisible="{Binding IsWideMatrix}"
+                     FontFamily="monospace" FontSize="12" />
+        </StackPanel>
+
+        <!-- checked lists (analyzers) and nested parameters -->
+        <TabControl IsVisible="{Binding IsCheckedList}" Padding="0,6,0,0">
+            <TabItem Header="Operators">
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button Content="Up" Command="{Binding MoveUpCommand}" />
+                        <Button Content="Down" Command="{Binding MoveDownCommand}" />
+                        <Button Content="Remove" Command="{Binding RemoveCommand}" />
+                        <Button Content="Add...">
+                            <Button.Flyout>
+                                <MenuFlyout ItemsSource="{Binding AddChoices}">
+                                    <MenuFlyout.ItemContainerTheme>
+                                        <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:MenuChoice">
+                                            <Setter Property="Header" Value="{Binding Display}" />
+                                            <Setter Property="Command" Value="{Binding Command}" />
+                                        </ControlTheme>
+                                    </MenuFlyout.ItemContainerTheme>
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
+                    <ListBox ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry}" MaxHeight="240">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CheckedEntryViewModel">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <CheckBox IsChecked="{Binding IsChecked}" ToolTip.Tip="Enabled" />
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <ContentControl Content="{Binding SelectedEntry.Parameters, FallbackValue={x:Null}}" />
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Parameters">
+                <ContentControl Content="{Binding Nested}" />
+            </TabItem>
+        </TabControl>
+        <StackPanel Spacing="4" IsVisible="{Binding HasNested}">
+            <TextBlock Text="Parameters" FontWeight="SemiBold" IsVisible="{Binding !IsCheckedList}" />
+            <ContentControl Content="{Binding Nested}" IsVisible="{Binding !IsCheckedList}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>
