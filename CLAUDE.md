@@ -7,7 +7,9 @@
   explicitly says so. New work lives in next/.
 
 ## Branches and safety
-- Never touch main. Work on feature branches off deepseek-development.
+- main is the integration branch (the user merges feature branches via pull requests).
+  Never commit to main directly; start feature branches from origin/main.
+  (deepseek-development is historical: it predates the port.)
 - Never push without the user's explicit approval. The user has authorized committing
   finished ports in next/ on feature branches without asking (one commit per project).
 - No destructive git commands (reset --hard, clean -fd) or rm -rf, ever.
