@@ -54,10 +54,12 @@
 - Plugin type discovery (LightweightApplicationManager replacement) scans assemblies in
   name order: AppDomain order differs between runtimes, and defaults are picked from the
   first discovered type.
-- Floating point: Math.Log/Exp/Tan come from the platform libm on Linux, so results can
-  differ in the last bit from .NET Framework (and from .NET on Windows). Algorithms with
-  near-ties (P3 linkage clustering, GP regression hyperparameter fits) may take a different
-  but equally valid trajectory; seeded runs are reproducible per platform, not across.
+- Seeded runs are reproducible per runtime and platform, not across them: .NET Framework,
+  .NET on Windows and .NET on Linux (glibc libm) can differ in the last bit of math results,
+  and searches with near-ties amplify that into different but equally valid trajectories.
+- Compile order matters: ports compile the legacy csproj's Compile items in their order
+  (Directory.Build.targets). Type order drives plugin discovery and thus default operators;
+  an alphabetical glob made PSO and GA grouping pick different defaults than legacy.
 
 ## Running tests
 - next/tools/run-tests.sh [quick|daily|all]: quick skips the long Run.Daily category.
@@ -65,11 +67,11 @@
   Windows-only GDI+/native DLL, Framework-specific expectations, or seeded Run.Daily
   results recorded on .NET Framework). Any other failure is a regression. Keep the list
   short and justified.
-- Status 2026-10-08 on Linux/net10.0: quick 427/427, daily 75/75 (442 + 82 tests; 22
-  excluded). Windows .NET 10 baseline: P3HIFF and GP regression pass there (Linux libm).
-  Compile order fix (legacy csproj order) made GA grouping and PSO reproduce .NET Framework.
-  Open: GP-with-OS, shape-constrained and structure-template samples also differ on Windows
-  .NET 10. Decide with the port on .NET Framework, on Windows:
+- Status 2026-10-09 on Linux/net10.0: quick 427/427, daily 75/75 (442 + 82 tests; 22
+  excluded). Port fidelity verified on Windows (docs/windows-baseline.md): the ported
+  libraries on .NET Framework 4.7.2 reproduce the recorded seeded sample results exactly;
+  the remaining Run.Daily deviations are .NET runtime / platform libm differences.
+- Fidelity check on Windows (opt-in net472 target of the tests):
   dotnet test next/tests/HeuristicLab.Tests -f net472 -p:HlFramework=true --filter <tests>
 
 ## Porting conventions
