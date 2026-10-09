@@ -33,6 +33,7 @@
     <Project Path="core/HeuristicLab.Core/HeuristicLab.Core.csproj" />
     <Project Path="core/HeuristicLab.Data/HeuristicLab.Data.csproj" />
     <Project Path="core/HeuristicLab.DataPreprocessing/HeuristicLab.DataPreprocessing.csproj" />
+    <Project Path="core/HeuristicLab.DebugEngine/HeuristicLab.DebugEngine.csproj" />
     <Project Path="core/HeuristicLab.Encodings.BinaryVectorEncoding/HeuristicLab.Encodings.BinaryVectorEncoding.csproj" />
     <Project Path="core/HeuristicLab.Encodings.IntegerVectorEncoding/HeuristicLab.Encodings.IntegerVectorEncoding.csproj" />
     <Project Path="core/HeuristicLab.Encodings.LinearLinkageEncoding/HeuristicLab.Encodings.LinearLinkageEncoding.csproj" />
