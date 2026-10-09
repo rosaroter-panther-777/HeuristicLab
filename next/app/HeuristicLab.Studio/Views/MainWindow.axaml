@@ -23,6 +23,8 @@
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button Content="New..." Command="{Binding NewCommand}" />
                 <Button Content="Open..." Command="{Binding OpenCommand}" />
+                <ComboBox ItemsSource="{Binding RecentFiles}" SelectedItem="{Binding SelectedRecentFile}" PlaceholderText="Recent"
+                          Width="110" IsEnabled="{Binding RecentFiles.Count}" ToolTip.Tip="Recently opened or saved files" />
                 <Button Content="Save as..." Command="{Binding SaveCommand}" />
                 <Separator Width="1" Margin="4,2" />
                 <TextBlock Text="Seed" VerticalAlignment="Center" />

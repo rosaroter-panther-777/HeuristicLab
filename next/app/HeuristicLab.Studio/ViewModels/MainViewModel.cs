@@ -29,16 +29,51 @@ public partial class MainViewModel : ViewModelBase {
 
   private readonly IFileDialogService? fileDialogs;
   private readonly IDialogService? dialogs;
+  private readonly ISettingsStore? settingsStore;
+  private const int MaxRecentFiles = 10;
   private readonly List<RunProgress> history = [];
   private IOptimizer? optimizer;
   private string? filePath;
 
   public MainViewModel() : this(null) { }
 
-  public MainViewModel(IFileDialogService? fileDialogs, IDialogService? dialogs = null) {
+  public MainViewModel(IFileDialogService? fileDialogs, IDialogService? dialogs = null, ISettingsStore? settingsStore = null) {
     this.fileDialogs = fileDialogs;
     this.dialogs = dialogs;
+    this.settingsStore = settingsStore;
     ResultsBrowser = new ResultsBrowserViewModel(fileDialogs);
+    if (settingsStore?.Load() is StudioSettings settings) {
+      foreach (var file in settings.RecentFiles.Where(File.Exists).Take(MaxRecentFiles)) RecentFiles.Add(file);
+      SeedText = settings.Seed;
+      RepetitionsText = settings.Runs;
+      ParallelText = settings.Parallel;
+      ResultsFolder = settings.ResultsFolder;
+    }
+  }
+
+  /// <summary>Most recently opened or saved files, newest first.</summary>
+  public ObservableCollection<string> RecentFiles { get; } = [];
+
+  [ObservableProperty]
+  public partial string? SelectedRecentFile { get; set; }
+
+  partial void OnSelectedRecentFileChanged(string? value) {
+    if (value == null || IsRunning) return;
+    SelectedRecentFile = null;  // the picker acts like a menu
+    _ = LoadAsync(value);
+  }
+
+  /// <summary>Stores recent files and run settings (called on exit and after open/save).</summary>
+  public void SaveSettings() => settingsStore?.Save(new StudioSettings {
+    RecentFiles = RecentFiles.ToList(), Seed = SeedText, Runs = RepetitionsText, Parallel = ParallelText, ResultsFolder = ResultsFolder
+  });
+
+  private void Remember(string path) {
+    var full = Path.GetFullPath(path);
+    RecentFiles.Remove(full);
+    RecentFiles.Insert(0, full);
+    while (RecentFiles.Count > MaxRecentFiles) RecentFiles.RemoveAt(RecentFiles.Count - 1);
+    SaveSettings();
   }
 
   public ResultsBrowserViewModel ResultsBrowser { get; }
@@ -154,6 +189,7 @@ public partial class MainViewModel : ViewModelBase {
       ShowDocument(loaded);
       ClearRunView();
       Solution.Show(loaded);
+      Remember(path);
       Status = $"Loaded {Path.GetFileName(path)}";
     } catch (Exception e) {
       Status = $"Could not load {Path.GetFileName(path)}: {e.Message}";
@@ -167,6 +203,7 @@ public partial class MainViewModel : ViewModelBase {
     if (path == null) return;
     await Task.Run(() => Documents.Save((IStorableContent)optimizer, path));
     filePath = path;
+    Remember(path);
     Status = $"Saved {Path.GetFileName(path)} ({optimizer.Runs.Count} runs)";
   }
   private bool CanSave() => HasDocument && !IsRunning;

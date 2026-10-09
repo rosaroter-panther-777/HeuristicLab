@@ -29,7 +29,13 @@
   Setups.Create like "hl new"), open/save .hl, editable parameters (text or operator choice,
   via ParameterEditor; invalid input reverted), run with seed or batches (runs, parallel,
   optional results folder) with live chart / per-run points and statistics, Results tab
-  (results folder: runs + statistics grouped by any column). Own LineChart control.
+  (results folder: runs + statistics grouped by any column), Solution tab (model, metrics,
+  charts), sweep / walk-forward section. Remembers recent files, seed/runs/parallel and the
+  results folder (~/.config/HeuristicLab.Studio/settings.json). Own LineChart control.
+  Install for the user: next/tools/install.sh [--prefix DIR] [--uninstall] (Release publish,
+  launchers hl and hl-studio in ~/.local/bin, desktop entry; needs the .NET 10 runtime).
+  DataFiles.Read/Write block on Parquet.Net's async API: keep that work on the thread pool
+  (Task.Run), else it deadlocks on the UI thread.
   Tests (next/tests/HeuristicLab.Studio.Tests) run headless (Avalonia.Headless + Skia) and
   save screenshots (studio-*.png in the test bin folder) for visual review.
   Note: HeadlessUnitTestSession.Dispose() hangs (12.1.3) - never dispose it in tests.
