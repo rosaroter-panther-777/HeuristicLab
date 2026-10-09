@@ -1,11 +1,7 @@
-using System.Globalization;
 using System.Reflection;
-using System.Text;
 using HeuristicLab.Optimization;
 using HeuristicLab.PluginInfrastructure;
-using HeuristicLab.Problems.DataAnalysis;
 using HeuristicLab.Problems.Instances;
-using HeuristicLab.Problems.Instances.DataAnalysis;
 
 namespace HeuristicLab.Next.Runtime;
 
@@ -43,30 +39,11 @@ public static class ProblemInstances {
   }
 
   /// <summary>
-  /// Imports a CSV file (header row with variable names; separator and number format detected)
-  /// into a regression or classification problem. Rows are not shuffled (HeuristicLab's shuffle
-  /// is unseeded); the first trainingPercent of rows form the training partition.
+  /// Imports a CSV or Parquet file into a regression, classification, time series or trading
+  /// problem (see DataProblems): rows keep their order, the first trainingPercent train.
   /// </summary>
-  public static void ImportCsv(IProblem problem, string path, string target, int trainingPercent = 66) {
-    if (trainingPercent is < 1 or > 99) throw new ArgumentOutOfRangeException(nameof(trainingPercent));
-    TableFileParser.DetermineFileFormat(path, out var numberFormat, out var dateFormat, out var separator);
-    var format = new DataAnalysisCSVFormat {
-      Separator = separator, NumberFormatInfo = numberFormat, DateTimeFormatInfo = dateFormat,
-      VariableNamesAvailable = true, Encoding = Encoding.UTF8
-    };
-    switch (problem) {
-      case IProblemInstanceConsumer<IRegressionProblemData> regression:
-        regression.Load(new RegressionCSVInstanceProvider().ImportData(path,
-          new RegressionImportType { TargetVariable = target, TrainingPercentage = trainingPercent, Shuffle = false }, format));
-        break;
-      case IProblemInstanceConsumer<IClassificationProblemData> classification:
-        classification.Load(new ClassificationCSVInstanceProvider().ImportData(path,
-          new ClassificationImportType { TargetVariable = target, TrainingPercentage = trainingPercent, Shuffle = false }, format));
-        break;
-      default:
-        throw new ArgumentException($"{problem.GetType().Name} cannot import CSV data (regression and classification problems can).");
-    }
-  }
+  public static string ImportCsv(IProblem problem, string path, string target, int trainingPercent = 66) =>
+    DataProblems.Load(problem, path, target, null, trainingPercent);
 
   /// <summary>
   /// Providers whose data the problem consumes. Providers of exactly a consumed data type win;
