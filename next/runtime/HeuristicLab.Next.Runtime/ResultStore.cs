@@ -27,7 +27,7 @@ public sealed class ResultStore(string directory) {
         .ToList();
 
   /// <summary>
-  /// One row per recorded run: report columns, then "param:Name" and "result:Name" columns for
+  /// One row per recorded run: report columns, then "label:Name", "param:Name" and "result:Name" columns for
   /// every scalar parameter/result (tables and other structured values are left out).
   /// </summary>
   public IReadOnlyList<IReadOnlyDictionary<string, string>> Rows() {
@@ -49,6 +49,7 @@ public sealed class ResultStore(string directory) {
           ["runtime"] = report.Provenance.Runtime,
           ["os"] = report.Provenance.OperatingSystem,
         };
+        foreach (var (name, value) in report.Labels ?? new Dictionary<string, string>()) row["label:" + name] = value;
         foreach (var (name, value) in run.Parameters) if (Scalar(value) is string v) row["param:" + name] = v;
         foreach (var (name, value) in run.Results) if (Scalar(value) is string v) row["result:" + name] = v;
         rows.Add(row);
@@ -60,6 +61,7 @@ public sealed class ResultStore(string directory) {
   public static void WriteCsv(IReadOnlyList<IReadOnlyDictionary<string, string>> rows, TextWriter writer) {
     var fixedColumns = rows.FirstOrDefault()?.Keys.Where(k => !k.Contains(':')).ToList() ?? [];
     var columns = fixedColumns
+      .Concat(rows.SelectMany(r => r.Keys).Where(k => k.StartsWith("label:")).Distinct().Order(StringComparer.Ordinal))
       .Concat(rows.SelectMany(r => r.Keys).Where(k => k.StartsWith("param:")).Distinct().Order(StringComparer.Ordinal))
       .Concat(rows.SelectMany(r => r.Keys).Where(k => k.StartsWith("result:")).Distinct().Order(StringComparer.Ordinal))
       .ToList();
@@ -96,7 +98,7 @@ public sealed class ResultStore(string directory) {
   // JSON shape for reading reports back (record positional constructors need matching names)
   private sealed record StoredReport(
     Provenance Provenance, string Optimizer, string OptimizerType, int? RequestedSeed, RunOutcome Outcome,
-    string? Error, double ExecutionSeconds, List<RunRecord> Runs) {
-    public RunReport ToRunReport() => new(Provenance, Optimizer, OptimizerType, RequestedSeed, Outcome, Error, ExecutionSeconds, Runs);
+    string? Error, double ExecutionSeconds, List<RunRecord> Runs, Dictionary<string, string>? Labels) {
+    public RunReport ToRunReport() => new(Provenance, Optimizer, OptimizerType, RequestedSeed, Outcome, Error, ExecutionSeconds, Runs, Labels);
   }
 }

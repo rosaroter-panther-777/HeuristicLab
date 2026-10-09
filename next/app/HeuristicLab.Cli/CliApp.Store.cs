@@ -29,11 +29,13 @@ public static partial class CliApp {
       if (key == null) { output.WriteLine("No numeric result to summarize (use --metric)."); return ExitUsage; }
       var groupBy = result.GetValue(by)!;
       output.WriteLine($"{key[7..]} by {groupBy}:");
-      output.WriteLine($"{"group",-36}  {"n",4}  {"mean",14}  {"sd",12}  {"min",14}  {"median",14}  {"max",14}");
-      foreach (var group in rows.GroupBy(r => Value(r, groupBy)).OrderBy(g => g.Key, StringComparer.Ordinal)) {
+      var groups = rows.GroupBy(r => Value(r, groupBy)).OrderBy(g => g.Key, StringComparer.Ordinal).ToList();
+      int width = Math.Clamp(groups.Select(g => g.Key.Length).DefaultIfEmpty(5).Max(), 5, 80);
+      output.WriteLine($"{"group".PadRight(width)}  {"n",4}  {"mean",14}  {"sd",12}  {"min",14}  {"median",14}  {"max",14}");
+      foreach (var group in groups) {
         var stats = Statistics.Of(group.Select(r => Value(r, key)).Where(v => v != "").Select(v => double.Parse(v, CultureInfo.InvariantCulture)));
         if (stats == null) continue;
-        output.WriteLine($"{Truncate(group.Key, 36),-36}  {stats.Count,4}  {G(stats.Mean),14}  {G(stats.StdDev),12}  {G(stats.Min),14}  {G(stats.Median),14}  {G(stats.Max),14}");
+        output.WriteLine($"{Truncate(group.Key, width).PadRight(width)}  {stats.Count,4}  {G(stats.Mean),14}  {G(stats.StdDev),12}  {G(stats.Min),14}  {G(stats.Median),14}  {G(stats.Max),14}");
       }
       return ExitCompleted;
     });

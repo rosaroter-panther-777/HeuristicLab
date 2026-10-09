@@ -40,12 +40,19 @@
   DataProblems (table -> regression/classification/time series/trading; kind decided by exactly
   consumed data types, never by contravariant pattern matching), Features (return, logreturn,
   diff, lag, lead, rolling mean/std/min/max, zscore; composable), OptimizerRunner, BatchRunner,
-  ResultStore, ItemValues, Provenance. Front ends must not use WinForms-era APIs (ItemImage).
+  ResultStore (label:/param:/result: columns), ItemValues, Provenance, Solutions (models,
+  metrics, predictions, trading equity, tours), WalkForward (rolling/expanding windows; also sets
+  a symbolic problem's FitnessCalculationPartition), Sweeps (full factorial, common seeds, runs
+  labelled "config"). Run labels (RunOptions.Labels) end up in reports and store rows.
+  Front ends must not use WinForms-era APIs (ItemImage).
 - next/app/HeuristicLab.Cli ("hl"), research workflow on the runtime:
   hl list algorithms|problems; hl instances <problem>;
   hl new <algorithm> [--problem P] [--instance I | --data f --target y] [--set N=V]... --out f.hl;
   hl data info f; hl data derive f --add EXPR... [--dropna] --out f2 (CSV or Parquet);
   hl new ... --data f --target y [--inputs a,lag(x,1..3)] [--training 66 --training-start 3];
+  hl walkforward f.hl --train N --test M [--step --expanding --start --seed --parallel --store --out];
+  hl show f.hl [--solution NAME] [--predictions out.csv] [--json];
+  hl run f.hl --sweep "Name=v1,v2" [--sweep ...] --repeat N (full factorial, same seeds per config);
   hl info f.hl; hl run f.hl [--seed S] [--set N=V]... [--repeat N --parallel K] [--timeout] [--out report.json]
   [--store DIR] [--save f.hl]; hl store list|summary [--metric M --by param:X]|export [--csv f] DIR.
   Exit 0 completed, 1 failed, 2 usage, 3 stopped (timeout/Ctrl+C; reports still written).

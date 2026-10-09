@@ -12,6 +12,8 @@ public sealed record RunOptions {
   public TimeSpan ProgressInterval { get; init; } = TimeSpan.FromSeconds(1);
   /// <summary>Optional wall-clock limit; the optimizer is stopped when it is reached.</summary>
   public TimeSpan? Timeout { get; init; }
+  /// <summary>Labels copied into the report, e.g. sweep configuration or walk-forward fold.</summary>
+  public IReadOnlyDictionary<string, string>? Labels { get; init; }
 }
 
 /// <summary>
@@ -28,7 +30,8 @@ public sealed record RunRecord(
 
 public sealed record RunReport(
   Provenance Provenance, string Optimizer, string OptimizerType, int? RequestedSeed,
-  RunOutcome Outcome, string? Error, double ExecutionSeconds, IReadOnlyList<RunRecord> Runs);
+  RunOutcome Outcome, string? Error, double ExecutionSeconds, IReadOnlyList<RunRecord> Runs,
+  IReadOnlyDictionary<string, string>? Labels = null);
 
 /// <summary>Runs an optimizer (algorithm, experiment, batch run) to completion, cancellation or failure.</summary>
 public static class OptimizerRunner {
@@ -72,7 +75,7 @@ public static class OptimizerRunner {
                 : RunOutcome.Completed;
     var runs = optimizer.Runs.Skip(runsBefore).Select(ToRecord).ToList();
     return new RunReport(provenance, optimizer.Name, optimizer.GetType().FullName!, options.Seed, outcome,
-      error?.ToString(), optimizer.ExecutionTime.TotalSeconds, runs);
+      error?.ToString(), optimizer.ExecutionTime.TotalSeconds, runs, options.Labels);
   }
 
   /// <summary>Sets SetSeedRandomly=false and Seed=seed on all algorithms that have these parameters.</summary>
