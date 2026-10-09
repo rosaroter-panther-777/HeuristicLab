@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:HeuristicLab.Studio.ViewModels"
         xmlns:controls="using:HeuristicLab.Studio.Controls"
+        xmlns:runtime="using:HeuristicLab.Next.Runtime"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
@@ -92,6 +93,33 @@
                             </ItemsControl>
                         </ScrollViewer>
                     </Grid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Solution">
+                <Grid Margin="12" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,320" DataContext="{Binding Solution}" x:DataType="vm:SolutionViewModel">
+                    <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                        <TextBlock Text="Solution" VerticalAlignment="Center" />
+                        <ComboBox ItemsSource="{Binding Solutions}" SelectedItem="{Binding Selected}" MinWidth="320"
+                                  DisplayMemberBinding="{Binding Name, x:DataType=runtime:SolutionView}" />
+                    </StackPanel>
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Heading}" FontWeight="SemiBold" Margin="0,0,0,6" />
+                    <TextBox Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Model}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="90"
+                             FontFamily="monospace" Margin="0,0,0,8" IsVisible="{Binding Model, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <controls:LineChart Grid.Row="3" Series="{Binding Series}" Markers="{Binding Markers}"
+                                        XAxisTitle="{Binding XAxisTitle}" YAxisTitle="{Binding YAxisTitle}"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                    <ScrollViewer Grid.Row="3" Grid.Column="1" Margin="12,0,0,0">
+                        <ItemsControl ItemsSource="{Binding Metrics}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:NameValue">
+                                    <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+                                        <TextBlock Text="{Binding Name}" Opacity="0.75" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Value}" FontFamily="monospace" Margin="8,0,0,0" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Grid>
             </TabItem>
             <TabItem Header="Results">

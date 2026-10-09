@@ -10,6 +10,8 @@ namespace HeuristicLab.Studio.Controls;
 
 public readonly record struct ChartPoint(double X, double Y);
 
+public sealed record ChartMarker(double X, string Label);
+
 /// <param name="PointsOnly">Draw markers without connecting lines (independent values, e.g. one per run).</param>
 public sealed record ChartSeries(string Name, Color Color, IReadOnlyList<ChartPoint> Points, bool PointsOnly = false) {
   private static readonly Color[] Palette = [
@@ -33,13 +35,22 @@ public class LineChart : Control {
   public static readonly StyledProperty<IBrush?> ForegroundProperty =
     AvaloniaProperty.Register<LineChart, IBrush?>(nameof(Foreground), Brushes.Gray);
 
+  /// <summary>Labelled vertical lines, e.g. the start of the test partition.</summary>
+  public static readonly StyledProperty<IReadOnlyList<ChartMarker>?> MarkersProperty =
+    AvaloniaProperty.Register<LineChart, IReadOnlyList<ChartMarker>?>(nameof(Markers));
+
+  public static readonly StyledProperty<string?> YAxisTitleProperty =
+    AvaloniaProperty.Register<LineChart, string?>(nameof(YAxisTitle));
+
   static LineChart() {
-    AffectsRender<LineChart>(SeriesProperty, XAxisTitleProperty, ForegroundProperty);
+    AffectsRender<LineChart>(SeriesProperty, XAxisTitleProperty, ForegroundProperty, MarkersProperty, YAxisTitleProperty);
   }
 
   public IReadOnlyList<ChartSeries>? Series { get => GetValue(SeriesProperty); set => SetValue(SeriesProperty, value); }
   public string XAxisTitle { get => GetValue(XAxisTitleProperty); set => SetValue(XAxisTitleProperty, value); }
   public IBrush? Foreground { get => GetValue(ForegroundProperty); set => SetValue(ForegroundProperty, value); }
+  public IReadOnlyList<ChartMarker>? Markers { get => GetValue(MarkersProperty); set => SetValue(MarkersProperty, value); }
+  public string? YAxisTitle { get => GetValue(YAxisTitleProperty); set => SetValue(YAxisTitleProperty, value); }
 
   private const double LeftMargin = 72, RightMargin = 16, TopMargin = 28, BottomMargin = 40, FontSize = 11;
   private static readonly Typeface Font = new(FontFamily.Default);
@@ -61,7 +72,7 @@ public class LineChart : Control {
 
     var points = series.SelectMany(s => s.Points).Where(p => double.IsFinite(p.Y)).ToList();
     if (points.Count == 0) return;
-    double xMin = 0, xMax = Math.Max(points.Max(p => p.X), 1e-9);
+    double xMin = Math.Min(0, points.Min(p => p.X)), xMax = Math.Max(points.Max(p => p.X), 1e-9);
     double yMin = points.Min(p => p.Y), yMax = points.Max(p => p.Y);
     if (yMax - yMin < 1e-12) { yMin -= 1; yMax += 1; }
     var yTicks = NiceTicks(yMin, yMax, 5);
@@ -88,6 +99,15 @@ public class LineChart : Control {
     context.DrawLine(axisPen, plot.BottomLeft, plot.BottomRight);
     context.DrawLine(axisPen, plot.BottomLeft, plot.TopLeft);
     DrawText(context, XAxisTitle, foreground, new Point(plot.Center.X, plot.Bottom + 28), center: true);
+    if (!string.IsNullOrEmpty(YAxisTitle)) DrawText(context, YAxisTitle, foreground, new Point(plot.Right, 10), alignRight: true);
+
+    var markerPen = new Pen(foreground, 1, new DashStyle([4, 3], 0));
+    foreach (var marker in Markers ?? []) {
+      if (marker.X < xMin || marker.X > xMax) continue;
+      var px = Map(new ChartPoint(marker.X, yMin)).X;
+      context.DrawLine(markerPen, new Point(px, plot.Top), new Point(px, plot.Bottom));
+      DrawText(context, marker.Label, foreground, new Point(px + 4, plot.Top + 8));
+    }
 
     using (context.PushClip(plot.Inflate(1))) {
       foreach (var s in series) {

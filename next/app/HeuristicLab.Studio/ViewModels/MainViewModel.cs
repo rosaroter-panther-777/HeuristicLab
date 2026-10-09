@@ -42,6 +42,7 @@ public partial class MainViewModel : ViewModelBase {
   }
 
   public ResultsBrowserViewModel ResultsBrowser { get; }
+  public SolutionViewModel Solution { get; } = new();
 
   [ObservableProperty]
   public partial string RepetitionsText { get; set; } = "1";
@@ -105,6 +106,7 @@ public partial class MainViewModel : ViewModelBase {
     Title = $"{setup.Algorithm.Name} - HeuristicLab Studio";
     ShowDocument(setup.Algorithm);
     ClearRunView();
+    Solution.Show(setup.Algorithm);
     Status = setup.Messages.Count > 0 ? string.Join("; ", setup.Messages) : $"Created {setup.Algorithm.Name}";
   }
 
@@ -135,6 +137,7 @@ public partial class MainViewModel : ViewModelBase {
       Title = $"{loaded.Name} - HeuristicLab Studio";
       ShowDocument(loaded);
       ClearRunView();
+      Solution.Show(loaded);
       Status = $"Loaded {Path.GetFileName(path)}";
     } catch (Exception e) {
       Status = $"Could not load {Path.GetFileName(path)}: {e.Message}";
@@ -187,6 +190,7 @@ public partial class MainViewModel : ViewModelBase {
       ShowReport(report);
       ShowQualityTable(report);
       ShowDocument(optimizer);
+      Solution.Show(optimizer);
     } finally {
       IsRunning = false;
     }
