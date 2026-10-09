@@ -25,6 +25,15 @@
 
 ## Current state
 - next/app/HeuristicLab.Studio (Avalonia 12 MVVM, CommunityToolkit) on the runtime:
+  Experiments tab (first): several experiments in one workspace, each a tree of building blocks
+  (algorithm + its problem, batch run, time-limit run) over plain HeuristicLab objects via
+  runtime ExperimentTree (a batch run with several children wraps them in an inner Experiment
+  named "Batch content"; a time-limit run takes one algorithm). Colors from the user's mockups:
+  yellow = button, grey = disabled, green = existing block (click: details/parameters, double-
+  click: rename, right-click: menu). Start all / start selected (ticked) experiments, enabled only
+  when complete; no seed is imposed (a fixed seed would make batch repetitions identical).
+  Legacy algorithms crash on Problem = null (OnProblemChanged): clone problems instead of
+  detaching them; "Remove problem" tolerates exactly that crash.
   New dialog (algorithm -> compatible problem -> benchmark instance or CSV/Parquet data, via
   Setups.Create like "hl new"), open/save .hl, editable parameters (text or operator choice,
   via ParameterEditor; invalid input reverted), run with seed or batches (runs, parallel,

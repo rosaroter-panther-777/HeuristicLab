@@ -1,0 +1,228 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             x:Class="HeuristicLab.Studio.Views.ExperimentWorkspaceView"
+             x:DataType="vm:ExperimentWorkspaceViewModel">
+    <!-- Colors as in the mockups: yellow = button, grey = disabled button, green = existing building block -->
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="ActionBrush" Color="#F2C94C" />
+        <SolidColorBrush x:Key="ActionHoverBrush" Color="#E5B52A" />
+        <SolidColorBrush x:Key="DisabledBrush" Color="#D0D0D0" />
+        <SolidColorBrush x:Key="BlockBrush" Color="#8CCB8E" />
+        <SolidColorBrush x:Key="BlockSelectedBrush" Color="#2E7D32" />
+        <SolidColorBrush x:Key="InkBrush" Color="#1E2A1F" />
+
+        <!-- one green block: label, inline rename, context menu (rename/delete/...) -->
+        <DataTemplate x:Key="Block" x:DataType="vm:BlockViewModel">
+            <Border Classes="block" Classes.selected="{Binding IsSelected}" ToolTip.Tip="{Binding Kind}"
+                    Tapped="BlockTapped" DoubleTapped="BlockDoubleTapped">
+                <Border.ContextMenu>
+                    <ContextMenu ItemsSource="{Binding Menu}">
+                        <ContextMenu.ItemContainerTheme>
+                            <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:MenuChoice">
+                                <Setter Property="Header" Value="{Binding Display}" />
+                                <Setter Property="Command" Value="{Binding Command}" />
+                            </ControlTheme>
+                        </ContextMenu.ItemContainerTheme>
+                    </ContextMenu>
+                </Border.ContextMenu>
+                <Panel>
+                    <TextBlock Text="{Binding Label}" IsVisible="{Binding !IsEditingName}" TextTrimming="CharacterEllipsis" />
+                    <TextBox Text="{Binding Name}" IsVisible="{Binding IsEditingName}" MinHeight="24" Padding="4,1"
+                             KeyDown="NameKeyDown" LostFocus="NameLostFocus" PropertyChanged="NameBoxPropertyChanged" />
+                </Panel>
+            </Border>
+        </DataTemplate>
+
+        <!-- yellow add button of a container, with the building blocks it accepts -->
+        <DataTemplate x:Key="AddButton" x:DataType="vm:ContainerBlockViewModel">
+            <Button Classes="action" Content="{Binding AddText}" IsVisible="{Binding CanAdd}">
+                <Button.Flyout>
+                    <MenuFlyout ItemsSource="{Binding AddChoices}">
+                        <MenuFlyout.ItemContainerTheme>
+                            <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:MenuChoice">
+                                <Setter Property="Header" Value="{Binding Display}" />
+                                <Setter Property="Command" Value="{Binding Command}" />
+                            </ControlTheme>
+                        </MenuFlyout.ItemContainerTheme>
+                    </MenuFlyout>
+                </Button.Flyout>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.action">
+            <Setter Property="Background" Value="{StaticResource ActionBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="12,6" />
+        </Style>
+        <Style Selector="Button.action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource ActionHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="Button.action:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource ActionHoverBrush}" />
+        </Style>
+        <Style Selector="Button.action:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource DisabledBrush}" />
+            <Setter Property="Foreground" Value="#7A7A7A" />
+        </Style>
+        <Style Selector="Border.block">
+            <Setter Property="Background" Value="{StaticResource BlockBrush}" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="Border.block.selected">
+            <Setter Property="BorderBrush" Value="{StaticResource BlockSelectedBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <UserControl.DataTemplates>
+        <!-- algorithm row: algorithm left, its problem (or the add-problem button) right -->
+        <DataTemplate DataType="vm:AlgorithmBlockViewModel">
+            <Grid ColumnDefinitions="260,20,300">
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource Block}" HorizontalAlignment="Stretch" />
+                <Rectangle Grid.Column="1" Height="1" Fill="{StaticResource BlockBrush}" VerticalAlignment="Center" />
+                <ContentControl Grid.Column="2" Content="{Binding Problem}" ContentTemplate="{StaticResource Block}"
+                                IsVisible="{Binding HasProblem}" HorizontalAlignment="Stretch" />
+                <Button Grid.Column="2" Classes="action" Content="+ Add problem" Command="{Binding ChooseProblemCommand}"
+                        IsVisible="{Binding !HasProblem}" />
+            </Grid>
+        </DataTemplate>
+        <!-- batch run / time-limit run: heading, indented children, own add button -->
+        <DataTemplate DataType="vm:ContainerBlockViewModel">
+            <StackPanel Spacing="6">
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource Block}" HorizontalAlignment="Left" MinWidth="260" />
+                <StackPanel Margin="32,0,0,0" Spacing="6">
+                    <ItemsControl ItemsSource="{Binding Children}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Spacing="6" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource AddButton}" />
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <Grid ColumnDefinitions="*,4,360">
+        <DockPanel Margin="12">
+            <!-- global start controls -->
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+                <Button Classes="action" Content="Start all experiments" Command="{Binding StartAllCommand}" />
+                <Button Classes="action" Content="Start selected experiments" Command="{Binding StartSelectedCommand}"
+                        ToolTip.Tip="Starts the experiments whose checkbox is ticked" />
+                <Button Content="Stop" Command="{Binding StopCommand}" />
+                <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Opacity="0.75" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+
+            <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                <StackPanel Spacing="14" IsEnabled="{Binding IsEditable}">
+                    <ItemsControl ItemsSource="{Binding Experiments}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Spacing="14" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ExperimentBlockViewModel">
+                                <Border Padding="10" CornerRadius="6" BorderThickness="1"
+                                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                    <StackPanel Spacing="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <CheckBox IsChecked="{Binding IsChecked}" ToolTip.Tip="Include in 'Start selected experiments'" />
+                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource Block}" MinWidth="260" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding RunStatus}" VerticalAlignment="Center" Opacity="0.75" />
+                                        </StackPanel>
+                                        <StackPanel Margin="32,0,0,0" Spacing="6">
+                                            <ItemsControl ItemsSource="{Binding Children}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate><StackPanel Spacing="6" /></ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource AddButton}" />
+                                            <TextBlock Text="{Binding Missing}" IsVisible="{Binding !IsReady}" Foreground="#B0563A"
+                                                       FontSize="12" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Classes="action" Content="+ New experiment / open...">
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuItem Header="New experiment" Command="{Binding CreateExperimentCommand}" />
+                                <MenuItem Header="Open..." Command="{Binding OpenExperimentCommand}" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+
+        <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+
+        <!-- details of the selected block -->
+        <ScrollViewer Grid.Column="2" Margin="12" IsEnabled="{Binding IsEditable}">
+            <ContentControl Content="{Binding Selected}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="vm:ExperimentBlockViewModel">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{Binding Kind}" Opacity="0.7" />
+                            <TextBox Text="{Binding Name}" />
+                            <TextBlock Text="{Binding FilePath, FallbackValue='', TargetNullValue='Not saved yet'}" Opacity="0.7" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding Missing}" IsVisible="{Binding !IsReady}" TextWrapping="Wrap" Foreground="#B0563A" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Save as..." Command="{Binding SaveCommand}" />
+                                <Button Content="Show in Run tab" Command="{Binding ShowInRunTabCommand}" />
+                            </StackPanel>
+                            <TextBlock Text="Runs keep their own seed settings (random by default), so repetitions differ."
+                                       TextWrapping="Wrap" FontSize="12" Opacity="0.7" />
+                        </StackPanel>
+                    </DataTemplate>
+                    <DataTemplate DataType="vm:ContainerBlockViewModel">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{Binding Kind}" Opacity="0.7" />
+                            <TextBox Text="{Binding Name}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsBatchRun}">
+                                <TextBlock Text="Repetitions" VerticalAlignment="Center" Width="100" />
+                                <TextBox Text="{Binding RepetitionsText, UpdateSourceTrigger=LostFocus}" Width="80" />
+                            </StackPanel>
+                            <TextBlock IsVisible="{Binding IsBatchRun}" TextWrapping="Wrap" FontSize="12" Opacity="0.7"
+                                       Text="Each repetition runs every building block in this batch once." />
+                            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsTimeLimitRun}">
+                                <TextBlock Text="Time limit" VerticalAlignment="Center" Width="100" />
+                                <TextBox Text="{Binding TimeLimitText, UpdateSourceTrigger=LostFocus}" Width="100" PlaceholderText="e.g. 5m" />
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                    <DataTemplate DataType="vm:BlockViewModel">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{Binding Kind}" Opacity="0.7" />
+                            <TextBox Text="{Binding Name}" />
+                            <TextBlock Text="Parameters" FontWeight="SemiBold" IsVisible="{Binding HasParameters}" />
+                            <ItemsControl ItemsSource="{Binding Parameters}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ParameterRowViewModel">
+                                        <Grid ColumnDefinitions="140,*" Margin="0,1" ToolTip.Tip="{Binding Description}">
+                                            <TextBlock Text="{Binding Name}" Opacity="0.75" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                            <TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=LostFocus}" IsVisible="{Binding IsText}"
+                                                     IsReadOnly="{Binding !Editable}" MinHeight="26" Padding="6,2" />
+                                            <ComboBox Grid.Column="1" ItemsSource="{Binding Choices}" SelectedItem="{Binding Value}" IsVisible="{Binding IsChoice}"
+                                                      HorizontalAlignment="Stretch" MinHeight="26" Padding="6,2" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -22,11 +22,18 @@ public partial class NewSetupViewModel : ViewModelBase {
   private const string NoInstance = "(none)";
   private readonly IFileDialogService? fileDialogs;
 
-  public NewSetupViewModel(IFileDialogService? fileDialogs = null) {
+  /// <param name="fixedAlgorithm">Only choose the problem for this algorithm (the experiment builder's "Add problem").</param>
+  public NewSetupViewModel(IFileDialogService? fileDialogs = null, CatalogEntry? fixedAlgorithm = null) {
     this.fileDialogs = fileDialogs;
-    Algorithms = Catalog.Algorithms().Select(a => new Choice(a.Name, a)).ToList();
+    ChoosesAlgorithm = fixedAlgorithm == null;
+    Algorithms = fixedAlgorithm != null ? [new Choice(fixedAlgorithm.Name, fixedAlgorithm)]
+      : Catalog.Algorithms().Select(a => new Choice(a.Name, a)).ToList();
     SelectedAlgorithm = Algorithms.FirstOrDefault(a => a.Entry?.Type.Name == "GeneticAlgorithm") ?? Algorithms.FirstOrDefault();
   }
+
+  public bool ChoosesAlgorithm { get; }
+  public string WindowTitle => ChoosesAlgorithm ? "New" : $"Problem for {SelectedAlgorithm?.Display}";
+  public string CreateText => ChoosesAlgorithm ? "Create" : "Use problem";
 
   public IReadOnlyList<Choice> Algorithms { get; }
 

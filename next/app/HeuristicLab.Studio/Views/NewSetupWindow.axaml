@@ -3,12 +3,12 @@
         xmlns:vm="using:HeuristicLab.Studio.ViewModels"
         x:Class="HeuristicLab.Studio.Views.NewSetupWindow"
         x:DataType="vm:NewSetupViewModel"
-        Title="New" Width="620" SizeToContent="Height" CanResize="False"
+        Title="{Binding WindowTitle}" Width="620" SizeToContent="Height" CanResize="False"
         WindowStartupLocation="CenterOwner">
     <StackPanel Margin="16" Spacing="10">
         <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
             <TextBlock Text="Algorithm" VerticalAlignment="Center" />
-            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Algorithms}"
+            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Algorithms}" IsEnabled="{Binding ChoosesAlgorithm}"
                       SelectedItem="{Binding SelectedAlgorithm}" DisplayMemberBinding="{Binding Display, x:DataType=vm:Choice}" />
             <TextBlock Grid.Row="1" Text="Problem" VerticalAlignment="Center" />
             <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Problems}"
@@ -38,7 +38,7 @@
         <TextBlock Text="{Binding Error}" Foreground="#C23B4A" TextWrapping="Wrap" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
             <Button Content="Cancel" Click="Cancel" />
-            <Button Content="Create" Classes="accent" Click="Create" />
+            <Button Content="{Binding CreateText}" Classes="accent" Click="Create" />
         </StackPanel>
     </StackPanel>
 </Window>

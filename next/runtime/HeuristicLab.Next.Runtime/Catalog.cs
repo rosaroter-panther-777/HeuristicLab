@@ -12,6 +12,9 @@ public sealed record CatalogEntry(string Name, string Description, string TypeNa
 public static class Catalog {
   public static IReadOnlyList<CatalogEntry> Algorithms() => Entries(typeof(IAlgorithm));
   public static IReadOnlyList<CatalogEntry> Problems() => Entries(typeof(IProblem));
+  /// <summary>Optimizers that are not algorithms: experiments, batch runs, time-limit runs.</summary>
+  public static IReadOnlyList<CatalogEntry> MetaOptimizers() =>
+    Entries(typeof(IOptimizer)).Where(e => !typeof(IAlgorithm).IsAssignableFrom(e.Type)).ToList();
 
   public static CatalogEntry? Find(IEnumerable<CatalogEntry> entries, string nameOrType) =>
     entries.FirstOrDefault(e => string.Equals(e.Name, nameOrType, StringComparison.OrdinalIgnoreCase)

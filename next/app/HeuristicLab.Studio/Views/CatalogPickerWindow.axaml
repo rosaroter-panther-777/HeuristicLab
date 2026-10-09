@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+        xmlns:runtime="using:HeuristicLab.Next.Runtime"
+        x:Class="HeuristicLab.Studio.Views.CatalogPickerWindow"
+        x:DataType="vm:CatalogPickerViewModel"
+        Title="{Binding Title}" Width="620" Height="520" WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="16">
+        <TextBox DockPanel.Dock="Top" Text="{Binding Filter}" PlaceholderText="Search by name or description" Margin="0,0,0,8" />
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,10,0,0">
+            <Button Content="Cancel" Click="Cancel" />
+            <Button Content="Add" Classes="accent" Click="Accept" IsEnabled="{Binding Selected, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+        <ListBox ItemsSource="{Binding Visible}" SelectedItem="{Binding Selected}" DoubleTapped="ListDoubleTapped">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="runtime:CatalogEntry">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Description}" Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</Window>

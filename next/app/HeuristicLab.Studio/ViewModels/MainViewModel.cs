@@ -42,6 +42,17 @@ public partial class MainViewModel : ViewModelBase {
     this.dialogs = dialogs;
     this.settingsStore = settingsStore;
     ResultsBrowser = new ResultsBrowserViewModel(fileDialogs);
+    Workspace = new ExperimentWorkspaceViewModel(dialogs, fileDialogs, () => ResultsFolder, () => IsRunning, (o, path) => {
+      ShowOptimizer(o, path);
+      SelectedTab = RunTab;
+    });
+    Workspace.PropertyChanged += (_, e) => {
+      if (e.PropertyName == nameof(ExperimentWorkspaceViewModel.IsRunning)) {
+        RunCommand.NotifyCanExecuteChanged();
+        // finished experiments: refresh the Run tab if it shows one of them
+        if (!Workspace.IsRunning && optimizer != null) { ShowDocument(optimizer); Solution.Show(optimizer); }
+      }
+    };
     if (settingsStore?.Load() is StudioSettings settings) {
       foreach (var file in settings.RecentFiles.Where(File.Exists).Take(MaxRecentFiles)) RecentFiles.Add(file);
       SeedText = settings.Seed;
@@ -77,6 +88,13 @@ public partial class MainViewModel : ViewModelBase {
   }
 
   public ResultsBrowserViewModel ResultsBrowser { get; }
+  /// <summary>Experiments tab: building blocks of several experiments.</summary>
+  public ExperimentWorkspaceViewModel Workspace { get; }
+
+  public const int RunTab = 1;
+
+  [ObservableProperty]
+  public partial int SelectedTab { get; set; }
   public SolutionViewModel Solution { get; } = new();
 
   [ObservableProperty]
@@ -182,19 +200,27 @@ public partial class MainViewModel : ViewModelBase {
         Status = $"{Path.GetFileName(path)} does not contain an algorithm, experiment or batch run.";
         return;
       }
-      optimizer = loaded;
-      filePath = path;
-      HasDocument = true;
-      Title = $"{loaded.Name} - HeuristicLab Studio";
-      ShowDocument(loaded);
-      ClearRunView();
-      Solution.Show(loaded);
+      ShowOptimizer(loaded, path);
       Remember(path);
       Status = $"Loaded {Path.GetFileName(path)}";
     } catch (Exception e) {
       Status = $"Could not load {Path.GetFileName(path)}: {e.Message}";
     }
   }
+
+  /// <summary>Makes an optimizer (opened, or from the Experiments tab) the Run tab's document.</summary>
+  public void ShowOptimizer(IOptimizer loaded, string? path) {
+    optimizer = loaded;
+    filePath = path;
+    HasDocument = true;
+    Title = $"{loaded.Name} - HeuristicLab Studio";
+    ShowDocument(loaded);
+    ClearRunView();
+    Solution.Show(loaded);
+    Status = $"Showing {loaded.Name}";
+  }
+
+  partial void OnIsRunningChanged(bool value) => Workspace.RefreshState();
 
   [RelayCommand(CanExecute = nameof(CanSave))]
   private async Task SaveAsync() {
@@ -256,7 +282,7 @@ public partial class MainViewModel : ViewModelBase {
       IsRunning = false;
     }
   }
-  private bool CanRun() => HasDocument && !IsRunning;
+  private bool CanRun() => HasDocument && !IsRunning && !Workspace.IsRunning;
 
   private void OnProgress(RunProgress progress) {
     if (!IsRunning) return;  // Progress<T> delivers asynchronously; ignore anything after the run ended

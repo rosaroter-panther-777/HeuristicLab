@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:HeuristicLab.Studio.ViewModels"
         xmlns:controls="using:HeuristicLab.Studio.Controls"
+        xmlns:views="using:HeuristicLab.Studio.Views"
         xmlns:runtime="using:HeuristicLab.Next.Runtime"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -47,7 +48,10 @@
             <TextBlock Text="{Binding Status}" />
         </Border>
 
-        <TabControl Padding="0">
+        <TabControl Padding="0" SelectedIndex="{Binding SelectedTab}">
+            <TabItem Header="Experiments">
+                <views:ExperimentWorkspaceView DataContext="{Binding Workspace}" />
+            </TabItem>
             <TabItem Header="Run">
                 <Grid ColumnDefinitions="340,4,*" Margin="0">
                     <!-- document and parameters -->
