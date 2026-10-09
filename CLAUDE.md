@@ -23,7 +23,15 @@
 
 ## Current state
 - next/HeuristicLab.Next.slnx + next/app/HeuristicLab.Studio (Avalonia MVVM,
-  CommunityToolkit, runs on this machine)
+  CommunityToolkit, runs on this machine; not yet connected to the runtime)
+- next/runtime/HeuristicLab.Next.Runtime (net10.0): the only way new front ends use the core.
+  HlRuntime.Initialize (preloads assemblies, content manager), Catalog, Documents (load/save
+  .hl), OptimizerRunner (seed, progress, timeout, cancellation -> RunReport from IOptimizer.Runs),
+  ItemValues (results as plain values), Provenance (tool commit, runtime, OS, input SHA-256).
+  Front ends must not reference WinForms-era APIs (ItemImage, views) directly.
+- next/app/HeuristicLab.Cli ("hl"): list algorithms|problems, info <file.hl>, run <file.hl>
+  [--seed --timeout --out report.json --save result.hl --quiet]. Exit 0 completed,
+  1 failed, 2 usage, 3 stopped (timeout/Ctrl+C; report still written).
 - Feasibility proven: 46 core assemblies compile with dotnet build +
   -p:FrameworkPathOverride=<mono 4.7.2-api with System.configuration case symlink>
 - Ported: every non-GUI project of the 3.3 solution (next/core, ~70 projects) plus the
@@ -62,7 +70,8 @@
   an alphabetical glob made PSO and GA grouping pick different defaults than legacy.
 
 ## Running tests
-- next/tools/run-tests.sh [quick|daily|all]: quick skips the long Run.Daily category.
+- next/tools/run-tests.sh [quick|daily|all]: quick skips the long Run.Daily category; quick and
+  all also run next/tests/HeuristicLab.Next.Runtime.Tests (runtime + CLI).
 - On Linux it excludes next/tests/known-failures-linux.txt (each entry with its reason:
   Windows-only GDI+/native DLL, Framework-specific expectations, or seeded Run.Daily
   results recorded on .NET Framework). Any other failure is a regression. Keep the list

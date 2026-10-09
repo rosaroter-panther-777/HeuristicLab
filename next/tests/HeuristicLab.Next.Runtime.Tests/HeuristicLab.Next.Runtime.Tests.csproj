@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\runtime\HeuristicLab.Next.Runtime\HeuristicLab.Next.Runtime.csproj" />
+    <ProjectReference Include="..\..\app\HeuristicLab.Cli\HeuristicLab.Cli.csproj" />
   </ItemGroup>
 
   <!-- .hl file saved by legacy HeuristicLab 3.3 on .NET Framework (with known seeded results) -->

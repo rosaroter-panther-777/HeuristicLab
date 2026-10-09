@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run the next/ test suite. Usage: next/tools/run-tests.sh [quick|daily|all] [extra dotnet test args]
+# Run the next/ test suites (legacy tests, then runtime/CLI tests). Usage: next/tools/run-tests.sh [quick|daily|all] [extra dotnet test args]
 #   quick (default): everything except the long-running Run.Daily category
 #   daily:           only Run.Daily (full algorithm runs, takes long)
 #   all:             everything
@@ -21,4 +21,10 @@ if [[ "$(uname -s)" != MINGW* && "$(uname -s)" != MSYS* ]]; then
   done < <(sed -e 's/#.*//' -e 's/[[:space:]]*$//' "$here/../tests/known-failures-linux.txt" | grep -v '^$')
 fi
 
-exec dotnet test "$here/../tests/HeuristicLab.Tests/HeuristicLab.Tests.csproj" ${filter:+--filter "$filter"} "$@"
+status=0
+dotnet test "$here/../tests/HeuristicLab.Tests/HeuristicLab.Tests.csproj" ${filter:+--filter "$filter"} "$@" || status=$?
+# runtime and CLI tests (fast; not part of the daily category)
+if [[ "$mode" != daily ]]; then
+  dotnet test "$here/../tests/HeuristicLab.Next.Runtime.Tests/HeuristicLab.Next.Runtime.Tests.csproj" "$@" || status=$?
+fi
+exit $status
