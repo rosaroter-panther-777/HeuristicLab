@@ -26,6 +26,21 @@ public static class Features {
     return dropIncomplete ? result.WhereFinite(added.Select(a => a.Item1)) : result;
   }
 
+  /// <summary>Splits a comma-separated list of column names/expressions at top-level commas only.</summary>
+  public static IReadOnlyList<string> SplitList(string list) {
+    var items = new List<string>();
+    int depth = 0, start = 0;
+    for (int i = 0; i <= list.Length; i++) {
+      if (i == list.Length || (list[i] == ',' && depth == 0)) {
+        var item = list[start..i].Trim();
+        if (item.Length > 0) items.Add(item);
+        start = i + 1;
+      } else if (list[i] == '(') depth++;
+      else if (list[i] == ')') depth--;
+    }
+    return items;
+  }
+
   /// <summary>"lag(x,1..3)" -> "lag(x,1)", "lag(x,2)", "lag(x,3)"; other expressions unchanged.</summary>
   public static IEnumerable<string> Expand(string expression) {
     var (function, argument, number) = Parse(expression.Trim());
@@ -106,12 +121,14 @@ public sealed record ColumnSummary(string Name, string Type, int Count, int Miss
     table.Names.Select((name, i) => table.Columns[i] switch {
       List<double> d => Numeric(name, d),
       List<DateTime> t => new ColumnSummary(name, "datetime", t.Count, 0, null, null, null, null,
-        t.Count > 0 ? t[0].ToString("O", CultureInfo.InvariantCulture) : null,
-        t.Count > 0 ? t[^1].ToString("O", CultureInfo.InvariantCulture) : null),
+        t.Count > 0 ? Date(t[0]) : null, t.Count > 0 ? Date(t[^1]) : null),
       List<string> s => new ColumnSummary(name, "text", s.Count, s.Count(string.IsNullOrEmpty), null, null, null, null,
         s.FirstOrDefault(), s.LastOrDefault()),
       _ => throw new InvalidOperationException()
     }).ToList();
+
+  private static string Date(DateTime value) =>
+    value.ToString(value.TimeOfDay == TimeSpan.Zero ? "yyyy-MM-dd" : "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
 
   private static ColumnSummary Numeric(string name, List<double> values) {
     var finite = values.Where(double.IsFinite).ToList();

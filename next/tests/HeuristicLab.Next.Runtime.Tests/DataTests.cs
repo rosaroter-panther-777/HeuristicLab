@@ -110,9 +110,8 @@ public class DataTests {
       DataFiles.Write(new TabularData(["y"], [y]), path);
       var ar = new AutoregressiveModeling { TimeOffset = 1 };
       var problem = new TimeSeriesPrognosisProblem();
-      DataProblems.Load(problem, path, "y", trainingPercent: 80);
       // AR reads y[row - TimeOffset]: training must not start before row TimeOffset
-      problem.ProblemData.TrainingPartition.Start = ar.TimeOffset;
+      DataProblems.Load(problem, path, "y", trainingPercent: 80, trainingStart: ar.TimeOffset);
       ar.Problem = problem;
       var report = await OptimizerRunner.RunAsync(ar);
       Assert.AreEqual(RunOutcome.Completed, report.Outcome, report.Error);
