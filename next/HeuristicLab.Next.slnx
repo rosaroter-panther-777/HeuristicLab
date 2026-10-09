@@ -94,6 +94,7 @@
     <Project Path="runtime/HeuristicLab.Next.Runtime/HeuristicLab.Next.Runtime.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/HeuristicLab.Studio.Tests/HeuristicLab.Studio.Tests.csproj" />
     <Project Path="tests/HeuristicLab.Next.Runtime.Tests/HeuristicLab.Next.Runtime.Tests.csproj" />
     <Project Path="tests/HeuristicLab.Tests/HeuristicLab.Tests.csproj" />
   </Folder>

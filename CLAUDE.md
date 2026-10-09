@@ -22,8 +22,12 @@
   Legacy probe recipe: see docs/linux-build-probe.md
 
 ## Current state
-- next/HeuristicLab.Next.slnx + next/app/HeuristicLab.Studio (Avalonia MVVM,
-  CommunityToolkit, runs on this machine; not yet connected to the runtime)
+- next/app/HeuristicLab.Studio (Avalonia 12 MVVM, CommunityToolkit) on the runtime: open .hl,
+  show parameters, run with seed (live progress chart, then the algorithm's quality table),
+  stop, save with runs. Own LineChart control (no charting dependency). Tests in
+  next/tests/HeuristicLab.Studio.Tests run headless (Avalonia.Headless + Skia) and save a
+  screenshot of the real window to bin/.../studio-after-run.png for visual review.
+  Note: HeadlessUnitTestSession.Dispose() hangs (12.1.3) - never dispose it in tests.
 - next/runtime/HeuristicLab.Next.Runtime (net10.0): the only way new front ends use the core.
   HlRuntime.Initialize (preloads assemblies, content manager), Catalog, Documents (load/save
   .hl), OptimizerRunner (seed, progress, timeout, cancellation -> RunReport from IOptimizer.Runs),

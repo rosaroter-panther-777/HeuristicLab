@@ -23,8 +23,10 @@ fi
 
 status=0
 dotnet test "$here/../tests/HeuristicLab.Tests/HeuristicLab.Tests.csproj" ${filter:+--filter "$filter"} "$@" || status=$?
-# runtime and CLI tests (fast; not part of the daily category)
+# runtime/CLI and Studio tests (fast; not part of the daily category)
 if [[ "$mode" != daily ]]; then
   dotnet test "$here/../tests/HeuristicLab.Next.Runtime.Tests/HeuristicLab.Next.Runtime.Tests.csproj" "$@" || status=$?
+  # Studio view model and headless window rendering (no display needed)
+  dotnet test "$here/../tests/HeuristicLab.Studio.Tests/HeuristicLab.Studio.Tests.csproj" "$@" || status=$?
 fi
 exit $status
