@@ -45,7 +45,7 @@ public static class Sweeps {
       foreach (var s in settings) { int eq = s.IndexOf('='); labels[s[..eq]] = s[(eq + 1)..]; }
       var batch = await BatchRunner.RepeatAsync(BatchRunner.Copies(configured), repetitions, seed0, parallelism,
         (options ?? new RunOptions()) with { Labels = labels }, inputFile,
-        (i, r) => onRunCompleted?.Invoke(name, i, r), cancellationToken);
+        (i, r) => onRunCompleted?.Invoke(name, i, r), cancellationToken).ConfigureAwait(false);
       results.Add(new SweepResult(name, settings, batch));
     }
     return results;

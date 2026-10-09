@@ -59,11 +59,14 @@ public sealed class TabularData {
 
 /// <summary>Reading and writing data tables: CSV (format detected by HeuristicLab's parser) and Parquet.</summary>
 public static class DataFiles {
+  // The Parquet library is async-only. Blocking on it from a thread with a synchronization context
+  // (a UI thread) deadlocks if any await inside resumes on that context, so the async work runs on
+  // the thread pool, where there is no context to capture.
   public static TabularData Read(string path) =>
-    IsParquet(path) ? ReadParquetAsync(path).GetAwaiter().GetResult() : ReadCsv(path);
+    IsParquet(path) ? Task.Run(() => ReadParquetAsync(path)).GetAwaiter().GetResult() : ReadCsv(path);
 
   public static void Write(TabularData table, string path) {
-    if (IsParquet(path)) WriteParquetAsync(table, path).GetAwaiter().GetResult();
+    if (IsParquet(path)) Task.Run(() => WriteParquetAsync(table, path)).GetAwaiter().GetResult();
     else WriteCsv(table, path);
   }
 
@@ -101,14 +104,14 @@ public static class DataFiles {
     value.IndexOfAny([',', '"', '\n', '\r']) >= 0 ? "\"" + value.Replace("\"", "\"\"") + "\"" : value;
 
   private static async Task<TabularData> ReadParquetAsync(string path) {
-    await using var stream = File.OpenRead(path);
-    using var reader = await ParquetReader.CreateAsync(stream);
+    using var stream = File.OpenRead(path);
+    using var reader = await ParquetReader.CreateAsync(stream).ConfigureAwait(false);
     var fields = reader.Schema.GetDataFields();
     var columns = fields.Select(f => NewColumn(f.ClrType)).ToList();
     for (int g = 0; g < reader.RowGroupCount; g++) {
       using var group = reader.OpenRowGroupReader(g);
       for (int i = 0; i < fields.Length; i++) {
-        var data = (await group.ReadColumnAsync(fields[i])).Data;
+        var data = (await group.ReadColumnAsync(fields[i]).ConfigureAwait(false)).Data;
         foreach (var value in data) Append(columns[i], value);
       }
     }
@@ -146,15 +149,15 @@ public static class DataFiles {
       _ => new DataField<string>(table.Names[i])
     })).ToArray();
     var schema = new ParquetSchema(fields);
-    await using var stream = File.Create(path);
-    using var writer = await ParquetWriter.CreateAsync(schema, stream);
+    using var stream = File.Create(path);
+    using var writer = await ParquetWriter.CreateAsync(schema, stream).ConfigureAwait(false);
     using var group = writer.CreateRowGroup();
     for (int i = 0; i < fields.Length; i++) {
       Array values = table.Columns[i] switch {
         List<double> d => d.ToArray(), List<DateTime> t => t.ToArray(), List<string> s => s.ToArray(),
         _ => throw new InvalidOperationException()
       };
-      await group.WriteColumnAsync(new DataColumn((DataField)fields[i], values));
+      await group.WriteColumnAsync(new DataColumn((DataField)fields[i], values)).ConfigureAwait(false);
     }
   }
 }

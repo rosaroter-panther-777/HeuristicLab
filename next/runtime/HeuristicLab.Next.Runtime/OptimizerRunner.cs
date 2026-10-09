@@ -58,7 +58,7 @@ public static class OptimizerRunner {
       : new Timer(_ => progress.Report(Snapshot(optimizer, clock.Elapsed)), null, options.ProgressInterval, options.ProgressInterval);
 
     try {
-      await Task.Run(() => optimizer.Start(CancellationToken.None), CancellationToken.None);
+      await Task.Run(() => optimizer.Start(CancellationToken.None), CancellationToken.None).ConfigureAwait(false);
       // an exception or the stop request leaves the optimizer paused; stopping records its run
       if (optimizer.ExecutionState == ExecutionState.Paused) TryStop(optimizer);
     } catch (Exception e) {
@@ -66,7 +66,7 @@ public static class OptimizerRunner {
     } finally {
       optimizer.ExceptionOccurred -= OnException;
       // waits for callbacks in flight, so no progress is reported after the final snapshot
-      if (progressTimer != null) await progressTimer.DisposeAsync();
+      if (progressTimer != null) await progressTimer.DisposeAsync().ConfigureAwait(false);
     }
     progress?.Report(Snapshot(optimizer, clock.Elapsed));
 

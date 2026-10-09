@@ -53,6 +53,22 @@ public partial class MainViewModel : ViewModelBase {
   [ObservableProperty]
   public partial string? ResultsFolder { get; set; }
 
+  /// <summary>Sweep specs separated by ';', e.g. "PopulationSize=50,200; Selector=TournamentSelector,ProportionalSelector".</summary>
+  [ObservableProperty]
+  public partial string SweepText { get; set; } = "";
+
+  [ObservableProperty]
+  public partial string WalkTrainText { get; set; } = "";
+
+  [ObservableProperty]
+  public partial string WalkTestText { get; set; } = "";
+
+  [ObservableProperty]
+  public partial string WalkStepText { get; set; } = "";
+
+  [ObservableProperty]
+  public partial bool WalkExpanding { get; set; }
+
   /// <summary>Batch report of the last batch run (null before the first batch).</summary>
   public BatchReport? LastBatch { get; private set; }
 
@@ -172,6 +188,14 @@ public partial class MainViewModel : ViewModelBase {
       Status = "Runs and parallel must be whole numbers of at least 1.";
       return;
     }
+    if (!string.IsNullOrWhiteSpace(WalkTrainText)) {
+      await RunWalkForwardAsync(parallel, seed, cancellationToken);
+      return;
+    }
+    if (!string.IsNullOrWhiteSpace(SweepText)) {
+      await RunSweepAsync(repetitions, parallel, seed, cancellationToken);
+      return;
+    }
     if (repetitions > 1) {
       await RunBatchAsync(repetitions, parallel, seed, cancellationToken);
       return;
@@ -259,6 +283,85 @@ public partial class MainViewModel : ViewModelBase {
       IsRunning = false;
     }
   }
+
+  private async Task RunSweepAsync(int repetitions, int parallel, int? seed, CancellationToken cancellationToken) {
+    var specs = SweepText.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    IsRunning = true;
+    ClearRunView();
+    var store = ResultsFolder == null ? null : new ResultStore(ResultsFolder);
+    int done = 0, total = Sweeps.Configurations(specs).Count * repetitions;
+    Status = $"Sweep: {total} runs ...";
+    try {
+      var results = await Sweeps.RunAsync(optimizer!, specs, repetitions, seed, parallel, new RunOptions(), filePath,
+        (config, i, report) => {
+          store?.Add(report);
+          Avalonia.Threading.Dispatcher.UIThread.Post(() => Status = $"Sweep: {++done} of {total} runs finished");
+        }, cancellationToken);
+      await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { });
+      var metric = KeyMetricNames.FirstOrDefault(k => results.Any(r => r.Batch.Summary.ContainsKey(k)));
+      Results.Clear();
+      var points = new List<ChartPoint>();
+      for (int c = 0; c < results.Count; c++) {
+        var r = results[c];
+        if (metric != null && r.Batch.Summary.TryGetValue(metric, out var stats)) {
+          Results.Add(new NameValue(r.Configuration, $"mean {Format(stats.Mean)}  sd {Format(stats.StdDev)}  [{Format(stats.Min)} .. {Format(stats.Max)}]  n={stats.Count}"));
+          points.AddRange(r.Batch.Reports.Select(KeyMetric).OfType<double>().Select(v => new ChartPoint(c + 1, v)));
+        }
+      }
+      if (points.Count > 0) Series = [new ChartSeries($"{metric} per run, by configuration", ChartSeries.PaletteColor(0), points, PointsOnly: true)];
+      ChartXAxisTitle = "Configuration (in the order listed below)";
+      Status = $"Sweep finished: {results.Count} configurations x {repetitions} runs" + (store != null ? $", stored in {store.Directory}" : "");
+      if (store != null && ResultsBrowser.Folder == store.Directory) ResultsBrowser.Load(store.Directory);
+    } catch (ArgumentException e) {
+      Status = e.Message;
+    } finally {
+      IsRunning = false;
+    }
+  }
+
+  private async Task RunWalkForwardAsync(int parallel, int? seed, CancellationToken cancellationToken) {
+    if (optimizer is not IAlgorithm algorithm) { Status = "Walk-forward validation needs an algorithm."; return; }
+    if (!int.TryParse(WalkTrainText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var train)
+        || !int.TryParse(WalkTestText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var test)
+        || (WalkStepText.Length > 0 && !int.TryParse(WalkStepText, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))) {
+      Status = "Walk-forward: training rows, test rows (and step) must be whole numbers.";
+      return;
+    }
+    int? step = WalkStepText.Length > 0 ? int.Parse(WalkStepText, CultureInfo.InvariantCulture) : null;
+    IsRunning = true;
+    ClearRunView();
+    var store = ResultsFolder == null ? null : new ResultStore(ResultsFolder);
+    Status = "Walk-forward ...";
+    try {
+      var walk = await WalkForward.RunAsync(algorithm, new WalkForwardOptions(train, test) { Step = step, Expanding = WalkExpanding },
+        seed, parallel, null, filePath, fold => {
+          store?.Add(fold.Report);
+          Avalonia.Threading.Dispatcher.UIThread.Post(() => Status = $"Walk-forward: fold {fold.Index} finished");
+        }, cancellationToken);
+      await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { });
+      Results.Clear();
+      foreach (var (name, s) in walk.TestSummary)
+        Results.Add(new NameValue(ShortName(name), $"mean {Format(s.Mean)}  sd {Format(s.StdDev)}  [{Format(s.Min)} .. {Format(s.Max)}]  n={s.Count}"));
+      // per fold: the first test metric (e.g. Sharpe ratio or R²), placed at the fold's test start
+      var key = walk.TestSummary.Keys.FirstOrDefault(k => k.Contains("Sharpe") || k.Contains("R²")) ?? walk.TestSummary.Keys.FirstOrDefault();
+      if (key != null) {
+        var points = walk.Folds.OrderBy(f => f.Index)
+          .Select(f => f.Report.Runs.Single().Results.TryGetValue(key, out var v) && v.Value is double d ? new ChartPoint(f.Test.Start, d) : (ChartPoint?)null)
+          .OfType<ChartPoint>().ToList();
+        Series = [new ChartSeries(ShortName(key), ChartSeries.PaletteColor(1), points, PointsOnly: true)];
+        ChartXAxisTitle = "First test row of the fold";
+      }
+      Status = $"Walk-forward finished: {walk.Folds.Count} folds" + (store != null ? $", stored in {store.Directory}" : "");
+      if (store != null && ResultsBrowser.Folder == store.Directory) ResultsBrowser.Load(store.Directory);
+    } catch (ArgumentException e) {
+      Status = e.Message;
+    } finally {
+      IsRunning = false;
+    }
+  }
+
+  /// <summary>"Best training solution.Sharpe ratio (test)" -> "Sharpe ratio (test)".</summary>
+  private static string ShortName(string resultName) => resultName[(resultName.LastIndexOf('.') + 1)..];
 
   private static readonly string[] KeyMetricNames = ["BestQuality", "CurrentBestQuality"];
   private static string? KeyMetricName(RunReport report) =>

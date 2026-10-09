@@ -56,10 +56,10 @@ public static class WalkForward {
           ["test"] = $"{test.Start}..{test.End - 1}"
         };
         var options = (runOptions ?? new RunOptions()) with { Seed = seed, Labels = labels };
-        var report = await OptimizerRunner.RunAsync(algorithm, options, inputFile, null, cancellationToken);
+        var report = await OptimizerRunner.RunAsync(algorithm, options, inputFile, null, cancellationToken).ConfigureAwait(false);
         folds[i] = new WalkForwardFold(i, training, test, report);
         onFold?.Invoke(folds[i]!);
-      });
+      }).ConfigureAwait(false);
     var done = folds.Where(f => f != null).Select(f => f!).ToList();
     return new WalkForwardReport(done, TestSummary(done));
   }

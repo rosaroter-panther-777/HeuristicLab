@@ -61,8 +61,11 @@ public partial class ResultsBrowserViewModel(IFileDialogService? fileDialogs = n
     Metrics = rows.SelectMany(r => r.Keys).Where(k => k.StartsWith("result:", StringComparison.Ordinal))
       .Distinct().Select(k => k["result:".Length..]).Order(StringComparer.OrdinalIgnoreCase).ToList();
     GroupColumns = new[] { "optimizer", "optimizerType", "inputFile", "runtime", "os" }
+      .Concat(rows.SelectMany(r => r.Keys).Where(k => k.StartsWith("label:", StringComparison.Ordinal)).Distinct().Order(StringComparer.OrdinalIgnoreCase))
       .Concat(rows.SelectMany(r => r.Keys).Where(k => k.StartsWith("param:", StringComparison.Ordinal)).Distinct().Order(StringComparer.OrdinalIgnoreCase))
       .ToList();
+    // sweeps are compared by configuration, walk-forward runs by fold
+    GroupBy = GroupColumns.Contains("label:config") ? "label:config" : GroupColumns.Contains("label:fold") ? "label:fold" : "optimizer";
     Metric = new[] { "BestQuality", "CurrentBestQuality" }.FirstOrDefault(Metrics.Contains) ?? Metrics.FirstOrDefault();
     Refresh();
     Status = $"{rows.Count} runs in {folder}";

@@ -48,9 +48,9 @@ public static class BatchRunner {
         var runOptions = (options ?? new RunOptions()) with { Seed = seed0 + i };
         IOptimizer optimizer;
         lock (factoryLock) optimizer = createOptimizer();
-        reports[i] = await OptimizerRunner.RunAsync(optimizer, runOptions, inputFile, null, cancellationToken);
+        reports[i] = await OptimizerRunner.RunAsync(optimizer, runOptions, inputFile, null, cancellationToken).ConfigureAwait(false);
         onRunCompleted?.Invoke(i, reports[i]);
-      });
+      }).ConfigureAwait(false);
 
     var done = reports.Where(r => r != null).ToList();
     return new BatchReport(seed0, repetitions, done, Summarize(done));
