@@ -8,12 +8,13 @@ using HeuristicLab.Optimization;
 namespace HeuristicLab.Cli;
 
 /// <summary>The hl command line. Output goes to the given writers so it can run in-process (tests).</summary>
-public static class CliApp {
+public static partial class CliApp {
   public const int ExitCompleted = 0, ExitFailed = 1, ExitUsage = 2, ExitStopped = 3;
 
   public static async Task<int> RunAsync(string[] args, TextWriter output, TextWriter error) {
-    var root = new RootCommand("HeuristicLab command line: inspect and run .hl files.") {
-      ListCommand(output), InfoCommand(output), RunCommand(output, error)
+    var root = new RootCommand("HeuristicLab command line: create, inspect and run .hl files; collect and compare results.") {
+      ListCommand(output), InstancesCommand(output), NewCommand(output), InfoCommand(output),
+      RunCommand(output, error), StoreCommand(output)
     };
     var config = new InvocationConfiguration { Output = output, Error = error };
     return await root.Parse(args).InvokeAsync(config);
@@ -57,41 +58,6 @@ public static class CliApp {
         }
       }
       return ExitCompleted;
-    });
-    return command;
-  }
-
-  private static Command RunCommand(TextWriter output, TextWriter error) {
-    var file = new Argument<FileInfo>("file") { Description = ".hl file with an algorithm, experiment or batch run" }.AcceptExistingOnly();
-    var seed = new Option<int?>("--seed") { Description = "Seed for all algorithms (sets SetSeedRandomly=false)" };
-    var timeout = new Option<TimeSpan?>("--timeout") { Description = "Stop after this wall-clock time (hh:mm:ss)" };
-    var report = new Option<FileInfo?>("--out") { Description = "Write the run report as JSON to this file" };
-    var save = new Option<FileInfo?>("--save") { Description = "Save the optimizer with its runs to this .hl file" };
-    var quiet = new Option<bool>("--quiet") { Description = "No progress output" };
-    var command = new Command("run", "Run a .hl file and report its results.") { file, seed, timeout, report, save, quiet };
-    command.SetAction(async (result, cancellationToken) => {
-      var path = result.GetValue(file)!.FullName;
-      if (Documents.Load(path) is not IOptimizer optimizer) {
-        error.WriteLine($"{path} does not contain an algorithm, experiment or batch run.");
-        return ExitUsage;
-      }
-      var progress = result.GetValue(quiet) ? null : new Progress<RunProgress>(p => error.WriteLine(FormatProgress(p)));
-      var options = new RunOptions { Seed = result.GetValue(seed), Timeout = result.GetValue(timeout) };
-      var runReport = await OptimizerRunner.RunAsync(optimizer, options, path, progress, cancellationToken);
-
-      WriteSummary(output, runReport);
-      if (result.GetValue(report) is FileInfo reportFile) {
-        await File.WriteAllTextAsync(reportFile.FullName, ReportJson.Serialize(runReport), CancellationToken.None);
-        output.WriteLine($"Report: {reportFile.FullName}");
-      }
-      if (result.GetValue(save) is FileInfo saveFile) {
-        Documents.Save((IStorableContent)optimizer, saveFile.FullName);
-        output.WriteLine($"Saved: {saveFile.FullName}");
-      }
-      if (runReport.Error != null) error.WriteLine(runReport.Error);
-      return runReport.Outcome switch {
-        RunOutcome.Completed => ExitCompleted, RunOutcome.Stopped => ExitStopped, _ => ExitFailed
-      };
     });
     return command;
   }

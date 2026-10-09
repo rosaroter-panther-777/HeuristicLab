@@ -33,14 +33,14 @@
   .hl), OptimizerRunner (seed, progress, timeout, cancellation -> RunReport from IOptimizer.Runs),
   ItemValues (results as plain values), Provenance (tool commit, runtime, OS, input SHA-256).
   Front ends must not reference WinForms-era APIs (ItemImage, views) directly.
-- next/app/HeuristicLab.Cli ("hl"): list algorithms|problems, info <file.hl>, run <file.hl>
-  [--seed --timeout --out report.json --save result.hl --quiet]. Exit 0 completed,
-  1 failed, 2 usage, 3 stopped (timeout/Ctrl+C; report still written).
-- Feasibility proven: 46 core assemblies compile with dotnet build +
-  -p:FrameworkPathOverride=<mono 4.7.2-api with System.configuration case symlink>
-- Ported: every non-GUI project of the 3.3 solution (next/core, ~70 projects) plus the
-  ExtLibs they need (next/extlibs: ALGLIB 3.17/3.7, LibSVM, AutoDiff, NativeInterpreter).
-  Headless subsets: PluginInfrastructure, Visualization.ChartControlsExtensions (ChartUtil).
+- next/app/HeuristicLab.Cli ("hl"), research workflow on the runtime:
+  hl list algorithms|problems; hl instances <problem>;
+  hl new <algorithm> [--problem P] [--instance I | --csv f --target y --training 66] [--set N=V]... --out f.hl;
+  hl info f.hl; hl run f.hl [--seed S] [--set N=V]... [--repeat N --parallel K] [--timeout] [--out report.json]
+  [--store DIR] [--save f.hl]; hl store list|summary [--metric M --by param:X]|export [--csv f] DIR.
+  Exit 0 completed, 1 failed, 2 usage, 3 stopped (timeout/Ctrl+C; reports still written).
+  Batches: explicit seeds S..S+N-1 (base seed drawn and recorded if not given), deep clones per
+  run; parallel and sequential give identical results. Results store = folder of JSON reports.
 - Not ported yet: Problems.ExternalEvaluation* (protobuf 2.4 / Matlab COM / Scilab),
   ExactOptimization (OR-Tools, Windows-only native runtime), all Views/GUI, Hive/OKB/Services.
 - next/tests/HeuristicLab.Tests: legacy tests linked unchanged incl. samples, run on

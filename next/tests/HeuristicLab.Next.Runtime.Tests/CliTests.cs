@@ -57,6 +57,52 @@ public class CliTests {
   }
 
   [TestMethod]
+  public async Task NewRepeatStoreSummaryExportWorkflow() {
+    var dir = Path.Combine(Path.GetTempPath(), $"hl-cli-workflow-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(dir);
+    var file = Path.Combine(dir, "ga.hl");
+    var store = Path.Combine(dir, "store");
+    try {
+      var created = await Hl("new", "GeneticAlgorithm", "--problem", "TravelingSalesmanProblem", "--instance", "berlin52",
+        "--set", "PopulationSize=20", "--set", "MaximumGenerations=10", "--out", file);
+      Assert.AreEqual(CliApp.ExitCompleted, created.Exit, created.Out);
+      StringAssert.Contains(created.Out, "berlin52");
+
+      var run = await Hl("run", file, "--repeat", "3", "--parallel", "2", "--seed", "5", "--store", store, "--quiet");
+      Assert.AreEqual(CliApp.ExitCompleted, run.Exit, run.Out + run.Err);
+      StringAssert.Contains(run.Out, "3 of 3 runs completed, seeds 5..7");
+      Assert.AreEqual(3, Directory.GetFiles(store, "*.json").Length);
+
+      var summary = await Hl("store", "summary", store, "--by", "param:PopulationSize");
+      Assert.AreEqual(CliApp.ExitCompleted, summary.Exit);
+      StringAssert.Contains(summary.Out, "BestQuality by param:PopulationSize");
+
+      var csv = Path.Combine(dir, "runs.csv");
+      var export = await Hl("store", "export", store, "--csv", csv);
+      Assert.AreEqual(CliApp.ExitCompleted, export.Exit);
+      Assert.AreEqual(4, File.ReadAllLines(csv).Length);
+    } finally {
+      Directory.Delete(dir, recursive: true);
+    }
+  }
+
+  [TestMethod]
+  public async Task NewRejectsAProblemTheAlgorithmCannotSolve() {
+    var file = Path.Combine(Path.GetTempPath(), $"hl-cli-{Guid.NewGuid():N}.hl");
+    var (exit, output, _) = await Hl("new", "GeneticAlgorithm", "--problem", "RegressionProblem", "--out", file);
+    Assert.AreEqual(CliApp.ExitUsage, exit);
+    StringAssert.Contains(output, "cannot solve");
+    Assert.IsFalse(File.Exists(file));
+  }
+
+  [TestMethod]
+  public async Task UnknownParameterIsAUsageError() {
+    var (exit, _, error) = await Hl("run", LegacyGaTsp, "--set", "NoSuchParameter=1", "--quiet");
+    Assert.AreEqual(CliApp.ExitUsage, exit);
+    StringAssert.Contains(error, "no parameter 'NoSuchParameter'");
+  }
+
+  [TestMethod]
   public async Task BadInputIsAUsageError() {
     var (missing, _, _) = await Hl("run", "/nonexistent/file.hl");
     Assert.AreNotEqual(CliApp.ExitCompleted, missing);
