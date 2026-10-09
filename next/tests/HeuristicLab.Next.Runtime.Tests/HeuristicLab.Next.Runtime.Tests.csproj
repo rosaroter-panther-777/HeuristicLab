@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\runtime\HeuristicLab.Next.Runtime\HeuristicLab.Next.Runtime.csproj" />
+  </ItemGroup>
+
+  <!-- .hl file saved by legacy HeuristicLab 3.3 on .NET Framework (with known seeded results) -->
+  <ItemGroup>
+    <None Include="..\..\..\HeuristicLab.Tests\Test Resources\GA_TSP.hl" Link="TestData\GA_TSP.hl" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="3.11.1" />
+  </ItemGroup>
+
+</Project>

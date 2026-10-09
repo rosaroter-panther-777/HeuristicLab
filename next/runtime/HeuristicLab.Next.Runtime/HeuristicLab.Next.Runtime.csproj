@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Headless runtime shared by all new front ends (CLI, Studio): loading/saving .hl files,
+       algorithm/problem catalog, running optimizers with seed/progress/cancellation, and
+       results as plain values with provenance. Knows nothing about GUIs. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>HeuristicLab.Next.Runtime</RootNamespace>
+  </PropertyGroup>
+
+  <!-- All ported libraries: .hl files and plugin discovery need every algorithm/problem
+       assembly next to the application. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\*\*.csproj" />
+    <ProjectReference Include="..\..\extlibs\*\*.csproj" />
+    <ProjectReference Update="..\..\extlibs\ALGLIB-3.7.0\ALGLIB-3.7.0.csproj" Aliases="alglib_3_7" />
+  </ItemGroup>
+
+</Project>
