@@ -14,7 +14,7 @@ public static partial class CliApp {
   public static async Task<int> RunAsync(string[] args, TextWriter output, TextWriter error) {
     var root = new RootCommand("HeuristicLab command line: create, inspect and run .hl files; collect and compare results.") {
       ListCommand(output), InstancesCommand(output), NewCommand(output), InfoCommand(output),
-      RunCommand(output, error), StoreCommand(output), DataCommand(output)
+      RunCommand(output, error), ShowCommand(output), StoreCommand(output), DataCommand(output)
     };
     var config = new InvocationConfiguration { Output = output, Error = error };
     return await root.Parse(args).InvokeAsync(config);

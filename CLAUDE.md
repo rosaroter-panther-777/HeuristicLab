@@ -76,6 +76,9 @@
 - Plugin type discovery (LightweightApplicationManager replacement) scans assemblies in
   name order: AppDomain order differs between runtimes, and defaults are picked from the
   first discovered type.
+- Trading (symbolic): the target (price change) must be among the inputs, but the grammar only
+  allows lagged variables with lag <= -1, so models cannot read the present (tested). Signals
+  are path-dependent: HeuristicLab evaluates training and test each from a fresh start.
 - Autoregressive Modeling reads y[row - offset] without checking: set a training start
   (--training-start / DataProblems trainingStart) of at least its maximum time offset.
 - Seeded runs are reproducible per runtime and platform, not across them: .NET Framework,

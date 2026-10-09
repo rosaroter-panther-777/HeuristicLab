@@ -9,6 +9,7 @@ public static class ReportJson {
     WriteIndented = true,
     NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    IncludeFields = true,  // value tuples (partition ranges, route points) are fields
     Converters = { new JsonStringEnumConverter() },
   };
 
