@@ -14,8 +14,11 @@ public sealed record RunOptions {
   public TimeSpan? Timeout { get; init; }
 }
 
-/// <summary>Progress snapshot: elapsed time and the numeric results of the running algorithm.</summary>
-public sealed record RunProgress(TimeSpan ExecutionTime, IReadOnlyDictionary<string, double> Values);
+/// <summary>
+/// Progress snapshot: wall-clock time since the run started (monotonic, for plotting), the
+/// optimizer's own execution time (updated in coarse steps), and its numeric results.
+/// </summary>
+public sealed record RunProgress(TimeSpan Elapsed, TimeSpan ExecutionTime, IReadOnlyDictionary<string, double> Values);
 
 public enum RunOutcome { Completed, Stopped, Failed }
 
@@ -47,8 +50,9 @@ public static class OptimizerRunner {
     using var stopSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
     if (options.Timeout is TimeSpan timeout) stopSource.CancelAfter(timeout);
     using var stopRegistration = stopSource.Token.Register(() => TryStop(optimizer));
-    using var progressTimer = progress == null ? null
-      : new Timer(_ => progress.Report(Snapshot(optimizer)), null, options.ProgressInterval, options.ProgressInterval);
+    var clock = System.Diagnostics.Stopwatch.StartNew();
+    var progressTimer = progress == null ? null
+      : new Timer(_ => progress.Report(Snapshot(optimizer, clock.Elapsed)), null, options.ProgressInterval, options.ProgressInterval);
 
     try {
       await Task.Run(() => optimizer.Start(CancellationToken.None), CancellationToken.None);
@@ -58,8 +62,10 @@ public static class OptimizerRunner {
       error ??= e;
     } finally {
       optimizer.ExceptionOccurred -= OnException;
+      // waits for callbacks in flight, so no progress is reported after the final snapshot
+      if (progressTimer != null) await progressTimer.DisposeAsync();
     }
-    progress?.Report(Snapshot(optimizer));
+    progress?.Report(Snapshot(optimizer, clock.Elapsed));
 
     var outcome = error != null ? RunOutcome.Failed
                 : stopSource.IsCancellationRequested ? RunOutcome.Stopped
@@ -88,7 +94,7 @@ public static class OptimizerRunner {
   private static T? Value<T>(IParameterizedItem item, string name) where T : class, IItem =>
     item.Parameters.TryGetValue(name, out var parameter) && parameter is IValueParameter vp ? vp.Value as T : null;
 
-  private static RunProgress Snapshot(IOptimizer optimizer) {
+  private static RunProgress Snapshot(IOptimizer optimizer, TimeSpan elapsed) {
     var values = new Dictionary<string, double>();
     if (optimizer is IAlgorithm algorithm) {
       try {
@@ -98,7 +104,7 @@ public static class OptimizerRunner {
         // results changed while being read by the running algorithm; next snapshot will catch up
       }
     }
-    return new RunProgress(optimizer.ExecutionTime, values);
+    return new RunProgress(elapsed, optimizer.ExecutionTime, values);
   }
 
   private static void TryStop(IOptimizer optimizer) {

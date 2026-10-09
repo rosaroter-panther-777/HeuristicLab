@@ -7,9 +7,12 @@ namespace HeuristicLab.Next.Runtime;
 
 /// <summary>
 /// A HeuristicLab item as a plain value. Value holds a number, bool, string, array, matrix
-/// (array of rows) or table (row name -> values); items without a plain form keep their text.
+/// (array of rows) or TableValue; items without a plain form keep their text.
 /// </summary>
 public sealed record ItemValue(string Type, object? Value, string? Text = null);
+
+/// <summary>Value of a DataTable result: named rows of values, plus the table's axis titles.</summary>
+public sealed record TableValue(string Name, string XAxisTitle, string YAxisTitle, IReadOnlyDictionary<string, double[]> Rows);
 
 public static class ItemValues {
   public static ItemValue From(IItem? item) {
@@ -25,7 +28,8 @@ public static class ItemValues {
       case StringArray sa: return new ItemValue(type, sa.ToArray());
       case StringMatrix sm: return new ItemValue(type, Rows(sm.Rows, sm.Columns, (r, c) => sm[r, c]));
       case DataTable table:
-        return new ItemValue(type, table.Rows.ToDictionary(r => r.Name, r => r.Values.ToArray()), table.Name);
+        return new ItemValue(type, new TableValue(table.Name, table.VisualProperties.XAxisTitle ?? "",
+          table.VisualProperties.YAxisTitle ?? "", table.Rows.ToDictionary(r => r.Name, r => r.Values.ToArray())));
     }
     var generic = GenericBase(item.GetType());
     if (generic == typeof(ValueTypeValue<>))
