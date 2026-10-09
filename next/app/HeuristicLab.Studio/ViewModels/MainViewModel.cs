@@ -28,15 +28,32 @@ public partial class MainViewModel : ViewModelBase {
   private static readonly string[] ChartKeys = ["BestQuality", "CurrentBestQuality", "CurrentAverageQuality", "CurrentWorstQuality"];
 
   private readonly IFileDialogService? fileDialogs;
+  private readonly IDialogService? dialogs;
   private readonly List<RunProgress> history = [];
   private IOptimizer? optimizer;
   private string? filePath;
 
   public MainViewModel() : this(null) { }
 
-  public MainViewModel(IFileDialogService? fileDialogs) {
+  public MainViewModel(IFileDialogService? fileDialogs, IDialogService? dialogs = null) {
     this.fileDialogs = fileDialogs;
+    this.dialogs = dialogs;
+    ResultsBrowser = new ResultsBrowserViewModel(fileDialogs);
   }
+
+  public ResultsBrowserViewModel ResultsBrowser { get; }
+
+  [ObservableProperty]
+  public partial string RepetitionsText { get; set; } = "1";
+
+  [ObservableProperty]
+  public partial string ParallelText { get; set; } = "1";
+
+  [ObservableProperty]
+  public partial string? ResultsFolder { get; set; }
+
+  /// <summary>Batch report of the last batch run (null before the first batch).</summary>
+  public BatchReport? LastBatch { get; private set; }
 
   [ObservableProperty]
   public partial string Title { get; set; } = "HeuristicLab Studio";
@@ -62,18 +79,39 @@ public partial class MainViewModel : ViewModelBase {
   private const string LiveAxisTitle = "Elapsed time [s]";
 
   [ObservableProperty]
-  [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(SaveCommand), nameof(OpenCommand))]
+  [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(SaveCommand), nameof(OpenCommand), nameof(NewCommand))]
   public partial bool IsRunning { get; set; }
 
   [ObservableProperty]
   [NotifyCanExecuteChangedFor(nameof(RunCommand), nameof(SaveCommand))]
   public partial bool HasDocument { get; set; }
 
-  public ObservableCollection<NameValue> Parameters { get; } = [];
+  public ObservableCollection<ParameterRowViewModel> Parameters { get; } = [];
   public ObservableCollection<NameValue> Results { get; } = [];
 
   /// <summary>Report of the last run (null before the first run).</summary>
   public RunReport? LastReport { get; private set; }
+
+  [RelayCommand(CanExecute = nameof(CanOpen))]
+  private async Task NewAsync() {
+    if (dialogs != null && await dialogs.NewSetupAsync() is SetupResult setup) ShowNew(setup);
+  }
+
+  /// <summary>Shows a freshly created (unsaved) setup as the current document.</summary>
+  public void ShowNew(SetupResult setup) {
+    optimizer = setup.Algorithm;
+    filePath = null;
+    HasDocument = true;
+    Title = $"{setup.Algorithm.Name} - HeuristicLab Studio";
+    ShowDocument(setup.Algorithm);
+    ClearRunView();
+    Status = setup.Messages.Count > 0 ? string.Join("; ", setup.Messages) : $"Created {setup.Algorithm.Name}";
+  }
+
+  [RelayCommand]
+  private async Task ChooseResultsFolderAsync() {
+    if (fileDialogs != null && await fileDialogs.PickFolderAsync("Results folder") is string folder) ResultsFolder = folder;
+  }
 
   [RelayCommand(CanExecute = nameof(CanOpen))]
   private async Task OpenAsync() {
@@ -126,6 +164,16 @@ public partial class MainViewModel : ViewModelBase {
       seed = parsed;
     }
 
+    if (!int.TryParse(RepetitionsText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var repetitions) || repetitions < 1
+        || !int.TryParse(ParallelText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parallel) || parallel < 1) {
+      Status = "Runs and parallel must be whole numbers of at least 1.";
+      return;
+    }
+    if (repetitions > 1) {
+      await RunBatchAsync(repetitions, parallel, seed, cancellationToken);
+      return;
+    }
+
     IsRunning = true;
     ClearRunView();
     Status = seed is int s ? $"Running with seed {s} ..." : "Running ...";
@@ -135,6 +183,7 @@ public partial class MainViewModel : ViewModelBase {
       var options = new RunOptions { Seed = seed, ProgressInterval = TimeSpan.FromMilliseconds(200) };
       var report = await OptimizerRunner.RunAsync(optimizer, options, filePath, progress, cancellationToken);
       LastReport = report;
+      if (ResultsFolder != null) new ResultStore(ResultsFolder).Add(report);
       ShowReport(report);
       ShowQualityTable(report);
       ShowDocument(optimizer);
@@ -170,6 +219,50 @@ public partial class MainViewModel : ViewModelBase {
     };
   }
 
+  private async Task RunBatchAsync(int repetitions, int parallel, int? seed, CancellationToken cancellationToken) {
+    IsRunning = true;
+    ClearRunView();
+    ChartXAxisTitle = "Run";
+    var store = ResultsFolder == null ? null : new ResultStore(ResultsFolder);
+    int done = 0;
+    var best = new List<ChartPoint>();
+    Status = $"Running {repetitions} runs ...";
+    try {
+      var batch = await BatchRunner.RepeatAsync(BatchRunner.Copies(optimizer!), repetitions, seed, parallel,
+        new RunOptions(), filePath, (i, report) => {
+          store?.Add(report);
+          var value = KeyMetric(report);
+          // called from worker threads: hand the UI update to the UI thread
+          Avalonia.Threading.Dispatcher.UIThread.Post(() => {
+            done++;
+            if (value is double v) {
+              best.Add(new ChartPoint(i + 1, v));
+              Series = [new ChartSeries((KeyMetricName(report) ?? "Result") + " per run", ChartSeries.PaletteColor(0),
+                                        best.OrderBy(p => p.X).ToList(), PointsOnly: true)];
+            }
+            Status = $"Run {done} of {repetitions} finished";
+          });
+        }, cancellationToken);
+      LastBatch = batch;
+      await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { });  // flush posted progress first
+      Results.Clear();
+      foreach (var (name, s) in batch.Summary)
+        Results.Add(new NameValue(name, $"mean {Format(s.Mean)}  sd {Format(s.StdDev)}  [{Format(s.Min)} .. {Format(s.Max)}]  n={s.Count}"));
+      Status = $"{batch.Completed} of {repetitions} runs completed (seeds {batch.BaseSeed}..{batch.BaseSeed + repetitions - 1})" +
+               (store != null ? $", stored in {store.Directory}" : "");
+      if (store != null && ResultsBrowser.Folder == store.Directory) ResultsBrowser.Load(store.Directory);
+    } finally {
+      IsRunning = false;
+    }
+  }
+
+  private static readonly string[] KeyMetricNames = ["BestQuality", "CurrentBestQuality"];
+  private static string? KeyMetricName(RunReport report) =>
+    KeyMetricNames.FirstOrDefault(k => report.Runs.LastOrDefault()?.Results.ContainsKey(k) == true);
+  private static double? KeyMetric(RunReport report) =>
+    KeyMetricName(report) is string k ? ItemValueNumber(report.Runs.Last().Results[k]) : null;
+  private static double? ItemValueNumber(ItemValue value) => value.Value switch { double d => d, int i => i, long l => l, _ => null };
+
   private void ShowDocument(IOptimizer loaded) {
     DocumentName = loaded.Name;
     var problem = loaded is IAlgorithm { Problem: not null } algorithm ? algorithm.Problem.Name : null;
@@ -180,8 +273,8 @@ public partial class MainViewModel : ViewModelBase {
     }.Where(l => l != null));
     Parameters.Clear();
     if (loaded is IParameterizedItem parameterized)
-      foreach (var parameter in parameterized.Parameters.Where(p => !p.Hidden).OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase))
-        Parameters.Add(new NameValue(parameter.Name, parameter.ActualValue?.ToString() ?? ""));
+      foreach (var parameter in ParameterEditor.Describe(parameterized))
+        Parameters.Add(new ParameterRowViewModel(parameterized, parameter, message => Status = message));
   }
 
   private void ClearRunView() {

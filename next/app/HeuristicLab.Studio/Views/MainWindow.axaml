@@ -20,13 +20,21 @@
         <Border DockPanel.Dock="Top" Padding="10,8" BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
             <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="New..." Command="{Binding NewCommand}" />
                 <Button Content="Open..." Command="{Binding OpenCommand}" />
                 <Button Content="Save as..." Command="{Binding SaveCommand}" />
                 <Separator Width="1" Margin="4,2" />
                 <TextBlock Text="Seed" VerticalAlignment="Center" />
                 <TextBox Text="{Binding SeedText}" Width="90" PlaceholderText="random" />
+                <TextBlock Text="Runs" VerticalAlignment="Center" />
+                <TextBox Text="{Binding RepetitionsText}" Width="50" />
+                <TextBlock Text="Parallel" VerticalAlignment="Center" />
+                <TextBox Text="{Binding ParallelText}" Width="50" />
                 <Button Content="Run" Command="{Binding RunCommand}" Classes="accent" />
                 <Button Content="Stop" Command="{Binding RunCancelCommand}" />
+                <Separator Width="1" Margin="4,2" />
+                <Button Content="Results folder..." Command="{Binding ChooseResultsFolderCommand}" />
+                <TextBlock Text="{Binding ResultsFolder}" VerticalAlignment="Center" Opacity="0.7" MaxWidth="260" TextTrimming="CharacterEllipsis" />
             </StackPanel>
         </Border>
 
@@ -36,49 +44,112 @@
             <TextBlock Text="{Binding Status}" />
         </Border>
 
-        <Grid ColumnDefinitions="340,4,*" Margin="0">
-            <!-- document and parameters -->
-            <DockPanel Grid.Column="0" Margin="12">
-                <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
-                    <TextBlock Text="{Binding DocumentName}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding DocumentDetails}" TextWrapping="Wrap" Opacity="0.75" />
-                </StackPanel>
-                <TextBlock DockPanel.Dock="Top" Text="Parameters" FontWeight="SemiBold" Margin="0,4,0,4" />
-                <ScrollViewer>
-                    <ItemsControl ItemsSource="{Binding Parameters}">
+        <TabControl Padding="0">
+            <TabItem Header="Run">
+                <Grid ColumnDefinitions="340,4,*" Margin="0">
+                    <!-- document and parameters -->
+                    <DockPanel Grid.Column="0" Margin="12">
+                        <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,10">
+                            <TextBlock Text="{Binding DocumentName}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding DocumentDetails}" TextWrapping="Wrap" Opacity="0.75" />
+                        </StackPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Parameters" FontWeight="SemiBold" Margin="0,4,0,4" />
+                        <ScrollViewer>
+                            <ItemsControl ItemsSource="{Binding Parameters}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ParameterRowViewModel">
+                                        <Grid ColumnDefinitions="150,*" Margin="0,1" ToolTip.Tip="{Binding Description}">
+                                            <TextBlock Text="{Binding Name}" Opacity="0.75" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                            <TextBox Grid.Column="1" Text="{Binding Value, UpdateSourceTrigger=LostFocus}" IsVisible="{Binding IsText}"
+                                                     IsReadOnly="{Binding !Editable}" MinHeight="26" Padding="6,2" />
+                                            <ComboBox Grid.Column="1" ItemsSource="{Binding Choices}" SelectedItem="{Binding Value}" IsVisible="{Binding IsChoice}"
+                                                      HorizontalAlignment="Stretch" MinHeight="26" Padding="6,2" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+
+                    <GridSplitter Grid.Column="1" ResizeDirection="Columns"
+                                  Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+
+                    <!-- progress chart and results -->
+                    <Grid Grid.Column="2" RowDefinitions="*,Auto,220" Margin="12">
+                        <controls:LineChart Grid.Row="0" Series="{Binding Series}" XAxisTitle="{Binding ChartXAxisTitle}"
+                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                        <TextBlock Grid.Row="1" Text="Results" FontWeight="SemiBold" Margin="0,10,0,4" />
+                        <ScrollViewer Grid.Row="2">
+                            <ItemsControl ItemsSource="{Binding Results}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:NameValue">
+                                        <Grid ColumnDefinitions="260,*" Margin="0,2">
+                                            <TextBlock Text="{Binding Name}" Opacity="0.75" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Value}" FontFamily="monospace" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Results">
+                <DockPanel Margin="12" DataContext="{Binding ResultsBrowser}" x:DataType="vm:ResultsBrowserViewModel">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,10">
+                        <Button Content="Open results folder..." Command="{Binding OpenFolderCommand}" />
+                        <Button Content="Reload" Command="{Binding ReloadCommand}" />
+                        <TextBlock Text="Result" VerticalAlignment="Center" Margin="12,0,0,0" />
+                        <ComboBox ItemsSource="{Binding Metrics}" SelectedItem="{Binding Metric}" MinWidth="200" />
+                        <TextBlock Text="Group by" VerticalAlignment="Center" />
+                        <ComboBox ItemsSource="{Binding GroupColumns}" SelectedItem="{Binding GroupBy}" MinWidth="200" />
+                    </StackPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding Status}" Opacity="0.75" Margin="0,0,0,8" />
+                    <TextBlock DockPanel.Dock="Top" Text="Statistics per group (completed runs)" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="2*,50,*,*,*,*,*" Margin="0,0,0,2">
+                        <TextBlock Text="group" Opacity="0.6" /><TextBlock Grid.Column="1" Text="n" Opacity="0.6" />
+                        <TextBlock Grid.Column="2" Text="mean" Opacity="0.6" /><TextBlock Grid.Column="3" Text="sd" Opacity="0.6" />
+                        <TextBlock Grid.Column="4" Text="min" Opacity="0.6" /><TextBlock Grid.Column="5" Text="median" Opacity="0.6" />
+                        <TextBlock Grid.Column="6" Text="max" Opacity="0.6" />
+                    </Grid>
+                    <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding Summary}" Margin="0,0,0,14">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:NameValue">
-                                <Grid ColumnDefinitions="150,*" Margin="0,2">
-                                    <TextBlock Text="{Binding Name}" Opacity="0.75" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Value}" TextTrimming="CharacterEllipsis" />
+                            <DataTemplate x:DataType="vm:SummaryRow">
+                                <Grid ColumnDefinitions="2*,50,*,*,*,*,*" Margin="0,1">
+                                    <TextBlock Text="{Binding Group}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Count}" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Mean}" FontFamily="monospace" />
+                                    <TextBlock Grid.Column="3" Text="{Binding StdDev}" FontFamily="monospace" />
+                                    <TextBlock Grid.Column="4" Text="{Binding Min}" FontFamily="monospace" />
+                                    <TextBlock Grid.Column="5" Text="{Binding Median}" FontFamily="monospace" />
+                                    <TextBlock Grid.Column="6" Text="{Binding Max}" FontFamily="monospace" />
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </ScrollViewer>
-            </DockPanel>
-
-            <GridSplitter Grid.Column="1" ResizeDirection="Columns"
-                          Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
-
-            <!-- progress chart and results -->
-            <Grid Grid.Column="2" RowDefinitions="*,Auto,220" Margin="12">
-                <controls:LineChart Grid.Row="0" Series="{Binding Series}" XAxisTitle="{Binding ChartXAxisTitle}"
-                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                <TextBlock Grid.Row="1" Text="Results" FontWeight="SemiBold" Margin="0,10,0,4" />
-                <ScrollViewer Grid.Row="2">
-                    <ItemsControl ItemsSource="{Binding Results}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:NameValue">
-                                <Grid ColumnDefinitions="260,*" Margin="0,2">
-                                    <TextBlock Text="{Binding Name}" Opacity="0.75" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Value}" FontFamily="monospace" />
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
-        </Grid>
+                    <TextBlock DockPanel.Dock="Top" Text="Runs" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="170,2*,100,100,*" Margin="0,0,0,2">
+                        <TextBlock Text="started (UTC)" Opacity="0.6" /><TextBlock Grid.Column="1" Text="optimizer" Opacity="0.6" />
+                        <TextBlock Grid.Column="2" Text="seed" Opacity="0.6" /><TextBlock Grid.Column="3" Text="outcome" Opacity="0.6" />
+                        <TextBlock Grid.Column="4" Text="result" Opacity="0.6" />
+                    </Grid>
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Runs}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RunRow">
+                                    <Grid ColumnDefinitions="170,2*,100,100,*" Margin="0,1">
+                                        <TextBlock Text="{Binding Started}" FontFamily="monospace" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Optimizer}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Seed}" />
+                                        <TextBlock Grid.Column="3" Text="{Binding Outcome}" />
+                                        <TextBlock Grid.Column="4" Text="{Binding Metric}" FontFamily="monospace" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
     </DockPanel>
 </Window>

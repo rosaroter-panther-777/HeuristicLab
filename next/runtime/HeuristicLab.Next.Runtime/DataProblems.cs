@@ -29,9 +29,7 @@ public static class DataProblems {
 
     // decide by the data types the problem consumes exactly: IProblemInstanceConsumer<in T> is
     // contravariant, so e.g. a regression problem would also "consume" time series data
-    var consumed = problem.GetType().GetInterfaces()
-      .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IProblemInstanceConsumer<>))
-      .Select(i => i.GetGenericArguments()[0]).ToHashSet();
+    var consumed = ConsumedDataTypes(problem);
     string kind;
     if (consumed.Contains(typeof(ITradingProblemData))) {
       ((IProblemInstanceConsumer<ITradingProblemData>)problem).Load(
@@ -55,6 +53,15 @@ public static class DataProblems {
     }
     return $"{kind} data: {table.Rows} rows, target {target}, {inputList.Count} inputs, training rows {trainingStart}..{trainingEnd - 1}";
   }
+
+  /// <summary>Whether the problem can load tabular data (regression, classification, time series, trading).</summary>
+  public static bool CanLoad(IProblem problem) => ConsumedDataTypes(problem).Overlaps(
+    [typeof(ITradingProblemData), typeof(ITimeSeriesPrognosisProblemData), typeof(IClassificationProblemData), typeof(IRegressionProblemData)]);
+
+  private static HashSet<Type> ConsumedDataTypes(IProblem problem) =>
+    problem.GetType().GetInterfaces()
+      .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IProblemInstanceConsumer<>))
+      .Select(i => i.GetGenericArguments()[0]).ToHashSet();
 
   public static string Load(IProblem problem, string path, string target,
                             IReadOnlyCollection<string>? inputs = null, int trainingPercent = 66, int trainingStart = 0) =>

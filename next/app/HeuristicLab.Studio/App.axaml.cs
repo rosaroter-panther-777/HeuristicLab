@@ -21,7 +21,8 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var window = new MainWindow();
-            var viewModel = new MainViewModel(new FileDialogService(window));
+            var fileDialogs = new FileDialogService(window);
+            var viewModel = new MainViewModel(fileDialogs, new DialogService(window, fileDialogs));
             window.DataContext = viewModel;
             desktop.MainWindow = window;
 

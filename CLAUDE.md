@@ -22,20 +22,28 @@
   Legacy probe recipe: see docs/linux-build-probe.md
 
 ## Current state
-- next/app/HeuristicLab.Studio (Avalonia 12 MVVM, CommunityToolkit) on the runtime: open .hl,
-  show parameters, run with seed (live progress chart, then the algorithm's quality table),
-  stop, save with runs. Own LineChart control (no charting dependency). Tests in
-  next/tests/HeuristicLab.Studio.Tests run headless (Avalonia.Headless + Skia) and save a
-  screenshot of the real window to bin/.../studio-after-run.png for visual review.
+- next/app/HeuristicLab.Studio (Avalonia 12 MVVM, CommunityToolkit) on the runtime:
+  New dialog (algorithm -> compatible problem -> benchmark instance or CSV/Parquet data, via
+  Setups.Create like "hl new"), open/save .hl, editable parameters (text or operator choice,
+  via ParameterEditor; invalid input reverted), run with seed or batches (runs, parallel,
+  optional results folder) with live chart / per-run points and statistics, Results tab
+  (results folder: runs + statistics grouped by any column). Own LineChart control.
+  Tests (next/tests/HeuristicLab.Studio.Tests) run headless (Avalonia.Headless + Skia) and
+  save screenshots (studio-*.png in the test bin folder) for visual review.
   Note: HeadlessUnitTestSession.Dispose() hangs (12.1.3) - never dispose it in tests.
 - next/runtime/HeuristicLab.Next.Runtime (net10.0): the only way new front ends use the core.
-  HlRuntime.Initialize (preloads assemblies, content manager), Catalog, Documents (load/save
-  .hl), OptimizerRunner (seed, progress, timeout, cancellation -> RunReport from IOptimizer.Runs),
-  ItemValues (results as plain values), Provenance (tool commit, runtime, OS, input SHA-256).
-  Front ends must not reference WinForms-era APIs (ItemImage, views) directly.
+  HlRuntime.Initialize, Catalog, Documents (.hl), Setups (shared "new" logic), ParameterEditor
+  (set/describe), ProblemInstances, DataFiles/TabularData (CSV via HeuristicLab's parser with
+  header-based separator check; Parquet via Parquet.Net 5.6.1 - 6.x dropped the column API),
+  DataProblems (table -> regression/classification/time series/trading; kind decided by exactly
+  consumed data types, never by contravariant pattern matching), Features (return, logreturn,
+  diff, lag, lead, rolling mean/std/min/max, zscore; composable), OptimizerRunner, BatchRunner,
+  ResultStore, ItemValues, Provenance. Front ends must not use WinForms-era APIs (ItemImage).
 - next/app/HeuristicLab.Cli ("hl"), research workflow on the runtime:
   hl list algorithms|problems; hl instances <problem>;
-  hl new <algorithm> [--problem P] [--instance I | --csv f --target y --training 66] [--set N=V]... --out f.hl;
+  hl new <algorithm> [--problem P] [--instance I | --data f --target y] [--set N=V]... --out f.hl;
+  hl data info f; hl data derive f --add EXPR... [--dropna] --out f2 (CSV or Parquet);
+  hl new ... --data f --target y [--inputs a,lag(x,1..3)] [--training 66 --training-start 3];
   hl info f.hl; hl run f.hl [--seed S] [--set N=V]... [--repeat N --parallel K] [--timeout] [--out report.json]
   [--store DIR] [--save f.hl]; hl store list|summary [--metric M --by param:X]|export [--csv f] DIR.
   Exit 0 completed, 1 failed, 2 usage, 3 stopped (timeout/Ctrl+C; reports still written).
@@ -66,6 +74,8 @@
 - Plugin type discovery (LightweightApplicationManager replacement) scans assemblies in
   name order: AppDomain order differs between runtimes, and defaults are picked from the
   first discovered type.
+- Autoregressive Modeling reads y[row - offset] without checking: set a training start
+  (--training-start / DataProblems trainingStart) of at least its maximum time offset.
 - Seeded runs are reproducible per runtime and platform, not across them: .NET Framework,
   .NET on Windows and .NET on Linux (glibc libm) can differ in the last bit of math results,
   and searches with near-ties amplify that into different but equally valid trajectories.

@@ -10,7 +10,8 @@ namespace HeuristicLab.Studio.Controls;
 
 public readonly record struct ChartPoint(double X, double Y);
 
-public sealed record ChartSeries(string Name, Color Color, IReadOnlyList<ChartPoint> Points) {
+/// <param name="PointsOnly">Draw markers without connecting lines (independent values, e.g. one per run).</param>
+public sealed record ChartSeries(string Name, Color Color, IReadOnlyList<ChartPoint> Points, bool PointsOnly = false) {
   private static readonly Color[] Palette = [
     Color.FromRgb(0x2E, 0x6F, 0xD8), Color.FromRgb(0xE0, 0x7B, 0x24), Color.FromRgb(0x3A, 0xA6, 0x5B),
     Color.FromRgb(0xC2, 0x3B, 0x4A), Color.FromRgb(0x7B, 0x52, 0xC4)
@@ -66,6 +67,8 @@ public class LineChart : Control {
     var yTicks = NiceTicks(yMin, yMax, 5);
     yMin = Math.Min(yMin, yTicks[0]); yMax = Math.Max(yMax, yTicks[^1]);
     var xTicks = NiceTicks(xMin, xMax, 6);
+    // markers at the last tick would be cut in half by the plot edge
+    if (series.Any(s => s.PointsOnly) && xTicks.Length > 1 && xTicks[^1] <= xMax) xMax += (xTicks[1] - xTicks[0]) / 2;
     xMax = Math.Max(xMax, xTicks[^1]);
 
     Point Map(ChartPoint p) => new(
@@ -90,7 +93,10 @@ public class LineChart : Control {
       foreach (var s in series) {
         var finite = s.Points.Where(p => double.IsFinite(p.Y)).Select(Map).ToList();
         var pen = new Pen(new SolidColorBrush(s.Color), 2);
-        if (finite.Count == 1) context.DrawEllipse(pen.Brush, null, finite[0], 2.5, 2.5);
+        if (s.PointsOnly || finite.Count == 1) {
+          foreach (var p in finite) context.DrawEllipse(pen.Brush, null, p, 4, 4);
+          continue;
+        }
         for (int i = 1; i < finite.Count; i++) context.DrawLine(pen, finite[i - 1], finite[i]);
       }
     }
