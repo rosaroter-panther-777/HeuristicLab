@@ -84,8 +84,8 @@
   LegacyExclude ($(LegacyDir)-prefixed, semicolon-separated) for files to leave out.
 - Package versions live only in next/core/Directory.Packages.props (central management
   with transitive pinning); PackageReference items carry no Version.
-- Legacy csproj files list Compile items explicitly; the glob can pick up dead files.
-  After every port run next/tools/check-linked-sources.py (fails on EXTRA files).
+- Compiled sources are exactly the legacy csproj's Compile items, in their order (read by
+  Directory.Build.targets). After every port run next/tools/check-linked-sources.py.
 - After every port also run the platform check:
   dotnet build <project> -p:HlPlatformCheck=true  (net10.0, enables CA1416).
 - Replacement files (when a legacy file needs changes) live in the next/ project folder,
