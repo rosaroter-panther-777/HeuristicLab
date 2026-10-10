@@ -243,7 +243,41 @@ public partial class ResultEntryViewModel(string name, IItem? value, string summ
   public string Name { get; } = name;
 
   [ObservableProperty]
+  [NotifyPropertyChangedFor(nameof(KindPictogram), nameof(KindTip))]
   public partial IItem? Value { get; set; } = value;
+
+  private Type? kindOf;
+  private string kind = "optional_value_parameter";
+
+  /// <summary>
+  /// Pictogram of what the result is: a chart (tables, histograms, scatter plots: result_diagram_logo),
+  /// a picture (tours, packings, trees, ...: result_visualisation_logo) or a value (the optional value
+  /// parameter's pictogram). Decided once per value type, since live results are replaced by new
+  /// values of the same type.
+  /// </summary>
+  public string KindPictogram {
+    get {
+      if (Value?.GetType() != kindOf) {
+        kindOf = Value?.GetType();
+        IReadOnlyList<HeuristicLab.Next.Runtime.Visuals.Visual> visuals;
+        try {
+          visuals = HeuristicLab.Next.Runtime.Visuals.Visualizations.For(Value, Name);
+        } catch (Exception e) when (e is InvalidOperationException or ArgumentException or IndexOutOfRangeException or NullReferenceException) {
+          visuals = [];  // changed while the algorithm runs
+          kindOf = null;
+        }
+        kind = visuals.Count == 0 ? "optional_value_parameter"
+          : visuals[0] is HeuristicLab.Next.Runtime.Visuals.ChartVisual ? "result_diagram_logo" : "result_visualisation_logo";
+      }
+      return kind;
+    }
+  }
+
+  public string KindTip => KindPictogram switch {
+    "result_diagram_logo" => "Chart",
+    "result_visualisation_logo" => "Visualization",
+    _ => "Value"
+  };
 
   [ObservableProperty]
   public partial string Summary { get; set; } = summary;

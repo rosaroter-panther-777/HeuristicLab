@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             xmlns:c="using:HeuristicLab.Studio.Controls"
              x:Class="HeuristicLab.Studio.Views.RunAnalysisView"
              x:DataType="vm:RunAnalysisViewModel">
     <Grid ColumnDefinitions="280,4,*">
@@ -215,9 +216,11 @@
                                 <ListBox Grid.Row="2" ItemsSource="{Binding RunResults}" SelectedItem="{Binding SelectedRunResult}">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate x:DataType="vm:ResultEntryViewModel">
-                                            <Grid ColumnDefinitions="*,Auto">
-                                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                                <TextBlock Grid.Column="1" Text="{Binding Summary}" FontFamily="monospace" Opacity="0.75" Margin="8,0,0,0" />
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <c:Pictogram Symbol="{Binding KindPictogram}" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                 ToolTip.Tip="{Binding KindTip}" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="2" Text="{Binding Summary}" FontFamily="monospace" Opacity="0.75" Margin="8,0,0,0" VerticalAlignment="Center" />
                                             </Grid>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>

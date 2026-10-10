@@ -113,6 +113,36 @@ public class StudioBlockDesignTests {
   }
 
   [TestMethod]
+  public async Task ResultKindPictograms() {
+    var shot = await session.Dispatch(async () => {
+      var vm = new MainViewModel(null);
+      var ws = vm.Workspace;
+      var block = ws.AddAlgorithm(ws.NewExperiment(), TabuSearch);
+      ws.SetProblem(block, Tsp());
+      ParameterEditor.Apply(block.Algorithm, ["MaximumIterations=20"]);
+      await OptimizerRunner.RunAsync(block.Algorithm);
+      var detail = block.ShowDetail(AlgorithmDetailViewModel.ResultsTab);
+      detail.Results.Refresh();
+      string Kind(string name) => detail.Results.Entries.FirstOrDefault(e => e.Name == name)?.KindPictogram ?? throw new AssertFailedException(name + " not in " + string.Join(", ", detail.Results.Entries.Select(e => e.Name)));
+      Assert.AreEqual("result_diagram_logo", Kind("Qualities"), "a table is a chart");
+      Assert.AreEqual("result_visualisation_logo", Kind("Best TSP Solution"), "a tour is a picture");
+      Assert.AreEqual("optional_value_parameter", Kind("BestQuality"), "a number is a value");
+
+      var window = new MainWindow { DataContext = vm, Width = 1300, Height = 760 };
+      window.Show();
+      ws.Selected = block;
+      block.Detail.SelectedTab = AlgorithmDetailViewModel.ResultsTab;
+      Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+      Assert.IsTrue(window.GetVisualDescendantsOf<Pictogram>().Any(p => p.Symbol == "result_diagram_logo"));
+      var file = Path.Combine(AppContext.BaseDirectory, "studio-result-kinds.png");
+      window.CaptureRenderedFrame()!.Save(file);
+      window.Close();
+      return file;
+    }, CancellationToken.None);
+    Assert.IsTrue(new FileInfo(shot).Length > 5_000);
+  }
+
+  [TestMethod]
   public async Task SavedStateFollowsChanges() {
     await session.Dispatch(async () => {
       var ws = new ExperimentWorkspaceViewModel();

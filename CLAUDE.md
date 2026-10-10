@@ -41,7 +41,10 @@
   Parameter lists show the parameter kind's pictogram before the name (constrained = choice,
   optional = may be empty, else value). Checked operator lists (analyzers) are numbered: a
   MultiAnalyzer runs its ticked operators in list order. Nested editors below a list get a
-  "<name> selected. Details/Options:" heading. Start all / start selected (ticked) experiments, enabled only
+  "<name> selected. Details/Options:" heading. Result lists (algorithm Results tab, Results tab's
+  Run view) show the result's kind first: chart (result_diagram_logo: first visualization is a
+  ChartVisual), picture (result_visualisation_logo: any other visualization), value (the optional
+  value parameter's pictogram); decided once per value type. Start all / start selected (ticked) experiments, enabled only
   when complete; no seed is imposed (a fixed seed would make batch repetitions identical).
   Legacy algorithms crash on Problem = null (OnProblemChanged): clone problems instead of
   detaching them; "Remove problem" tolerates exactly that crash.
