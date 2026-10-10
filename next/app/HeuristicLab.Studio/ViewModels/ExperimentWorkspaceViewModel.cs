@@ -37,6 +37,7 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
     this.resultsFolder = resultsFolder ?? (() => null);
     this.busyElsewhere = busyElsewhere ?? (() => false);
     this.showInRunTab = showInRunTab ?? ((_, _) => { });
+    liveTimer = new Avalonia.Threading.DispatcherTimer(TimeSpan.FromMilliseconds(500), Avalonia.Threading.DispatcherPriority.Background, (_, _) => RefreshLive());
   }
 
   public ObservableCollection<ExperimentBlockViewModel> Experiments { get; } = [];
@@ -79,7 +80,29 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
     IsRunning = IsRunningExperiments || algorithmRunning;
   }
 
-  partial void OnIsRunningChanged(bool value) => (Detail as AlgorithmDetailViewModel)?.Refresh();
+  partial void OnIsRunningChanged(bool value) {
+    if (value) liveTimer.Start();
+    RefreshLive();
+    if (!value) liveTimer.Stop();
+  }
+
+  private readonly Avalonia.Threading.DispatcherTimer liveTimer;
+
+  /// <summary>Whether live monitoring is active (anything is running).</summary>
+  public bool IsLive => liveTimer.IsEnabled;
+
+  /// <summary>
+  /// Live monitoring while anything runs: the shown detail (results, selected result's
+  /// visualization, runs), the experiments' run tables and the tree's counters. Called by a timer
+  /// every half second; reads are tolerant of the running algorithm changing the data.
+  /// </summary>
+  public void RefreshLive() {
+    switch (Detail) {
+      case AlgorithmDetailViewModel a: a.Refresh(); break;
+      case ContainerBlockViewModel c: c.RefreshRuns(); break;
+    }
+    foreach (var a in AllBlocks(Experiments).OfType<AlgorithmBlockViewModel>()) a.RefreshCounts();
+  }
 
   /// <summary>Building blocks cannot change while experiments run.</summary>
   public bool IsEditable => !IsRunning;
@@ -298,8 +321,7 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
     } finally {
       IsRunningExperiments = false;
       IsRunning = algorithmRunning;
-      (Detail as AlgorithmDetailViewModel)?.Refresh();
-      foreach (var a in AllBlocks(Experiments).OfType<AlgorithmBlockViewModel>()) a.RefreshCounts();
+      RefreshLive();
       stopSource.Dispose();
       stopSource = null;
       RefreshState();

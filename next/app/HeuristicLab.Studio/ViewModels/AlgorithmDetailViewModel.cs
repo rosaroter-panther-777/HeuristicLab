@@ -28,6 +28,7 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
   private readonly EditContext context;
   private readonly DispatcherTimer timer;
   private Task? execution;
+  private bool startedHere;
 
   public AlgorithmDetailViewModel(AlgorithmBlockViewModel block) {
     this.block = block;
@@ -180,6 +181,7 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
       ? "Breakpoints only pause the Debug Engine (Engine tab)." : null;
     if (Algorithm.ExecutionState == ExecutionState.Stopped) Algorithm.Prepare(clearRuns: false);
     block.Workspace.SetAlgorithmRunning(true);
+    startedHere = true;
     execution = Task.Run(() => Algorithm.Start(CancellationToken.None));
     timer.Start();
     Tick();
@@ -190,11 +192,12 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
 
   [RelayCommand(CanExecute = nameof(IsStarted))]
   private void Pause() => Algorithm.Pause();
-  private bool IsStarted() => Algorithm.ExecutionState == ExecutionState.Started;
+  // while an experiment runs the algorithm, the experiment's Stop controls it
+  private bool IsStarted() => Algorithm.ExecutionState == ExecutionState.Started && !block.Workspace.IsRunningExperiments;
 
   [RelayCommand(CanExecute = nameof(CanStop))]
   private void Stop() => Algorithm.Stop();
-  private bool CanStop() => Algorithm.ExecutionState is ExecutionState.Started or ExecutionState.Paused;
+  private bool CanStop() => Algorithm.ExecutionState is ExecutionState.Started or ExecutionState.Paused && !block.Workspace.IsRunningExperiments;
 
   [RelayCommand(CanExecute = nameof(CanPrepare))]
   private void Prepare() {
@@ -230,9 +233,13 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
     bool active = Algorithm.ExecutionState is ExecutionState.Started || execution is { IsCompleted: false };
     if (!active) {
       timer.Stop();
-      // paused (e.g. at a breakpoint) still counts as running for the workspace: the tree stays locked
-      block.Workspace.SetAlgorithmRunning(Algorithm.ExecutionState == ExecutionState.Paused);
-      if (Algorithm.ExecutionState == ExecutionState.Paused) Message = "Paused (breakpoint or Pause). Start resumes.";
+      if (startedHere) {
+        // paused (e.g. at a breakpoint) still counts as running for the workspace: the tree stays locked
+        bool paused = Algorithm.ExecutionState == ExecutionState.Paused;
+        startedHere = paused;
+        block.Workspace.SetAlgorithmRunning(paused);
+        if (paused) Message = "Paused (breakpoint or Pause). Start resumes.";
+      }
     }
   }
 
@@ -240,62 +247,141 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
   public void Refresh() => Tick();
 }
 
-public sealed record ResultEntry(string Name, string Summary, IItem? Value);
+/// <summary>One named result; its value text changes in place while the algorithm runs.</summary>
+public partial class ResultEntryViewModel(string name, IItem? value, string summary) : ViewModelBase {
+  public string Name { get; } = name;
+
+  [ObservableProperty]
+  public partial IItem? Value { get; set; } = value;
+
+  [ObservableProperty]
+  public partial string Summary { get; set; } = summary;
+}
 
 /// <summary>
-/// Results of an algorithm, refreshed while it runs; the selected one is shown in detail. Read
-/// through a function: preparing an algorithm gives it a new result collection.
+/// Results of an algorithm as a live monitor: entries are updated in place (selection and
+/// scrolling stay), and the selected result's detail (quality, visualization, value) follows its
+/// data while the algorithm runs. Read through a function: preparing an algorithm gives it a new
+/// result collection.
 /// </summary>
 public partial class ResultsViewModel(Func<ResultCollection> results, EditContext context) : ViewModelBase {
-  public ObservableCollection<ResultEntry> Entries { get; } = [];
+  public ObservableCollection<ResultEntryViewModel> Entries { get; } = [];
 
   [ObservableProperty]
-  public partial ResultEntry? Selected { get; set; }
+  public partial ResultEntryViewModel? Selected { get; set; }
 
   [ObservableProperty]
-  public partial ValueEditorViewModel? SelectedValue { get; set; }
+  public partial ResultDetailViewModel? Detail { get; set; }
+
+  public bool IsEmpty => Entries.Count == 0;
+
+  partial void OnSelectedChanged(ResultEntryViewModel? value) =>
+    Detail = value == null ? null : new ResultDetailViewModel(value.Name, value.Value, context);
+
+  /// <summary>Syncs the entries with the algorithm's results and refreshes the selected detail.</summary>
+  public void Refresh() {
+    List<(string Name, IItem? Value, string Summary)> current;
+    try {
+      current = results().ToArray().Select(r => (r.Name, (IItem?)r.Value, ItemInspector.Summary(r.Value))).ToList();
+    } catch (InvalidOperationException) {
+      return;  // changed while the algorithm runs; next tick
+    }
+    // results only ever get added during a run, and replaced wholesale by Prepare
+    if (!current.Select(c => c.Name).Take(Entries.Count).SequenceEqual(Entries.Select(e => e.Name))) {
+      Entries.Clear();
+      Selected = null;
+    }
+    for (int i = 0; i < current.Count; i++) {
+      var (name, value, summary) = current[i];
+      if (i < Entries.Count) {
+        Entries[i].Value = value;
+        Entries[i].Summary = summary;
+      } else Entries.Add(new ResultEntryViewModel(name, value, summary));
+    }
+    OnPropertyChanged(nameof(IsEmpty));
+    if (Selected != null) {
+      if (Detail == null || !ReferenceEquals(Detail.Item, Selected.Value)) Detail = new ResultDetailViewModel(Selected.Name, Selected.Value, context);
+      else Detail.Refresh();
+    }
+  }
+}
+
+/// <summary>
+/// The selected result by data type: a quality and a visualization for solutions (a tour is drawn
+/// through its coordinates), a chart for tables, and the underlying value (its members for
+/// structured results, a table or text otherwise). Rebuilt from the live item on every refresh,
+/// so visualization and quality always belong to the same solution.
+/// </summary>
+public partial class ResultDetailViewModel : ViewModelBase {
+  private readonly EditContext context;
+
+  public ResultDetailViewModel(string name, IItem? item, EditContext context) {
+    Name = name;
+    Item = item;
+    this.context = context;
+    Refresh();
+  }
+
+  public string Name { get; }
+  public IItem? Item { get; }
+  public string TypeName => Item?.ItemName ?? "";
+
+  [ObservableProperty]
+  public partial string? Quality { get; set; }
+
+  public bool HasQuality => Quality != null;
 
   [ObservableProperty]
   public partial IReadOnlyList<ChartSeries> Chart { get; set; } = [];
 
-  public bool HasChart => Chart.Count > 0;
-  public bool IsEmpty => Entries.Count == 0;
+  [ObservableProperty]
+  public partial string XAxisTitle { get; set; } = "";
 
   [ObservableProperty]
-  public partial string ChartXAxisTitle { get; set; } = "";
+  public partial string YAxisTitle { get; set; } = "";
 
+  public bool HasVisualization => Chart.Count > 0;
+
+  /// <summary>Visualization or Value, kept across refreshes.</summary>
   [ObservableProperty]
-  public partial string ChartYAxisTitle { get; set; } = "";
+  public partial int SelectedTab { get; set; }
 
-  partial void OnChartChanged(IReadOnlyList<ChartSeries> value) => OnPropertyChanged(nameof(HasChart));
+  /// <summary>Underlying value: the members of a structured result, or the value itself.</summary>
+  [ObservableProperty]
+  public partial IReadOnlyList<MemberViewModel> Members { get; set; } = [];
 
-  partial void OnSelectedChanged(ResultEntry? value) {
-    SelectedValue = value == null ? null : new ValueEditorViewModel(value.Value, context, readOnly: true);
-    var table = value?.Value is HeuristicLab.Analysis.DataTable ? ItemValues.From(value.Value).Value as TableValue : null;
-    // tables without an axis title (e.g. Qualities) are indexed by row position
-    ChartXAxisTitle = string.IsNullOrEmpty(table?.XAxisTitle) ? "Index" : table.XAxisTitle;
-    ChartYAxisTitle = table?.YAxisTitle ?? "";
-    Chart = table == null ? []
-      : table.Rows.Select((r, i) => new ChartSeries(r.Key, ChartSeries.PaletteColor(i), r.Value.Select((y, x) => new ChartPoint(x, y)).ToList())).ToList();
-  }
+  partial void OnQualityChanged(string? value) => OnPropertyChanged(nameof(HasQuality));
+  partial void OnChartChanged(IReadOnlyList<ChartSeries> value) => OnPropertyChanged(nameof(HasVisualization));
 
   public void Refresh() {
-    List<ResultEntry> current;
+    if (Item == null) { Members = [new MemberViewModel("Value", new ValueEditorViewModel(null, context, readOnly: true))]; return; }
     try {
-      current = results().ToArray().Select(r => new ResultEntry(r.Name, ItemInspector.Summary(r.Value), r.Value)).ToList();
-    } catch (InvalidOperationException) {
-      return;  // changed while the algorithm runs; next tick
+      Quality = ItemInspector.QualityOf(Item)?.ToString("G10", CultureInfo.InvariantCulture);
+      if (ItemInspector.TourOf(Item) is { } tour) {
+        Chart = [
+          new ChartSeries("Tour", ChartSeries.PaletteColor(0), tour.Select(p => new ChartPoint(p.X, p.Y)).ToList()),
+          new ChartSeries("Locations", ChartSeries.PaletteColor(1), ItemInspector.PointsOf(Item)!.Select(p => new ChartPoint(p.X, p.Y)).ToList(), PointsOnly: true)
+        ];
+        XAxisTitle = "x";
+        YAxisTitle = "y";
+      } else if (Item is HeuristicLab.Analysis.DataTable && ItemValues.From(Item).Value is TableValue table) {
+        Chart = table.Rows.Select((r, i) => new ChartSeries(r.Key, ChartSeries.PaletteColor(i), r.Value.Select((y, x) => new ChartPoint(x, y)).ToList())).ToList();
+        // tables without an axis title (e.g. Qualities) are indexed by row position
+        XAxisTitle = string.IsNullOrEmpty(table.XAxisTitle) ? "Index" : table.XAxisTitle;
+        YAxisTitle = table.YAxisTitle;
+      } else Chart = [];
+      var members = ItemInspector.KindOf(Item) is ValueKind.Other or ValueKind.Parameterized ? ItemInspector.Members(Item) : [];
+      Members = members.Count > 0
+        ? members.Select(m => new MemberViewModel(m.Name, new ValueEditorViewModel(m.Value, context, readOnly: true))).ToList()
+        : [new MemberViewModel("Value", new ValueEditorViewModel(Item, context, readOnly: true))];
+      if (!HasVisualization) SelectedTab = 1;
+    } catch (Exception e) when (e is InvalidOperationException or ArgumentException or IndexOutOfRangeException) {
+      // the running algorithm changed the value while it was read; the next refresh shows it
     }
-    var selectedName = Selected?.Name;
-    if (current.Select(c => (c.Name, c.Summary)).SequenceEqual(Entries.Select(e => (e.Name, e.Summary)))) return;
-    Entries.Clear();
-    foreach (var c in current) Entries.Add(c);
-    OnPropertyChanged(nameof(IsEmpty));
-    var again = Entries.FirstOrDefault(e => e.Name == selectedName);
-    if (again != null && !ReferenceEquals(again.Value, Selected?.Value)) Selected = again;
-    else if (again != null) { Selected = again; }
   }
 }
+
+public sealed record MemberViewModel(string Name, ValueEditorViewModel Value);
 
 public sealed record RunTableRow(string Name, IReadOnlyList<string> Cells, IRun Run);
 
@@ -342,8 +428,10 @@ public partial class RunsViewModel(RunCollection runs) : ViewModelBase {
     var records = all.Select(r => (Run: r, Record: OptimizerRunner.ToRecord(r))).ToList();
     var columns = records.SelectMany(r => r.Record.Results.Where(x => x.Value.Value is double or int or long or bool).Select(x => x.Key))
       .Distinct().Order(StringComparer.OrdinalIgnoreCase).ToList();
+    var selected = Selected?.Run;
     Columns = columns;
     Rows = records.Select(r => new RunTableRow(r.Run.Name,
       columns.Select(c => r.Record.Results.TryGetValue(c, out var v) ? Text(v) : "").ToList(), r.Run)).ToList();
+    Selected = Rows.FirstOrDefault(r => ReferenceEquals(r.Run, selected));
   }
 }

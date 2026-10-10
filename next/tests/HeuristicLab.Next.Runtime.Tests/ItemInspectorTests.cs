@@ -73,6 +73,21 @@ public class ItemInspectorTests {
   }
 
   [TestMethod]
+  public async Task BestSolutionResultIsATourWithQuality() {
+    var ts = TabuSearchCh130();
+    ParameterEditor.Apply(ts, ["MaximumIterations=3"]);
+    await OptimizerRunner.RunAsync(ts);
+    var best = ts.Results["Best TSP Solution"].Value;
+    var members = ItemInspector.Members(best).Select(m => m.Name).ToList();
+    CollectionAssert.AreEqual(new[] { "Coordinates", "Permutation", "Quality" }, members);
+    Assert.AreEqual(((DoubleValue)ts.Results["BestQuality"].Value).Value, ItemInspector.QualityOf(best));
+    var tour = ItemInspector.TourOf(best)!;
+    Assert.AreEqual(131, tour.Count, "130 cities, closed");
+    Assert.AreEqual(tour[0], tour[^1]);
+    Assert.IsNull(ItemInspector.TourOf(ts.Results["BestQuality"].Value));
+  }
+
+  [TestMethod]
   public void EnginesAndProblemOrigin() {
     var engines = ItemInspector.Engines().Select(e => e.Name).ToList();
     CollectionAssert.Contains(engines, "Sequential Engine", string.Join(", ", engines));

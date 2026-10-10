@@ -94,6 +94,40 @@ public static class ItemInspector {
   public static IReadOnlyList<IReadOnlyList<string>> Cells(IStringConvertibleMatrix m) =>
     Enumerable.Range(0, m.Rows).Select(r => (IReadOnlyList<string>)Enumerable.Range(0, m.Columns).Select(c => m.GetValue(r, c)).ToList()).ToList();
 
+  // ---- structured values (e.g. a best solution result)
+
+  /// <summary>
+  /// The item-valued properties a structured value consists of, in declaration order, e.g. a
+  /// PathTSPTour's Coordinates, Permutation and Quality. Members of the item framework itself
+  /// (HeuristicLab.Core/Common) are left out.
+  /// </summary>
+  public static IReadOnlyList<(string Name, IItem? Value)> Members(IItem item) =>
+    item.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+      .Where(p => p.GetIndexParameters().Length == 0 && typeof(IItem).IsAssignableFrom(p.PropertyType) && p.CanRead
+               && p.DeclaringType!.Assembly != typeof(Item).Assembly && p.DeclaringType.Assembly != typeof(HeuristicLab.Common.Cloner).Assembly)
+      .OrderBy(p => p.MetadataToken)
+      .Select(p => (p.Name, p.GetValue(item) as IItem)).ToList();
+
+  /// <summary>The value of a "Quality" member (solutions carry their quality), else null.</summary>
+  public static double? QualityOf(IItem item) =>
+    item.GetType().GetProperty("Quality")?.GetValue(item) is DoubleValue q ? q.Value : null;
+
+  /// <summary>
+  /// A tour through coordinates (a solution with Coordinates and a Permutation, e.g. a TSP tour):
+  /// the visited points in order, closed back to the start; null for anything else.
+  /// </summary>
+  public static IReadOnlyList<(double X, double Y)>? TourOf(IItem item) {
+    if (item.GetType().GetProperty("Coordinates")?.GetValue(item) is not DoubleMatrix { Columns: >= 2 } xy) return null;
+    if (item.GetType().GetProperty("Permutation")?.GetValue(item) is not IntArray order || order.Length == 0) return null;
+    if (order.Any(i => i < 0 || i >= xy.Rows)) return null;
+    return order.Append(order[0]).Select(i => (xy[i, 0], xy[i, 1])).ToList();
+  }
+
+  /// <summary>All locations of an item with coordinates (a tour's cities), else null.</summary>
+  public static IReadOnlyList<(double X, double Y)>? PointsOf(IItem item) =>
+    item.GetType().GetProperty("Coordinates")?.GetValue(item) is DoubleMatrix { Columns: >= 2 } xy
+      ? Enumerable.Range(0, xy.Rows).Select(r => (xy[r, 0], xy[r, 1])).ToList() : null;
+
   // ---- operator graphs
 
   public sealed record GraphNode(IOperator Operator, int Layer, int Row);

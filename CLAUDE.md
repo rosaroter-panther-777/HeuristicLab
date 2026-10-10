@@ -41,6 +41,11 @@
   bool, text, choices with nested parameters, arrays/matrices, checked lists (analyzers), Show in
   Run (GetsCollected). Views are found by ViewLocator (XyzViewModel -> XyzView), so nested
   editors recurse.
+  Live monitoring: while anything runs (experiments or a single algorithm), a workspace timer
+  (500 ms, ExperimentWorkspaceViewModel.RefreshLive) refreshes the shown detail: results in place
+  (selection stays), the selected result's quality/visualization/value (tours via
+  ItemInspector.TourOf, tables as charts, structured values via ItemInspector.Members), runs
+  tables and tree counters. Reads tolerate the running algorithm changing the data.
   HeuristicLab facts behind it: only the Debug Engine honors breakpoints; Prepare() gives an
   algorithm a new Results collection (never cache it); an algorithm's valid operators (move
   generators, ...) come from its problem, so rebuild parameter views after a problem change.

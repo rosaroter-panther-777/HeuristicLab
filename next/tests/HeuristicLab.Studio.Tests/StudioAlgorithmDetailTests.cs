@@ -19,6 +19,97 @@ public class StudioAlgorithmDetailTests {
     (IProblem)Setups.Create(new SetupRequest("TabuSearch") { Problem = "TravelingSalesmanProblem", Instance = "ch130" }).Algorithm.Problem!.Clone();
 
   [TestMethod]
+  public async Task ResultsUpdateLiveWhileTheExperimentRuns() {
+    var file = await session.Dispatch(async () => {
+      var vm = new MainViewModel(null, null);
+      var ws = vm.Workspace;
+      var window = new MainWindow { DataContext = vm, Width = 1440, Height = 880 };
+      window.Show();
+      var experiment = ws.NewExperiment();
+      var block = ws.AddAlgorithm(experiment, Catalog.Find(Catalog.Algorithms(), "TabuSearch")!);
+      ws.SetProblem(block, Ch130());
+      ParameterEditor.Apply(block.Algorithm, ["MaximumIterations=100000"]);
+      ws.Selected = block;
+      var detail = (AlgorithmDetailViewModel)ws.Detail!;
+      detail.SelectedTab = AlgorithmDetailViewModel.ResultsTab;
+
+      var run = ws.StartAllCommand.ExecuteAsync(null);
+      Assert.IsTrue(ws.IsLive, "live monitoring runs while the experiment runs");
+      async Task Until(Func<bool> condition, string what) {
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        while (!condition()) {
+          if (clock.Elapsed > TimeSpan.FromSeconds(60)) Assert.Fail($"timed out waiting for {what}");
+          await Task.Delay(100);
+          ws.RefreshLive();
+        }
+      }
+      string Value(string name) => detail.Results.Entries.Single(e => e.Name == name).Summary;
+
+      // results appear while running, without any action
+      await Until(() => detail.Results.Entries.Any(e => e.Name == "Best TSP Solution") && Value("Iterations") != "0", "results");
+      var best = detail.Results.Entries.Single(e => e.Name == "Best TSP Solution");
+      detail.Results.Selected = best;
+      Assert.AreEqual(131, detail.Results.Detail!.Chart[0].Points.Count, "closed tour through 130 cities");
+
+      // counters move on; the selection and its detail follow the live data
+      var iterations = Value("Iterations");
+      await Until(() => Value("Iterations") != iterations, "the next iterations");
+      Assert.AreSame(best, detail.Results.Selected, "selection stays while results update");
+      Assert.IsNotNull(detail.Results.Detail.Quality);
+      Assert.AreEqual("6110", Value("BestKnownQuality"), "reference value stays");
+      Assert.AreEqual("Started", detail.State);
+      Assert.IsFalse(detail.PauseCommand.CanExecute(null), "the experiment controls its algorithms");
+      Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+      var shot = Path.Combine(AppContext.BaseDirectory, "studio-detail-results-live.png");
+      window.CaptureRenderedFrame()!.Save(shot);
+
+      ws.StopCommand.Execute(null);
+      await run;
+      ws.RefreshLive();
+      Assert.IsFalse(ws.IsLive);
+      // visualization and quality belong to the same solution: the best quality found
+      Assert.AreEqual(Value("BestQuality"), detail.Results.Detail.Quality);
+      Assert.AreSame(best, detail.Results.Selected);
+      window.Close();
+      return shot;
+    }, CancellationToken.None);
+    Assert.IsTrue(new FileInfo(file).Length > 5_000);
+  }
+
+  [TestMethod]
+  public async Task RunsAppearWhileTheBatchContinues() {
+    await session.Dispatch(async () => {
+      var ws = new ExperimentWorkspaceViewModel();
+      var experiment = ws.NewExperiment();
+      var batch = ws.AddContainer(experiment, ExperimentTree.ContainerTypes().Single(e => e.Type == typeof(BatchRun)));
+      batch.RepetitionsText = "3";
+      var block = ws.AddAlgorithm(batch, Catalog.Find(Catalog.Algorithms(), "TabuSearch")!);
+      ws.SetProblem(block, Ch130());
+      ParameterEditor.Apply(block.Algorithm, ["MaximumIterations=150"]);
+      ws.Selected = batch;
+
+      var run = ws.StartAllCommand.ExecuteAsync(null);
+      var clock = System.Diagnostics.Stopwatch.StartNew();
+      int seenWhileRunning = 0;
+      while (!run.IsCompleted && clock.Elapsed < TimeSpan.FromMinutes(2)) {
+        await Task.Delay(100);
+        ws.RefreshLive();
+        if (ws.IsRunningExperiments) seenWhileRunning = Math.Max(seenWhileRunning, batch.Runs.Rows.Count);
+        if (seenWhileRunning > 0 && seenWhileRunning < 3) break;
+      }
+      Assert.IsTrue(seenWhileRunning is > 0 and < 3, $"a finished repetition shows while the batch continues (saw {seenWhileRunning})");
+      // the algorithm's own Runs tab follows too
+      ws.Selected = block;
+      ws.RefreshLive();
+      Assert.IsTrue(block.Detail.Runs.Rows.Count > 0);
+      await run;
+      ws.Selected = batch;
+      ws.RefreshLive();
+      Assert.AreEqual(3, batch.Runs.Rows.Count);
+    }, CancellationToken.None);
+  }
+
+  [TestMethod]
   public async Task TabuSearchOnCh130ExposesWhatHeuristicLabShowed() {
     var shots = await session.Dispatch(async () => {
       var vm = new MainViewModel(null, null);
@@ -123,8 +214,8 @@ public class StudioAlgorithmDetailTests {
       Assert.IsTrue(detail.Log.Count > 0, "engine log");
       detail.SelectedTab = AlgorithmDetailViewModel.ResultsTab;
       detail.Results.Selected = detail.Results.Entries.First(e => e.Name == "Qualities");
-      Assert.IsTrue(detail.Results.HasChart);
-      Assert.AreEqual("Index", detail.Results.ChartXAxisTitle, "Qualities has no axis title of its own");
+      Assert.IsTrue(detail.Results.Detail!.HasVisualization);
+      Assert.AreEqual("Index", detail.Results.Detail.XAxisTitle, "Qualities has no axis title of its own");
       Shot("results");
       detail.SelectedTab = AlgorithmDetailViewModel.RunsTab;
       detail.Runs.Selected = detail.Runs.Rows[0];

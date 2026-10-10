@@ -98,6 +98,8 @@ public partial class ContainerBlockViewModel : BlockViewModel {
       return runs;
     }
   }
+
+  public void RefreshRuns() => runs?.Refresh();
   public ObservableCollection<BlockViewModel> Children { get; } = [];
   public IReadOnlyList<MenuChoice> AddChoices { get; }
 

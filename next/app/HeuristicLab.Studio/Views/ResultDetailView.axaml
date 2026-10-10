@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             xmlns:controls="using:HeuristicLab.Studio.Controls"
+             x:Class="HeuristicLab.Studio.Views.ResultDetailView"
+             x:DataType="vm:ResultDetailViewModel">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,6">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding TypeName}" Opacity="0.65" />
+            </StackPanel>
+            <Border IsVisible="{Binding HasQuality}" BorderThickness="1" CornerRadius="4" Padding="10,6"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="Quality" FontWeight="SemiBold" />
+                    <TextBlock Text="Value" Opacity="0.7" />
+                    <TextBlock Text="{Binding Quality}" FontFamily="monospace" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        <TabControl SelectedIndex="{Binding SelectedTab}" Padding="0,6,0,0">
+            <TabItem Header="Visualization" IsEnabled="{Binding HasVisualization}">
+                <controls:LineChart Series="{Binding Chart}" XAxisTitle="{Binding XAxisTitle}" YAxisTitle="{Binding YAxisTitle}" MinHeight="300"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+            </TabItem>
+            <TabItem Header="Value">
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Members}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MemberViewModel">
+                                <StackPanel Spacing="4" Margin="0,0,0,10">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                    <ContentControl Content="{Binding Value}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</UserControl>
