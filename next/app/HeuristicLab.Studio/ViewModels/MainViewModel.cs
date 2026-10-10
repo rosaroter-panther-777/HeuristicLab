@@ -49,8 +49,11 @@ public partial class MainViewModel : ViewModelBase {
       Scripts.Open(script);
       SelectedTab = ScriptsTab;
     });
+    RunAnalysis = new RunAnalysisViewModel(Workspace, fileDialogs);
     Workspace.PropertyChanged += (_, e) => {
       if (e.PropertyName == nameof(ExperimentWorkspaceViewModel.IsRunning)) {
+        // finished experiments bring new runs
+        if (!Workspace.IsRunning) RunAnalysis.RefreshSources();
         RunCommand.NotifyCanExecuteChanged();
         // finished experiments: refresh the Run tab if it shows one of them
         if (!Workspace.IsRunning && optimizer != null) { ShowDocument(optimizer); Solution.Show(optimizer); }
@@ -96,12 +99,20 @@ public partial class MainViewModel : ViewModelBase {
 
   public const int RunTab = 1;
   public const int ScriptsTab = 4;
+  public const int ResultsTab = 3;
+
+  /// <summary>Results tab: the runs of the workspace and of results folders, compared in tables, charts and tests.</summary>
+  public RunAnalysisViewModel RunAnalysis { get; }
 
   /// <summary>C# scripts (HeuristicLab's script samples, or new ones).</summary>
   public ScriptsViewModel Scripts { get; } = new();
 
   [ObservableProperty]
   public partial int SelectedTab { get; set; }
+
+  partial void OnSelectedTabChanged(int value) {
+    if (value == ResultsTab) RunAnalysis.RefreshSources();
+  }
   public SolutionViewModel Solution { get; } = new();
 
   [ObservableProperty]
@@ -349,6 +360,7 @@ public partial class MainViewModel : ViewModelBase {
       Status = $"{batch.Completed} of {repetitions} runs completed (seeds {batch.BaseSeed}..{batch.BaseSeed + repetitions - 1})" +
                (store != null ? $", stored in {store.Directory}" : "");
       if (store != null && ResultsBrowser.Folder == store.Directory) ResultsBrowser.Load(store.Directory);
+      if (store != null) RunAnalysis.AddFolder(store.Directory);
     } finally {
       IsRunning = false;
     }
@@ -382,6 +394,7 @@ public partial class MainViewModel : ViewModelBase {
       ChartXAxisTitle = "Configuration (in the order listed below)";
       Status = $"Sweep finished: {results.Count} configurations x {repetitions} runs" + (store != null ? $", stored in {store.Directory}" : "");
       if (store != null && ResultsBrowser.Folder == store.Directory) ResultsBrowser.Load(store.Directory);
+      if (store != null) RunAnalysis.AddFolder(store.Directory);
     } catch (ArgumentException e) {
       Status = e.Message;
     } finally {
@@ -423,6 +436,7 @@ public partial class MainViewModel : ViewModelBase {
       }
       Status = $"Walk-forward finished: {walk.Folds.Count} folds" + (store != null ? $", stored in {store.Directory}" : "");
       if (store != null && ResultsBrowser.Folder == store.Directory) ResultsBrowser.Load(store.Directory);
+      if (store != null) RunAnalysis.AddFolder(store.Directory);
     } catch (ArgumentException e) {
       Status = e.Message;
     } finally {

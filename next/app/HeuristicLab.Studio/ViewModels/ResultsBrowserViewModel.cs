@@ -11,7 +11,7 @@ using HeuristicLab.Studio.Services;
 
 namespace HeuristicLab.Studio.ViewModels;
 
-public sealed record RunRow(string Started, string Optimizer, string Seed, string Outcome, string Metric);
+public sealed record StoredRunRow(string Started, string Optimizer, string Seed, string Outcome, string Metric);
 public sealed record SummaryRow(string Group, int Count, string Mean, string StdDev, string Min, string Median, string Max);
 
 /// <summary>Results folder (written by runs with a results folder or "hl run --store"): runs and grouped statistics.</summary>
@@ -36,7 +36,7 @@ public partial class ResultsBrowserViewModel(IFileDialogService? fileDialogs = n
   [ObservableProperty]
   public partial string Status { get; set; } = "Open a results folder to compare runs.";
 
-  public ObservableCollection<RunRow> Runs { get; } = [];
+  public ObservableCollection<StoredRunRow> Runs { get; } = [];
   public ObservableCollection<SummaryRow> Summary { get; } = [];
 
   [RelayCommand]
@@ -79,7 +79,7 @@ public partial class ResultsBrowserViewModel(IFileDialogService? fileDialogs = n
     Summary.Clear();
     var metricKey = Metric == null ? null : "result:" + Metric;
     foreach (var r in rows)
-      Runs.Add(new RunRow(Value(r, "startedAt") is { Length: >= 19 } s ? s[..19].Replace('T', ' ') : "",
+      Runs.Add(new StoredRunRow(Value(r, "startedAt") is { Length: >= 19 } s ? s[..19].Replace('T', ' ') : "",
         Value(r, "optimizer"), Value(r, "seed"), Value(r, "outcome"), metricKey == null ? "" : Value(r, metricKey)));
     if (metricKey == null) return;
     foreach (var group in rows.Where(r => Value(r, "outcome") == "Completed").GroupBy(r => Value(r, GroupBy)).OrderBy(g => g.Key, StringComparer.Ordinal)) {

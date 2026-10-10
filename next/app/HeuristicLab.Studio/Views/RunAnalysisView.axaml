@@ -1,0 +1,234 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             x:Class="HeuristicLab.Studio.Views.RunAnalysisView"
+             x:DataType="vm:RunAnalysisViewModel">
+    <Grid ColumnDefinitions="280,4,*">
+        <!-- where the runs come from -->
+        <DockPanel Margin="10">
+            <TextBlock DockPanel.Dock="Top" Text="Runs from" FontWeight="SemiBold" Margin="0,0,0,6" />
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
+                <Button Content="Refresh" Command="{Binding RefreshSourcesCommand}" ToolTip.Tip="Read the workspace again (new experiments, finished runs)" />
+                <Button Content="+ Results folder..." Command="{Binding AddFolderCommand}" ToolTip.Tip="Runs stored by the Run tab or 'hl run --store'" />
+            </StackPanel>
+            <TextBlock DockPanel.Dock="Bottom" TextWrapping="Wrap" FontSize="11" Opacity="0.6" Margin="0,6,0,0"
+                       Text="Tick one source to look at its runs, several to compare them. A run reached from two ticked sources counts once." />
+            <TreeView ItemsSource="{Binding Sources}">
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate DataType="vm:RunSourceViewModel" ItemsSource="{Binding Children}">
+                        <CheckBox IsChecked="{Binding IsChecked}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Label}" />
+                                <TextBlock Text="{Binding Kind}" FontSize="11" Opacity="0.6" />
+                            </StackPanel>
+                        </CheckBox>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+        </DockPanel>
+        <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+
+        <DockPanel Grid.Column="2" Margin="10">
+            <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,6">
+                <TextBlock Text="{Binding Status}" Opacity="0.8" />
+                <!-- filters: any number of conditions, all must hold -->
+                <WrapPanel ItemSpacing="6" LineSpacing="4">
+                    <TextBlock Text="Filter" VerticalAlignment="Center" Width="70" FontWeight="SemiBold" />
+                    <ItemsControl ItemsSource="{Binding Filters}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel ItemSpacing="10" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FilterViewModel">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <ComboBox ItemsSource="{Binding Owner.AllColumns}" SelectedItem="{Binding Column}" Width="220" />
+                                    <ComboBox ItemsSource="{Binding Operators}" SelectedItem="{Binding Op}" Width="90" />
+                                    <TextBox Text="{Binding Value}" Width="120" Watermark="value" />
+                                    <Button Content="✕" Command="{Binding Owner.RemoveFilterCommand}" CommandParameter="{Binding}" ToolTip.Tip="Remove this filter" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Content="+ Filter" Command="{Binding AddFilterCommand}" />
+                </WrapPanel>
+                <!-- grouping: any combination of columns; numbers in bins -->
+                <WrapPanel ItemSpacing="6" LineSpacing="4">
+                    <TextBlock Text="Group by" VerticalAlignment="Center" Width="70" FontWeight="SemiBold" />
+                    <ItemsControl ItemsSource="{Binding GroupBy}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel ItemSpacing="6" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ColumnChoice">
+                                <Border Background="#8FCB8F" CornerRadius="10" Padding="10,3">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding Display}" Foreground="#1E2A1F" VerticalAlignment="Center" />
+                                        <Button Content="✕" Padding="4,0" Background="Transparent" Foreground="#1E2A1F" ToolTip.Tip="Stop grouping by this"
+                                                Command="{Binding $parent[UserControl].((vm:RunAnalysisViewModel)DataContext).RemoveGroupCommand}" CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ComboBox ItemsSource="{Binding AllColumns}" SelectedItem="{Binding GroupToAdd}" PlaceholderText="+ Group by..." Width="240"
+                              ToolTip.Tip="Add a column: every combination of values of the grouped columns is a group" />
+                    <TextBlock Text="Numbers in" VerticalAlignment="Center" Margin="10,0,0,0" />
+                    <NumericUpDown Value="{Binding Bins}" Minimum="1" Maximum="50" Increment="1" FormatString="0" Width="110"
+                                   ToolTip.Tip="Numeric columns with more distinct values are grouped into this many equal ranges" />
+                    <TextBlock Text="ranges" VerticalAlignment="Center" />
+                </WrapPanel>
+            </StackPanel>
+
+            <TabControl Padding="0,6,0,0" SelectedIndex="{Binding SelectedView}">
+                <TabItem Header="Table">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10" Margin="0,0,0,6">
+                            <CheckBox Content="All parameters" IsChecked="{Binding ShowAllParameters}" ToolTip.Tip="Else only the parameters that differ between the runs" />
+                            <Button Content="Export CSV..." Command="{Binding ExportCommand}" ToolTip.Tip="The table as shown: filtered, sorted, these columns" />
+                            <TextBlock Text="Click a column title to sort; select a run to see it in the Run tab." VerticalAlignment="Center" FontSize="11" Opacity="0.6" />
+                        </StackPanel>
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <DockPanel>
+                                <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding TableColumns}" Margin="12,0,0,4">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ColumnChoice">
+                                            <Button Content="{Binding Display}" Width="150" Margin="0,0,4,0" HorizontalContentAlignment="Left" FontWeight="SemiBold"
+                                                    Background="Transparent" ToolTip.Tip="{Binding Key}"
+                                                    Command="{Binding $parent[UserControl].((vm:RunAnalysisViewModel)DataContext).SortCommand}" CommandParameter="{Binding Key}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <ListBox ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:AnalysisRow">
+                                            <ItemsControl ItemsSource="{Binding Cells}">
+                                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="x:String">
+                                                        <TextBlock Text="{Binding}" Width="150" Margin="0,0,4,0" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding}" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </ScrollViewer>
+                    </DockPanel>
+                </TabItem>
+
+                <TabItem Header="Charts">
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Top" ItemSpacing="8" LineSpacing="4" Margin="0,0,0,6">
+                            <ComboBox ItemsSource="{Binding ChartKinds}" SelectedItem="{Binding ChartKind}" Width="210" />
+                            <TextBlock Text="X" VerticalAlignment="Center" IsVisible="{Binding IsScatter}" />
+                            <ComboBox ItemsSource="{Binding XChoices}" SelectedItem="{Binding ChartX}" Width="240" IsVisible="{Binding IsScatter}" />
+                            <TextBlock Text="Value" VerticalAlignment="Center" IsVisible="{Binding NeedsValue}" />
+                            <ComboBox ItemsSource="{Binding NumericColumns}" SelectedItem="{Binding ChartValue}" Width="260" IsVisible="{Binding NeedsValue}" />
+                            <TextBlock Text="Table" VerticalAlignment="Center" IsVisible="{Binding IsCurves}" />
+                            <ComboBox ItemsSource="{Binding CurveTables}" SelectedItem="{Binding CurveTable}" Width="200" IsVisible="{Binding IsCurves}" />
+                            <TextBlock Text="Row" VerticalAlignment="Center" IsVisible="{Binding IsCurves}" />
+                            <ComboBox ItemsSource="{Binding CurveRows}" SelectedItem="{Binding CurveRow}" Width="200" IsVisible="{Binding IsCurves}" />
+                            <CheckBox Content="Every run" IsChecked="{Binding CurveRuns}" IsVisible="{Binding IsCurves}" />
+                            <CheckBox Content="Mean per group" IsChecked="{Binding CurveMean}" IsVisible="{Binding IsCurves}" />
+                        </WrapPanel>
+                        <TextBlock DockPanel.Dock="Bottom" Text="One color per group; click a legend entry to hide or show a group." FontSize="11" Opacity="0.6" />
+                        <ContentControl Content="{Binding Chart}" />
+                    </DockPanel>
+                </TabItem>
+
+                <TabItem Header="Statistics">
+                    <ScrollViewer>
+                        <StackPanel Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Value" VerticalAlignment="Center" />
+                                <ComboBox ItemsSource="{Binding NumericColumns}" SelectedItem="{Binding StatisticsValue}" Width="300" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding AllGroupsTest}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <TextBlock Text="Per group" FontWeight="SemiBold" Margin="0,6,0,0" />
+                            <Grid ColumnDefinitions="3*,60,*,*,*,*,*,*,*">
+                                <TextBlock Text="group" Opacity="0.6" /><TextBlock Grid.Column="1" Text="n" Opacity="0.6" />
+                                <TextBlock Grid.Column="2" Text="mean" Opacity="0.6" /><TextBlock Grid.Column="3" Text="sd" Opacity="0.6" />
+                                <TextBlock Grid.Column="4" Text="min" Opacity="0.6" /><TextBlock Grid.Column="5" Text="Q1" Opacity="0.6" />
+                                <TextBlock Grid.Column="6" Text="median" Opacity="0.6" /><TextBlock Grid.Column="7" Text="Q3" Opacity="0.6" />
+                                <TextBlock Grid.Column="8" Text="max" Opacity="0.6" />
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding Summaries}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:SummaryLine">
+                                        <Grid ColumnDefinitions="3*,60,*,*,*,*,*,*,*" Margin="0,1">
+                                            <TextBlock Text="{Binding Group}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Group}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Count}" />
+                                            <TextBlock Grid.Column="2" Text="{Binding Mean}" FontFamily="monospace" />
+                                            <TextBlock Grid.Column="3" Text="{Binding StdDev}" FontFamily="monospace" />
+                                            <TextBlock Grid.Column="4" Text="{Binding Min}" FontFamily="monospace" />
+                                            <TextBlock Grid.Column="5" Text="{Binding Q1}" FontFamily="monospace" />
+                                            <TextBlock Grid.Column="6" Text="{Binding Median}" FontFamily="monospace" />
+                                            <TextBlock Grid.Column="7" Text="{Binding Q3}" FontFamily="monospace" />
+                                            <TextBlock Grid.Column="8" Text="{Binding Max}" FontFamily="monospace" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="Pairs of groups" FontWeight="SemiBold" Margin="0,10,0,0" />
+                            <TextBlock Text="Mann-Whitney U p-value, adjusted for many pairs (Bonferroni-Holm; bold: below 0.05), t-test p-value and effect sizes."
+                                       FontSize="11" Opacity="0.6" TextWrapping="Wrap" />
+                            <Grid ColumnDefinitions="3*,*,*,*,*,*">
+                                <TextBlock Text="pair" Opacity="0.6" /><TextBlock Grid.Column="1" Text="Mann-Whitney" Opacity="0.6" />
+                                <TextBlock Grid.Column="2" Text="adjusted" Opacity="0.6" /><TextBlock Grid.Column="3" Text="t-test" Opacity="0.6" />
+                                <TextBlock Grid.Column="4" Text="Cohen's d" Opacity="0.6" /><TextBlock Grid.Column="5" Text="Hedges' g" Opacity="0.6" />
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding Pairs}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PairLine">
+                                        <Grid ColumnDefinitions="3*,*,*,*,*,*" Margin="0,1">
+                                            <TextBlock Text="{Binding Pair}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Pair}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding MannWhitney}" FontFamily="monospace" />
+                                            <TextBlock Grid.Column="2" Text="{Binding Adjusted}" FontFamily="monospace"
+                                                       FontWeight="{Binding Significant, Converter={x:Static vm:Converters.BoldIfTrue}}" />
+                                            <TextBlock Grid.Column="3" Text="{Binding TTest}" FontFamily="monospace" />
+                                            <TextBlock Grid.Column="4" Text="{Binding CohensD}" FontFamily="monospace" />
+                                            <TextBlock Grid.Column="5" Text="{Binding HedgesG}" FontFamily="monospace" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="Run">
+                    <Grid ColumnDefinitions="360,4,*">
+                        <Panel>
+                            <TextBlock Text="Select a run in the table." Opacity="0.6" IsVisible="{Binding SelectedRow, Converter={x:Static ObjectConverters.IsNull}}" />
+                            <Grid RowDefinitions="*,Auto,*" IsVisible="{Binding SelectedRow, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <ScrollViewer>
+                                    <ItemsControl ItemsSource="{Binding RunDetails}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:NameValue">
+                                                <Grid ColumnDefinitions="170,*" Margin="0,1">
+                                                    <TextBlock Text="{Binding Name}" Opacity="0.7" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Name}" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding Value}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Value}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                                <TextBlock Grid.Row="1" Text="Results of this run" FontWeight="SemiBold" Margin="0,8,0,4" />
+                                <ListBox Grid.Row="2" ItemsSource="{Binding RunResults}" SelectedItem="{Binding SelectedRunResult}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ResultEntryViewModel">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Summary}" FontFamily="monospace" Opacity="0.75" Margin="8,0,0,0" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Panel>
+                        <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+                        <ContentControl Grid.Column="2" Margin="8,0,0,0" Content="{Binding RunResultDetail}" />
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </DockPanel>
+    </Grid>
+</UserControl>

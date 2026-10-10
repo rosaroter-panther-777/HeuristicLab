@@ -145,60 +145,7 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Results">
-                <DockPanel Margin="12" DataContext="{Binding ResultsBrowser}" x:DataType="vm:ResultsBrowserViewModel">
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,10">
-                        <Button Content="Open results folder..." Command="{Binding OpenFolderCommand}" />
-                        <Button Content="Reload" Command="{Binding ReloadCommand}" />
-                        <TextBlock Text="Result" VerticalAlignment="Center" Margin="12,0,0,0" />
-                        <ComboBox ItemsSource="{Binding Metrics}" SelectedItem="{Binding Metric}" MinWidth="200" />
-                        <TextBlock Text="Group by" VerticalAlignment="Center" />
-                        <ComboBox ItemsSource="{Binding GroupColumns}" SelectedItem="{Binding GroupBy}" MinWidth="200" />
-                    </StackPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="{Binding Status}" Opacity="0.75" Margin="0,0,0,8" />
-                    <TextBlock DockPanel.Dock="Top" Text="Statistics per group (completed runs)" FontWeight="SemiBold" Margin="0,0,0,4" />
-                    <Grid DockPanel.Dock="Top" ColumnDefinitions="2*,50,*,*,*,*,*" Margin="0,0,0,2">
-                        <TextBlock Text="group" Opacity="0.6" /><TextBlock Grid.Column="1" Text="n" Opacity="0.6" />
-                        <TextBlock Grid.Column="2" Text="mean" Opacity="0.6" /><TextBlock Grid.Column="3" Text="sd" Opacity="0.6" />
-                        <TextBlock Grid.Column="4" Text="min" Opacity="0.6" /><TextBlock Grid.Column="5" Text="median" Opacity="0.6" />
-                        <TextBlock Grid.Column="6" Text="max" Opacity="0.6" />
-                    </Grid>
-                    <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding Summary}" Margin="0,0,0,14">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:SummaryRow">
-                                <Grid ColumnDefinitions="2*,50,*,*,*,*,*" Margin="0,1">
-                                    <TextBlock Text="{Binding Group}" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Count}" />
-                                    <TextBlock Grid.Column="2" Text="{Binding Mean}" FontFamily="monospace" />
-                                    <TextBlock Grid.Column="3" Text="{Binding StdDev}" FontFamily="monospace" />
-                                    <TextBlock Grid.Column="4" Text="{Binding Min}" FontFamily="monospace" />
-                                    <TextBlock Grid.Column="5" Text="{Binding Median}" FontFamily="monospace" />
-                                    <TextBlock Grid.Column="6" Text="{Binding Max}" FontFamily="monospace" />
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <TextBlock DockPanel.Dock="Top" Text="Runs" FontWeight="SemiBold" Margin="0,0,0,4" />
-                    <Grid DockPanel.Dock="Top" ColumnDefinitions="170,2*,100,100,*" Margin="0,0,0,2">
-                        <TextBlock Text="started (UTC)" Opacity="0.6" /><TextBlock Grid.Column="1" Text="optimizer" Opacity="0.6" />
-                        <TextBlock Grid.Column="2" Text="seed" Opacity="0.6" /><TextBlock Grid.Column="3" Text="outcome" Opacity="0.6" />
-                        <TextBlock Grid.Column="4" Text="result" Opacity="0.6" />
-                    </Grid>
-                    <ScrollViewer>
-                        <ItemsControl ItemsSource="{Binding Runs}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:RunRow">
-                                    <Grid ColumnDefinitions="170,2*,100,100,*" Margin="0,1">
-                                        <TextBlock Text="{Binding Started}" FontFamily="monospace" />
-                                        <TextBlock Grid.Column="1" Text="{Binding Optimizer}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="2" Text="{Binding Seed}" />
-                                        <TextBlock Grid.Column="3" Text="{Binding Outcome}" />
-                                        <TextBlock Grid.Column="4" Text="{Binding Metric}" FontFamily="monospace" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </DockPanel>
+                <ContentControl Content="{Binding RunAnalysis}" />
             </TabItem>
             <TabItem Header="Scripts">
                 <ContentControl Content="{Binding Scripts}" />

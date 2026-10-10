@@ -82,6 +82,14 @@
   screen, AnalysisControlsView (navigation + chart) in a movable, resizable floating panel. Not for
   BasicAlgorithms or data analysis (GPR): no candidate solutions in scopes. HeuristicLab's GA
   default crossover for real vectors is CopyCrossover: only mutations create new solutions there.
+  Results tab (RunAnalysisView, runtime Runs.*): ticked sources (any experiment / batch run /
+  time-limit run / algorithm of the workspace, results folders) -> RunTable (source, origin
+  relative to the source, run, param:*, result:*; numbers or text; a run from two sources once),
+  filters (column op value), grouping by any combination of columns (numbers in N ranges),
+  Table (varying parameters or all, sort, CSV export), Charts (box plot, scatter, histogram,
+  cumulative distribution, curves of a DataTable row per run + group mean; NaN = line gap),
+  Statistics (HeuristicLab.Analysis.Statistics: Kruskal-Wallis, Mann-Whitney U with
+  Bonferroni-Holm, t-test, Cohen's d, Hedges' g), Run (one run's results with visualizations).
   HeuristicLab facts behind it: only the Debug Engine honors breakpoints; Prepare() gives an
   algorithm a new Results collection (never cache it); an algorithm's valid operators (move
   generators, ...) come from its problem, so rebuild parameter views after a problem change.

@@ -26,7 +26,8 @@ public class StudioAnalysisTests {
     var block = ws.AddAlgorithm(experiment, Catalog.Find(Catalog.Algorithms(), algorithm)!);
     var setup = Setups.Create(new SetupRequest(algorithm) { Problem = problem, Instance = instance });
     ws.SetProblem(block, (IProblem)setup.Algorithm.Problem!.Clone());
-    ParameterEditor.Apply(block.Algorithm, settings);
+    // seeded: what the assertions look at (changes, layers) must not depend on chance
+    ParameterEditor.Apply(block.Algorithm, ["SetSeedRandomly=false", "Seed=11", .. settings]);
     ws.Selected = block;
     var detail = (AlgorithmDetailViewModel)ws.Detail!;
     detail.SelectedTab = AlgorithmDetailViewModel.AnalysisTab;

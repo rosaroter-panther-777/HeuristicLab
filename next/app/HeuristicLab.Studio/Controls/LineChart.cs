@@ -204,7 +204,10 @@ public class LineChart : Control {
     double xMin = double.MaxValue, xMax = double.MinValue;
     foreach (var s in series) {
       double half = s.IsColumns ? ColumnWidth(s) / 2 : 0;
-      foreach (var p in s.Points) { xMin = Math.Min(xMin, p.X - half); xMax = Math.Max(xMax, p.X + half); }
+      foreach (var p in s.Points) {
+        if (!double.IsFinite(p.X)) continue;  // gaps between curves
+        xMin = Math.Min(xMin, p.X - half); xMax = Math.Max(xMax, p.X + half);
+      }
     }
     bool columnsOrHistogram = series.Any(s => s.IsColumns);
     if (!columnsOrHistogram) xMin = Math.Min(0, xMin);
@@ -278,7 +281,7 @@ public class LineChart : Control {
       // columns first, so lines and points stay visible on top
       foreach (var s in series.OrderBy(s => s.IsColumns ? 0 : 1)) {
         var axis = s.SecondYAxis && y2 != null ? y2 : y1;
-        var finite = s.Points.Where(p => double.IsFinite(p.Y)).ToList();
+        var finite = s.Points.Where(p => double.IsFinite(p.Y) && double.IsFinite(p.X)).ToList();
         var brush = new SolidColorBrush(s.Color);
         var pen = new Pen(brush, 2);
         if (s.IsColumns) {
@@ -297,7 +300,15 @@ public class LineChart : Control {
           foreach (var p in mapped) context.DrawEllipse(brush, null, p, 3.5, 3.5);
           continue;
         }
+        // a point without a value (NaN) ends a line: several curves (runs) in one series
+        var connected = new List<bool>();
+        for (int i = 0, k = 0; i < s.Points.Count; i++) {
+          if (!double.IsFinite(s.Points[i].Y) || !double.IsFinite(s.Points[i].X)) { if (connected.Count > 0) connected[^1] = false; continue; }
+          connected.Add(true);
+          k++;
+        }
         for (int i = 1; i < mapped.Count; i++) {
+          if (!connected[i - 1]) continue;
           if (s.Kind == SeriesKind.StepLine) {
             var corner = new Point(mapped[i].X, mapped[i - 1].Y);
             context.DrawLine(pen, mapped[i - 1], corner);
