@@ -7,7 +7,13 @@
     <AssemblyTitle>HeuristicLab.Encodings.SymbolicExpressionTreeEncoding</AssemblyTitle>
     <Description>Provides operators and related classes for the symbolic expression tree encoding.</Description>
     <AssemblyVersion>3.4.0.0</AssemblyVersion>
+    <!-- replaced: loading files saved before the parameter type change lost the tree length lookup -->
+    <LegacyExclude>$(LegacyDir)Analyzers\SymbolicExpressionTreeLengthAnalyzer.cs</LegacyExclude>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="SymbolicExpressionTreeLengthAnalyzer.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\HeuristicLab.Analysis\HeuristicLab.Analysis.csproj" />
