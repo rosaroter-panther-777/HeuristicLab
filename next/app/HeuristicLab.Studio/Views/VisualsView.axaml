@@ -14,7 +14,7 @@
             </StackPanel>
             <TextBlock DockPanel.Dock="Bottom" Text="{Binding Notes}" IsVisible="{Binding HasNotes}" TextWrapping="Wrap"
                        FontSize="12" Opacity="0.75" Margin="0,4,0,0" />
-            <ContentControl Content="{Binding Current}" MinHeight="300">
+            <ContentControl Content="{Binding Current}" MinHeight="120" ClipToBounds="True">
                 <ContentControl.DataTemplates>
                     <DataTemplate DataType="vm:ChartPanel">
                         <controls:LineChart Series="{Binding Series}" XAxisTitle="{Binding XAxisTitle}" YAxisTitle="{Binding YAxisTitle}"

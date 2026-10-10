@@ -121,6 +121,9 @@
                     <ListBox ItemsSource="{Binding Log}" Height="300" FontFamily="monospace" FontSize="12" />
                 </StackPanel>
             </TabItem>
+            <TabItem Header="Detailed analysis">
+                <ContentControl Content="{Binding Analysis}" />
+            </TabItem>
         </TabControl>
     </DockPanel>
 </UserControl>

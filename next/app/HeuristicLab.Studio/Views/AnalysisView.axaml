@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             xmlns:controls="using:HeuristicLab.Studio.Controls"
+             x:Class="HeuristicLab.Studio.Views.AnalysisView"
+             x:DataType="vm:AnalysisViewModel">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,6">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Content="▶ Start detailed analysis run" Command="{Binding StartCommand}" Background="#F2C94C" Foreground="#1E2A1F" />
+                <Button Content="■ Stop" Command="{Binding StopCommand}" />
+                <TextBlock Text="Keep up to" VerticalAlignment="Center" />
+                <TextBox Text="{Binding StorageLimitText}" Width="90" ToolTip.Tip="Solutions kept as copies for drawing (memory); later steps are still recorded and charted." />
+                <TextBlock Text="solutions" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Margin="10,0,0,0" />
+            </StackPanel>
+            <TextBlock Text="{Binding Unsupported}" Foreground="#B0563A" TextWrapping="Wrap" IsVisible="{Binding !IsSupported}" />
+            <TextBlock TextWrapping="Wrap" FontSize="12" Opacity="0.7" IsVisible="{Binding !HasTrace}"
+                       Text="Runs a copy of this algorithm and records every solution it creates: by which operator, from which parents, with which quality, in which iteration and when. Afterwards (and while it runs) select iterations in the chart and step through them." />
+        </StackPanel>
+        <Grid RowDefinitions="*,4,Auto,240" IsVisible="{Binding HasTrace}">
+            <ContentControl Content="{Binding Visuals}" />
+            <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <StackPanel Grid.Row="2" Spacing="3" Margin="0,6,0,4">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Content="◀◀ Iteration" Command="{Binding PreviousIterationCommand}" ToolTip.Tip="Previous iteration" />
+                    <Button Content="Iteration ▶▶" Command="{Binding NextIterationCommand}" ToolTip.Tip="Next iteration" />
+                    <Button Content="◀ Step" Command="{Binding PreviousStepCommand}" Margin="12,0,0,0" ToolTip.Tip="Previous step (solution created)" />
+                    <Button Content="Step ▶" Command="{Binding NextStepCommand}" ToolTip.Tip="Next step (solution created)" />
+                    <TextBlock Text="Earlier iterations shown" VerticalAlignment="Center" Margin="16,0,0,0" />
+                    <NumericUpDown Value="{Binding Trail}" Minimum="0" Maximum="50" Increment="1" FormatString="0" Width="110"
+                                   ToolTip.Tip="How many earlier iterations are drawn fading (when no range is selected)" />
+                    <CheckBox Content="Parents" IsChecked="{Binding ShowParents}" Margin="8,0,0,0" />
+                </StackPanel>
+                <TextBlock Text="{Binding IterationText}" FontFamily="monospace" FontSize="12" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding StepText}" FontFamily="monospace" FontSize="12" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding RangeText}" FontFamily="monospace" FontSize="12" TextWrapping="Wrap" />
+                <TextBlock Text="Click the chart to select an iteration, shift+click to select a range." FontSize="11" Opacity="0.6" />
+            </StackPanel>
+            <controls:LineChart Grid.Row="3" Series="{Binding Series}" Markers="{Binding Markers}" CanSelect="True"
+                                SelectionStart="{Binding SelectionStart}" SelectionEnd="{Binding SelectionEnd}"
+                                TopAxis="{Binding TimeAxis}" TopAxisTitle="Elapsed time" XAxisTitle="Iteration" YAxisTitle="Quality"
+                                EmptyText="No iterations yet." Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        </Grid>
+    </DockPanel>
+</UserControl>

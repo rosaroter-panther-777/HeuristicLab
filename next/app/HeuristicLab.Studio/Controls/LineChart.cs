@@ -57,10 +57,54 @@ public class LineChart : Control {
   public static readonly StyledProperty<string> EmptyTextProperty =
     AvaloniaProperty.Register<LineChart, string>(nameof(EmptyText), "No data yet - run the algorithm to see its progress.");
 
+  /// <summary>Selected x (a solid line), e.g. an iteration; set by clicking when CanSelect.</summary>
+  public static readonly StyledProperty<double?> SelectionStartProperty =
+    AvaloniaProperty.Register<LineChart, double?>(nameof(SelectionStart), defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+
+  /// <summary>Second selected x (shift+click): the range between the two is shaded.</summary>
+  public static readonly StyledProperty<double?> SelectionEndProperty =
+    AvaloniaProperty.Register<LineChart, double?>(nameof(SelectionEnd), defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
+
+  public static readonly StyledProperty<bool> CanSelectProperty =
+    AvaloniaProperty.Register<LineChart, bool>(nameof(CanSelect));
+
+  /// <summary>Labels of a second x axis along the top (e.g. elapsed time at some iterations); not necessarily linear.</summary>
+  public static readonly StyledProperty<IReadOnlyList<ChartMarker>?> TopAxisProperty =
+    AvaloniaProperty.Register<LineChart, IReadOnlyList<ChartMarker>?>(nameof(TopAxis));
+
+  public static readonly StyledProperty<string?> TopAxisTitleProperty =
+    AvaloniaProperty.Register<LineChart, string?>(nameof(TopAxisTitle));
+
   static LineChart() {
     AffectsRender<LineChart>(SeriesProperty, XAxisTitleProperty, ForegroundProperty, MarkersProperty, YAxisTitleProperty,
-      SecondYAxisTitleProperty, EmptyTextProperty);
+      SecondYAxisTitleProperty, EmptyTextProperty, SelectionStartProperty, SelectionEndProperty, TopAxisProperty, TopAxisTitleProperty);
   }
+
+  public double? SelectionStart { get => GetValue(SelectionStartProperty); set => SetValue(SelectionStartProperty, value); }
+  public double? SelectionEnd { get => GetValue(SelectionEndProperty); set => SetValue(SelectionEndProperty, value); }
+  public bool CanSelect { get => GetValue(CanSelectProperty); set => SetValue(CanSelectProperty, value); }
+  public IReadOnlyList<ChartMarker>? TopAxis { get => GetValue(TopAxisProperty); set => SetValue(TopAxisProperty, value); }
+  public string? TopAxisTitle { get => GetValue(TopAxisTitleProperty); set => SetValue(TopAxisTitleProperty, value); }
+
+  // the last drawn mapping, for turning clicks into x values
+  private Rect lastPlot;
+  private double lastXMin, lastXMax;
+
+  protected override void OnPointerPressed(Avalonia.Input.PointerPressedEventArgs e) {
+    base.OnPointerPressed(e);
+    if (!CanSelect || lastPlot.Width <= 1 || lastXMax <= lastXMin) return;
+    var at = e.GetPosition(this);
+    double x = lastXMin + (Math.Clamp(at.X, lastPlot.Left, lastPlot.Right) - lastPlot.Left) / lastPlot.Width * (lastXMax - lastXMin);
+    // snap to the nearest point of the data (iterations are whole numbers)
+    var xs = (Series ?? []).SelectMany(s => s.Points).Select(p => p.X).ToList();
+    if (xs.Count > 0) x = xs.MinBy(v => Math.Abs(v - x));
+    if (e.KeyModifiers.HasFlag(Avalonia.Input.KeyModifiers.Shift) && SelectionStart != null) SelectionEnd = x;
+    else { SelectionStart = x; SelectionEnd = null; }
+    e.Handled = true;
+  }
+
+  /// <summary>Hit testing needs a background.</summary>
+  public IBrush? Background { get; set; } = Brushes.Transparent;
 
   public IReadOnlyList<ChartSeries>? Series { get => GetValue(SeriesProperty); set => SetValue(SeriesProperty, value); }
   public string XAxisTitle { get => GetValue(XAxisTitleProperty); set => SetValue(XAxisTitleProperty, value); }
@@ -97,14 +141,17 @@ public class LineChart : Control {
 
   public override void Render(DrawingContext context) {
     var bounds = new Rect(Bounds.Size);
+    if (Background != null) context.FillRectangle(Background, bounds);
+    bool topAxis = TopAxis is { Count: > 0 };
     var foreground = Foreground ?? Brushes.Gray;
     var series = (Series ?? []).Where(s => s.Points.Count > 0).ToList();
     var first = series.Where(s => !s.SecondYAxis).ToList();
     var second = series.Where(s => s.SecondYAxis).ToList();
     if (first.Count == 0) { first = second; second = []; }
     double right = second.Count > 0 ? SecondAxisMargin : RightMargin;
-    var plot = new Rect(LeftMargin, TopMargin,
-      Math.Max(1, bounds.Width - LeftMargin - right), Math.Max(1, bounds.Height - TopMargin - BottomMargin));
+    double plotTop = TopMargin + (topAxis ? 22 : 0);
+    var plot = new Rect(LeftMargin, plotTop,
+      Math.Max(1, bounds.Width - LeftMargin - right), Math.Max(1, bounds.Height - plotTop - BottomMargin));
     var gridPen = new Pen(new SolidColorBrush(Colors.Gray, 0.25), 1);
     var axisPen = new Pen(foreground, 1);
 
@@ -134,6 +181,7 @@ public class LineChart : Control {
     var y1 = YAxis(first);
     var y2 = second.Count > 0 ? YAxis(second) : null;
     double MapX(double x) => plot.Left + (x - xMin) / (xMax - xMin) * plot.Width;
+    lastPlot = plot; lastXMin = xMin; lastXMax = xMax;
     double MapY(double y, Axis axis) => plot.Bottom - (y - axis.Min) / (axis.Max - axis.Min) * plot.Height;
 
     foreach (var y in y1.Ticks) {
@@ -162,6 +210,28 @@ public class LineChart : Control {
       var px = MapX(marker.X);
       context.DrawLine(markerPen, new Point(px, plot.Top), new Point(px, plot.Bottom));
       DrawText(context, marker.Label, foreground, new Point(px + 4, plot.Top + 8));
+    }
+
+    if (topAxis) {
+      context.DrawLine(axisPen, plot.TopLeft, plot.TopRight);
+      foreach (var tick in TopAxis!) {
+        if (tick.X < xMin || tick.X > xMax) continue;
+        var px = MapX(tick.X);
+        context.DrawLine(axisPen, new Point(px, plot.Top - 4), new Point(px, plot.Top));
+        DrawText(context, tick.Label, foreground, new Point(px, plot.Top - 12), center: true);
+      }
+      if (!string.IsNullOrEmpty(TopAxisTitle)) DrawText(context, TopAxisTitle, foreground, new Point(plot.Right, plot.Top - 26), alignRight: true);
+    }
+
+    // selection: a range is shaded, the selected x values are solid lines
+    if (SelectionStart is double s0) {
+      var selectionBrush = new SolidColorBrush(Color.FromRgb(0xF2, 0xA9, 0x00));
+      if (SelectionEnd is double s1) {
+        double a = MapX(Math.Min(s0, s1)), b = MapX(Math.Max(s0, s1));
+        context.FillRectangle(new SolidColorBrush(Color.FromRgb(0xF2, 0xC9, 0x4C), 0.18), new Rect(new Point(a, plot.Top), new Point(b, plot.Bottom)));
+        context.DrawLine(new Pen(selectionBrush, 2), new Point(MapX(s1), plot.Top), new Point(MapX(s1), plot.Bottom));
+      }
+      context.DrawLine(new Pen(selectionBrush, 2), new Point(MapX(s0), plot.Top), new Point(MapX(s0), plot.Bottom));
     }
 
     using (context.PushClip(plot.Inflate(1))) {

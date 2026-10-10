@@ -63,6 +63,16 @@
   GUI_Automation_Script (WinForms MainForm, does not compile). Older .hl files lost the tree
   length analyzer's lookup on load (upstream #3139): fixed by a replacement
   SymbolicExpressionTreeLengthAnalyzer.cs in next/core (keeps the parameter's ActualName).
+  Detailed analysis (algorithm detail tab): runtime Tracing.DetailedRun runs a copy of an operator-
+  based algorithm on a RecordingEngine (sequential engine + a look at each operator's scope and its
+  ancestors afterwards): every new or changed solution is a step (operator, parents, quality,
+  iteration, time). Copies made by selection are recognized by content fingerprint (not new);
+  crossover parents are the scope's sub-scopes. Iterations end at the algorithm's Analyzer (as
+  HeuristicLab's quality charts index them), else at the Generations/Iterations counter. Raw
+  solutions are drawn with their problem via Visualizations.ForSolution (decoders run in a scope
+  holding the problem's parameters); earlier iterations fade via Visualizations.Overlay. Not for
+  BasicAlgorithms or data analysis (GPR): no candidate solutions in scopes. HeuristicLab's GA
+  default crossover for real vectors is CopyCrossover: only mutations create new solutions there.
   HeuristicLab facts behind it: only the Debug Engine honors breakpoints; Prepare() gives an
   algorithm a new Results collection (never cache it); an algorithm's valid operators (move
   generators, ...) come from its problem, so rebuild parameter views after a problem change.

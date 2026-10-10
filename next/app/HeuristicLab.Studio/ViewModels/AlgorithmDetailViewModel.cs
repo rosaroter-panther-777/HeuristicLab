@@ -23,7 +23,7 @@ namespace HeuristicLab.Studio.ViewModels;
 /// plus start / pause / stop. Breakpoints on operators pause the algorithm; Start resumes it.
 /// </summary>
 public partial class AlgorithmDetailViewModel : ViewModelBase {
-  public const int ProblemTab = 0, AlgorithmTab = 1, ResultsTab = 2, RunsTab = 3, GraphTab = 4, EngineTab = 5;
+  public const int ProblemTab = 0, AlgorithmTab = 1, ResultsTab = 2, RunsTab = 3, GraphTab = 4, EngineTab = 5, AnalysisTab = 6;
 
   private readonly AlgorithmBlockViewModel block;
   private readonly EditContext context;
@@ -37,11 +37,15 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
     Engines = ItemInspector.Engines();
     Results = new ResultsViewModel(() => Algorithm.Results, context);
     Runs = new RunsViewModel(Algorithm.Runs);
+    Analysis = new AnalysisViewModel(() => Algorithm, running => block.Workspace.SetAlgorithmRunning(running));
     timer = new DispatcherTimer(TimeSpan.FromMilliseconds(400), DispatcherPriority.Background, (_, _) => Tick());
     RefreshProblem();
   }
 
   public IAlgorithm Algorithm => block.Algorithm;
+
+  /// <summary>Detailed analysis: a recorded run of a copy of the algorithm, to walk through step by step.</summary>
+  public AnalysisViewModel Analysis { get; }
   public AlgorithmBlockViewModel Block => block;
 
   public string Name {
@@ -209,6 +213,7 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
     PrepareCommand.NotifyCanExecuteChanged();
     Results.Refresh();
     Runs.Refresh();
+    if (Analysis.IsRecording) Analysis.Refresh();
     RefreshLog();
     block.RefreshCounts();
     bool active = Algorithm.ExecutionState is ExecutionState.Started || execution is { IsCompleted: false };
