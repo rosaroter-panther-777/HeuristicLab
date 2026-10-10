@@ -343,22 +343,40 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
     var store = folder == null ? null : new ResultStore(folder);
     Status = experiments.Count == 1 ? $"Running {experiments[0].Name} ..." : $"Running {experiments.Count} experiments ...";
     try {
-      var reports = await Task.WhenAll(experiments.Select(async e => {
-        e.RunStatus = "Running ...";
-        var progress = new Progress<RunProgress>(p => {
-          if (e.RunStatus.StartsWith("Running", StringComparison.Ordinal)) e.RunStatus = $"Running ... {p.Elapsed:hh\\:mm\\:ss}";
-        });
-        var report = await OptimizerRunner.RunAsync(e.Experiment,
-          new RunOptions { ProgressInterval = TimeSpan.FromMilliseconds(500), Labels = new System.Collections.Generic.Dictionary<string, string> { ["experiment"] = e.Name } },
-          e.FilePath, progress, stopSource.Token);
-        store?.Add(report);
-        e.RunStatus = report.Outcome switch {
-          RunOutcome.Completed => $"Completed: {report.Runs.Count} runs in {TimeSpan.FromSeconds(report.ExecutionSeconds):hh\\:mm\\:ss}",
-          RunOutcome.Stopped => $"Stopped: {report.Runs.Count} runs",
-          _ => $"Failed: {report.Error?.Split('\n')[0]}"
-        };
-        return report;
+      // the Resources tab may limit how many experiments run at the same time
+      int concurrent = Resources.Current.ConcurrentExperiments;
+      using var slots = new SemaphoreSlim(concurrent > 0 ? concurrent : Math.Max(1, experiments.Count));
+      var token = stopSource.Token;
+      var started = await Task.WhenAll(experiments.Select(async e => {
+        e.RunStatus = "Waiting for a free slot ...";
+        try {
+          await slots.WaitAsync(token);
+        } catch (OperationCanceledException) {
+          e.RunStatus = "Not started (stopped)";
+          return null;
+        }
+        try {
+          Resources.Configure(e.Experiment);
+          e.RunStatus = "Running ...";
+          var progress = new Progress<RunProgress>(p => {
+            if (e.RunStatus.StartsWith("Running", StringComparison.Ordinal)) e.RunStatus = $"Running ... {p.Elapsed:hh\\:mm\\:ss}";
+          });
+          var report = await OptimizerRunner.RunAsync(e.Experiment,
+            new RunOptions { ProgressInterval = TimeSpan.FromMilliseconds(500), Labels = new System.Collections.Generic.Dictionary<string, string> { ["experiment"] = e.Name } },
+            e.FilePath, progress, token);
+          store?.Add(report);
+          e.RunStatus = report.Outcome switch {
+            RunOutcome.Completed => $"Completed: {report.Runs.Count} runs in {TimeSpan.FromSeconds(report.ExecutionSeconds):hh\\:mm\\:ss}",
+            RunOutcome.Stopped => $"Stopped: {report.Runs.Count} runs",
+            _ => $"Failed: {report.Error?.Split('\n')[0]}"
+          };
+          Resources.Tag(Resources.RunsOf(e.Experiment));
+          return report;
+        } finally {
+          slots.Release();
+        }
       }));
+      var reports = started.OfType<RunReport>().ToArray();
       Status = $"{reports.Count(r => r.Outcome == RunOutcome.Completed)} of {reports.Length} experiments completed, " +
                $"{reports.Sum(r => r.Runs.Count)} runs" + (store != null ? $", stored in {store.Directory}" : "");
     } finally {

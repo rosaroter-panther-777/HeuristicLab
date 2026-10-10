@@ -12,6 +12,12 @@ public sealed class StudioSettings {
   public string Runs { get; set; } = "1";
   public string Parallel { get; set; } = "1";
   public string? ResultsFolder { get; set; }
+  /// <summary>Resources tab; 0 cores means all.</summary>
+  public int ResourceCores { get; set; }
+  public int ResourceThreads { get; set; } = 1;
+  public int ResourceConcurrentExperiments { get; set; }
+  public double ResourceMemoryGB { get; set; }
+  public string ResourcePriority { get; set; } = "Normal";
 }
 
 public interface ISettingsStore {

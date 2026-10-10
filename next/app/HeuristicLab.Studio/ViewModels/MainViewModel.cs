@@ -59,13 +59,21 @@ public partial class MainViewModel : ViewModelBase {
         if (!Workspace.IsRunning && optimizer != null) { ShowDocument(optimizer); Solution.Show(optimizer); }
       }
     };
-    if (settingsStore?.Load() is StudioSettings settings) {
+    var loaded = settingsStore?.Load();
+    if (loaded is StudioSettings settings) {
       foreach (var file in settings.RecentFiles.Where(File.Exists).Take(MaxRecentFiles)) RecentFiles.Add(file);
       SeedText = settings.Seed;
       RepetitionsText = settings.Runs;
       ParallelText = settings.Parallel;
       ResultsFolder = settings.ResultsFolder;
     }
+    var limits = loaded == null ? new ResourceLimits() : new ResourceLimits {
+      Cores = loaded.ResourceCores > 0 ? loaded.ResourceCores : Environment.ProcessorCount,
+      ThreadsPerAlgorithm = Math.Max(1, loaded.ResourceThreads), ConcurrentExperiments = loaded.ResourceConcurrentExperiments,
+      MemoryLimitGB = loaded.ResourceMemoryGB,
+      Priority = Enum.TryParse<ResourcePriority>(loaded.ResourcePriority, out var priority) ? priority : ResourcePriority.Normal
+    };
+    Resources = new ResourcesViewModel(limits, _ => { if (Resources != null) SaveSettings(); }, StopEverything);
   }
 
   /// <summary>Most recently opened or saved files, newest first.</summary>
@@ -81,9 +89,37 @@ public partial class MainViewModel : ViewModelBase {
   }
 
   /// <summary>Stores recent files and run settings (called on exit and after open/save).</summary>
-  public void SaveSettings() => settingsStore?.Save(new StudioSettings {
-    RecentFiles = RecentFiles.ToList(), Seed = SeedText, Runs = RepetitionsText, Parallel = ParallelText, ResultsFolder = ResultsFolder
-  });
+  public void SaveSettings() {
+    var limits = Resources?.Limits ?? new ResourceLimits();
+    settingsStore?.Save(new StudioSettings {
+      RecentFiles = RecentFiles.ToList(), Seed = SeedText, Runs = RepetitionsText, Parallel = ParallelText, ResultsFolder = ResultsFolder,
+      ResourceCores = limits.Cores, ResourceThreads = limits.ThreadsPerAlgorithm, ResourceConcurrentExperiments = limits.ConcurrentExperiments,
+      ResourceMemoryGB = limits.MemoryLimitGB, ResourcePriority = limits.Priority.ToString()
+    });
+  }
+
+  public const int ResourcesTab = 5;
+
+  /// <summary>Resources tab: what the program may use, and what it uses.</summary>
+  public ResourcesViewModel Resources { get; }
+
+  /// <summary>The memory limit was exceeded: stop experiments, algorithms and the Run tab.</summary>
+  private void StopEverything(string message) {
+    if (Workspace.StopCommand.CanExecute(null)) Workspace.StopCommand.Execute(null);
+    if (Workspace.Detail is AlgorithmDetailViewModel detail && detail.StopCommand.CanExecute(null)) detail.StopCommand.Execute(null);
+    if (RunCancelCommand.CanExecute(null)) RunCancelCommand.Execute(null);
+    Status = message;
+    Workspace.Status = message;
+  }
+
+  /// <summary>Labels the Run tab gives its runs: the resources they were made with.</summary>
+  private static Dictionary<string, string> ResourceLabels() {
+    var limits = HeuristicLab.Next.Runtime.Resources.Current;
+    return new() {
+      ["resources:cores"] = limits.Cores.ToString(CultureInfo.InvariantCulture),
+      ["resources:threads"] = limits.ThreadsPerAlgorithm.ToString(CultureInfo.InvariantCulture)
+    };
+  }
 
   private void Remember(string path) {
     var full = Path.GetFullPath(path);
@@ -288,8 +324,10 @@ public partial class MainViewModel : ViewModelBase {
     try {
       // Progress<T> captures the UI synchronization context: updates arrive on the UI thread
       var progress = new Progress<RunProgress>(OnProgress);
-      var options = new RunOptions { Seed = seed, ProgressInterval = TimeSpan.FromMilliseconds(200) };
+      var options = new RunOptions { Seed = seed, ProgressInterval = TimeSpan.FromMilliseconds(200), Labels = ResourceLabels() };
+      HeuristicLab.Next.Runtime.Resources.Configure(optimizer);
       var report = await OptimizerRunner.RunAsync(optimizer, options, filePath, progress, cancellationToken);
+      HeuristicLab.Next.Runtime.Resources.Tag(HeuristicLab.Next.Runtime.Resources.RunsOf(optimizer));
       LastReport = report;
       if (ResultsFolder != null) new ResultStore(ResultsFolder).Add(report);
       ShowReport(report);
@@ -337,8 +375,9 @@ public partial class MainViewModel : ViewModelBase {
     var best = new List<ChartPoint>();
     Status = $"Running {repetitions} runs ...";
     try {
+      HeuristicLab.Next.Runtime.Resources.Configure(optimizer!);
       var batch = await BatchRunner.RepeatAsync(BatchRunner.Copies(optimizer!), repetitions, seed, parallel,
-        new RunOptions(), filePath, (i, report) => {
+        new RunOptions { Labels = ResourceLabels() }, filePath, (i, report) => {
           store?.Add(report);
           var value = KeyMetric(report);
           // called from worker threads: hand the UI update to the UI thread

@@ -165,6 +165,7 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
     Message = HasBreakpoints() && Algorithm is EngineAlgorithm { Engine: not null } a && a.Engine.GetType().Name != "DebugEngine"
       ? "Breakpoints only pause the Debug Engine (Engine tab)." : null;
     if (Algorithm.ExecutionState == ExecutionState.Stopped) Algorithm.Prepare(clearRuns: false);
+    HeuristicLab.Next.Runtime.Resources.Configure(Algorithm);
     block.Workspace.SetAlgorithmRunning(true);
     startedHere = true;
     execution = Task.Run(() => Algorithm.Start(CancellationToken.None));
@@ -220,6 +221,7 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
     if (!active) {
       timer.Stop();
       if (startedHere) {
+        HeuristicLab.Next.Runtime.Resources.Tag(Algorithm.Runs);
         // paused (e.g. at a breakpoint) still counts as running for the workspace: the tree stays locked
         bool paused = Algorithm.ExecutionState == ExecutionState.Paused;
         startedHere = paused;

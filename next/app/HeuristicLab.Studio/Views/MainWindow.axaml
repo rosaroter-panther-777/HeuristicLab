@@ -150,6 +150,9 @@
             <TabItem Header="Scripts">
                 <ContentControl Content="{Binding Scripts}" />
             </TabItem>
+            <TabItem Header="Resources">
+                <ContentControl Content="{Binding Resources}" />
+            </TabItem>
         </TabControl>
     </DockPanel>
 </Window>

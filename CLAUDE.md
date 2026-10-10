@@ -90,6 +90,14 @@
   cumulative distribution, curves of a DataTable row per run + group mean; NaN = line gap),
   Statistics (HeuristicLab.Analysis.Statistics: Kruskal-Wallis, Mann-Whitney U with
   Bonferroni-Holm, t-test, Cohen's d, Hedges' g), Run (one run's results with visualizations).
+  Resources tab (runtime Resources/ResourceMonitor, remembered in settings.json): CPU cores =
+  process affinity (hard limit, Linux/Windows), threads per algorithm (1 = HeuristicLab's default
+  SequentialEngine; more = ParallelEngine with that DegreeOfParallelism, set by Resources.Configure
+  before a start, only on prepared algorithms, Debug Engine kept), experiments at the same time
+  (semaphore in StartAsync), memory limit (monitor stops running work), priority. Nothing in
+  HeuristicLab uses the GPU. Runs get "Resources: ..." parameters (Resources.Tag) to compare in the
+  Results tab. Same seed, same result on any threads: the parallel engine only parallelizes
+  evaluation (tested).
   HeuristicLab facts behind it: only the Debug Engine honors breakpoints; Prepare() gives an
   algorithm a new Results collection (never cache it); an algorithm's valid operators (move
   generators, ...) come from its problem, so rebuild parameter views after a problem change.

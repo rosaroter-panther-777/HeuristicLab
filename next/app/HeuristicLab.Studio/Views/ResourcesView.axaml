@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             xmlns:controls="using:HeuristicLab.Studio.Controls"
+             x:Class="HeuristicLab.Studio.Views.ResourcesView"
+             x:DataType="vm:ResourcesViewModel">
+    <ScrollViewer>
+        <StackPanel Margin="16" Spacing="12" MaxWidth="1100" HorizontalAlignment="Left">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Resources" FontSize="20" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding MachineText}" Opacity="0.75" />
+                <TextBlock Text="{Binding Applied}" />
+                <TextBlock Text="{Binding Problems}" Foreground="#B0563A" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Grid ColumnDefinitions="260,140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+                <TextBlock Text="CPU cores the program may use" VerticalAlignment="Center" FontWeight="SemiBold" />
+                <NumericUpDown Grid.Column="1" Value="{Binding Cores}" Minimum="1" Maximum="{Binding LogicalProcessors}" Increment="1" FormatString="0" />
+                <TextBlock Grid.Column="2" TextWrapping="Wrap" FontSize="12" Opacity="0.75" VerticalAlignment="Center"
+                           Text="A hard limit for everything Studio runs (processor affinity). Fewer cores: algorithms and experiments share them and take longer." />
+
+                <TextBlock Grid.Row="1" Text="Threads per algorithm" VerticalAlignment="Center" FontWeight="SemiBold" />
+                <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding ThreadsPerAlgorithm}" Minimum="1" Maximum="{Binding LogicalProcessors}" Increment="1" FormatString="0" />
+                <TextBlock Grid.Row="1" Grid.Column="2" TextWrapping="Wrap" FontSize="12" Opacity="0.75" VerticalAlignment="Center"
+                           Text="1 is HeuristicLab's default (sequential engine). More uses its parallel engine: a population is evaluated in parallel, so expensive evaluations (data analysis, simulations) get faster; cheap ones (TSP) hardly." />
+
+                <TextBlock Grid.Row="2" Text="Experiments at the same time" VerticalAlignment="Center" FontWeight="SemiBold" />
+                <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding ConcurrentExperiments}" Minimum="0" Maximum="64" Increment="1" FormatString="0" />
+                <TextBlock Grid.Row="2" Grid.Column="2" TextWrapping="Wrap" FontSize="12" Opacity="0.75" VerticalAlignment="Center"
+                           Text="0: all started experiments at once (each uses one core per algorithm). A number: the others wait for a free slot." />
+
+                <TextBlock Grid.Row="3" Text="Memory limit [GB]" VerticalAlignment="Center" FontWeight="SemiBold" />
+                <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding MemoryLimitGB}" Minimum="0" Maximum="1024" Increment="0.5" FormatString="0.#" />
+                <TextBlock Grid.Row="3" Grid.Column="2" TextWrapping="Wrap" FontSize="12" Opacity="0.75" VerticalAlignment="Center"
+                           Text="0: no limit. Above it (after freeing what can be freed) running experiments and algorithms are stopped, so the computer stays usable." />
+
+                <TextBlock Grid.Row="4" Text="Priority" VerticalAlignment="Center" FontWeight="SemiBold" />
+                <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding Priorities}" SelectedItem="{Binding Priority}" HorizontalAlignment="Stretch" />
+                <TextBlock Grid.Row="4" Grid.Column="2" TextWrapping="Wrap" FontSize="12" Opacity="0.75" VerticalAlignment="Center"
+                           Text="Lower: other programs go first, the computer stays responsive during long runs. (Raising it again may need administrator rights.)" />
+
+                <TextBlock Grid.Row="5" Text="Graphics card (VRAM)" VerticalAlignment="Center" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Gpu}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            </Grid>
+            <Button Content="Back to the defaults" Command="{Binding DefaultsCommand}" />
+
+            <Border BorderThickness="1" CornerRadius="4" Padding="12" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="What the limits change" FontWeight="SemiBold" />
+                    <TextBlock TextWrapping="Wrap" FontSize="12"
+                               Text="With the same seed an algorithm finds the same solutions on 1 core or 16, with one thread or many: resources change how fast it gets there, not where. They change the outcome when time is what limits a run - in a time-limit run, more speed means more generations and usually better solutions." />
+                    <TextBlock TextWrapping="Wrap" FontSize="12"
+                               Text="To see it: put time-limit runs in an experiment, run it with different settings here, and compare the runs in the Results tab grouped by 'Resources: CPU cores' or 'Resources: threads per algorithm' - every run records the resources it was made with." />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Usage now" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding Usage}" FontFamily="monospace" />
+            <controls:LineChart Series="{Binding UsageSeries}" Height="260" XAxisTitle="Seconds" YAxisTitle="CPU [%]" SecondYAxisTitle="Memory [MB]"
+                                EmptyText="Measuring ..." Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
