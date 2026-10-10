@@ -70,7 +70,11 @@
   crossover parents are the scope's sub-scopes. Iterations end at the algorithm's Analyzer (as
   HeuristicLab's quality charts index them), else at the Generations/Iterations counter. Raw
   solutions are drawn with their problem via Visualizations.ForSolution (decoders run in a scope
-  holding the problem's parameters); earlier iterations fade via Visualizations.Overlay. Not for
+  holding the problem's parameters) and combined by Visuals.Composition: current solution red, what
+  it has beyond its ancestors from before its iteration yellow, earlier iterations blue shades,
+  later ones (finished runs) green shades, a selected range's start/end as wide/medium strokes
+  under it; no transparency. Only shapes marked IsSolution are recolored (builders mark them;
+  trees and the lawn are not layered). A selected range plays as an animation (iterations/s). Not for
   BasicAlgorithms or data analysis (GPR): no candidate solutions in scopes. HeuristicLab's GA
   default crossover for real vectors is CopyCrossover: only mutations create new solutions there.
   HeuristicLab facts behind it: only the Debug Engine honors breakpoints; Prepare() gives an

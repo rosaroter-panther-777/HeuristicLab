@@ -179,7 +179,7 @@ public class SceneView : Control {
           case RectShape r: {
               var rect = MapRect(r.X, r.Y, r.Width, r.Height);
               context.DrawRectangle(r.Fill is { } fill ? new SolidColorBrush(ColorOf(fill)) : null,
-                r.Stroke is { } stroke ? new Pen(new SolidColorBrush(ColorOf(stroke)), 1) : null, rect);
+                r.Stroke is { } stroke ? new Pen(new SolidColorBrush(ColorOf(stroke)), r.StrokeThickness) : null, rect);
               if (!string.IsNullOrEmpty(r.Label)) {
                 var label = Text(r.Label, LabelBrush(r.Fill));
                 if (label.Width <= rect.Width - 2 && label.Height <= rect.Height + 2)

@@ -61,7 +61,13 @@ public enum MarkerKind { Circle, Square, Diamond }
 
 public enum TextAnchor { Center, Left, Right }
 
-public abstract record Shape;
+/// <param name="IsSolution">
+/// Part of the solution (a tour, the routes, the placed items) rather than of the problem's data
+/// (locations, grids, landscapes): compositions of several solutions recolor only these.
+/// </param>
+public abstract record Shape {
+  public bool IsSolution { get; init; }
+}
 
 public sealed record LineShape(Point2 From, Point2 To, Rgb Color, double Thickness = 1) : Shape;
 
@@ -72,7 +78,9 @@ public sealed record PathShape(IReadOnlyList<Point2> Points, Rgb Color, double T
 public sealed record MarkerShape(Point2 At, Rgb Color, double Size = 6, MarkerKind Kind = MarkerKind.Circle, string? Label = null) : Shape;
 
 /// <summary>Rectangle in scene coordinates; the label is drawn centered if it fits.</summary>
-public sealed record RectShape(double X, double Y, double Width, double Height, Rgb? Fill, Rgb? Stroke = null, string? Label = null) : Shape;
+public sealed record RectShape(double X, double Y, double Width, double Height, Rgb? Fill, Rgb? Stroke = null, string? Label = null) : Shape {
+  public double StrokeThickness { get; init; } = 1;
+}
 
 /// <summary>Circle or ellipse in scene coordinates.</summary>
 public sealed record EllipseShape(double X, double Y, double Width, double Height, Rgb? Fill, Rgb? Stroke = null) : Shape;
@@ -95,6 +103,8 @@ public sealed record LegendEntry(string Label, Rgb Color);
 /// </summary>
 public sealed record SceneVisual(string Title, IReadOnlyList<Shape> Shapes, bool YUp = true, bool Uniform = true) : Visual(Title) {
   public bool Axes { get; init; }
+  /// <summary>Whether several solutions can be drawn over each other (not trees, whose layouts differ).</summary>
+  public bool Layered { get; init; } = true;
   /// <summary>With Axes: whether the horizontal axis has a scale (a knapsack's width means nothing).</summary>
   public bool XAxisScale { get; init; } = true;
   public string XAxisTitle { get; init; } = "";

@@ -40,9 +40,9 @@ internal static class TestFunctions {
                                        IReadOnlyList<RealVector> population, RealVector? best, RealVector? bestKnown) {
     double xMin = bounds[0, 0], xMax = bounds[0, 1], yMin = bounds[1 % bounds.Rows, 0], yMax = bounds[1 % bounds.Rows, 1];
     var shapes = new List<Shape> { new RasterShape(xMin, yMin, xMax - xMin, yMax - yMin, Resolution, Resolution, Pixels(evaluator, xMin, xMax, yMin, yMax)) };
-    shapes.AddRange(population.Where(v => v.Length == 2).Select(v => (Shape)new MarkerShape(new Point2(v[0], v[1]), Rgb.Blue, 7)));
+    shapes.AddRange(population.Where(v => v.Length == 2).Select(v => (Shape)new MarkerShape(new Point2(v[0], v[1]), Rgb.Blue, 7) { IsSolution = true }));
     if (bestKnown is { Length: 2 }) shapes.Add(new MarkerShape(new Point2(bestKnown[0], bestKnown[1]), Rgb.Red, 11, MarkerKind.Diamond));
-    if (best is { Length: 2 }) shapes.Add(new MarkerShape(new Point2(best[0], best[1]), Rgb.Green, 11, MarkerKind.Circle));
+    if (best is { Length: 2 }) shapes.Add(new MarkerShape(new Point2(best[0], best[1]), Rgb.Green, 11, MarkerKind.Circle) { IsSolution = true });
     return new SceneVisual(title, shapes) {
       Axes = true, XAxisTitle = "x₁", YAxisTitle = "x₂",
       Legend = [new("Population", Rgb.Blue), new("Best", Rgb.Green), new("Best known", Rgb.Red)],

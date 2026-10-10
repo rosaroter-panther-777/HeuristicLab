@@ -62,7 +62,8 @@ internal static class Programs {
     }
 
     Place(tree.Root, 0);
-    return new SceneVisual(title, [.. edges, .. shapes], YUp: false) { Notes = [$"Length {nodes}, depth {depth}", "Scroll to zoom, drag to move"] };
+    return new SceneVisual(title, [.. edges, .. shapes], YUp: false) {
+      Layered = false, Notes = [$"Length {nodes}, depth {depth}", "Scroll to zoom, drag to move"] };
   }
 
   private static readonly Rgb Food = new(0x9E, 0xC9, 0xF0), Grid = new(0xD0, 0xD0, 0xD0);
@@ -92,13 +93,13 @@ internal static class Programs {
     var path = new List<Point2>();
     void Mark() {
       interpreter.AntLocation(out int row, out int column);
-      shapes.Add(new RectShape(column + 0.25, row + 0.25, 0.5, 0.5, Rgb.Brown));
+      shapes.Add(new RectShape(column + 0.25, row + 0.25, 0.5, 0.5, Rgb.Brown) { IsSolution = true });
       var center = new Point2(column + 0.5, row + 0.5);
       var heading = interpreter.AntDirection switch {
         0 => new Point2(center.X + 0.5, center.Y), 1 => new Point2(center.X, center.Y + 0.5),
         2 => new Point2(center.X - 0.5, center.Y), _ => new Point2(center.X, center.Y - 0.5)
       };
-      shapes.Add(new LineShape(center, heading, Rgb.Brown, 1.5));
+      shapes.Add(new LineShape(center, heading, Rgb.Brown, 1.5) { IsSolution = true });
       path.Add(center);
     }
     Mark();
@@ -123,7 +124,8 @@ internal static class Programs {
         if (mowed[r, c]) count++;
         pixels[r * columns + c] = mowed[r, c] ? new Rgb(0x7F, 0xFF, 0x00) : new Rgb(0x00, 0x64, 0x00);
       }
-    return new SceneVisual("Lawn", [new RasterShape(0, 0, columns, rows, rows, columns, pixels), .. GridLines(rows, columns)], YUp: false) {
+    return new SceneVisual("Lawn", [new RasterShape(0, 0, columns, rows, rows, columns, pixels) { IsSolution = true }, .. GridLines(rows, columns)], YUp: false) {
+      Layered = false,
       Notes = [$"Mowed {count} of {rows * columns} tiles"]
     };
   }

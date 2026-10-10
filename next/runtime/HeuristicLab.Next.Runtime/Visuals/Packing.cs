@@ -31,7 +31,7 @@ internal static class Packing {
       foreach (var (id, position) in bin.Positions.ToArray()) {
         var packed = bin.Items[id];
         double w = position.Rotated ? packed.Height : packed.Width, h = position.Rotated ? packed.Width : packed.Height;
-        shapes.Add(new RectShape(position.X, position.Y, w, h, color(id, packed.Material).WithAlpha(220), Rgb.Black, id.ToString(CultureInfo.InvariantCulture)));
+        shapes.Add(new RectShape(position.X, position.Y, w, h, color(id, packed.Material).WithAlpha(220), Rgb.Black, id.ToString(CultureInfo.InvariantCulture)) { IsSolution = true });
       }
       return (Visual)new SceneVisual($"Bin {b + 1} of {bins.Length}", shapes) {
         Axes = true,

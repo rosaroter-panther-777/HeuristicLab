@@ -18,8 +18,9 @@ namespace HeuristicLab.Studio.ViewModels;
 /// "Detailed analysis" of an algorithm: a run of a copy of it that records every solution created
 /// (DetailedRun), then lets the user walk through it. The chart shows the qualities per iteration
 /// (time along the top); clicking selects an iteration, shift+clicking a range. The picture above
-/// shows the solution at the current step, with the solutions of earlier iterations (the range,
-/// or the last few) fading with their age, and the current solution's parents.
+/// shows the solution at the current step in red, what changed in its iteration in yellow, earlier
+/// iterations in shades of blue and later ones in shades of green (see Composition); a selected
+/// range can be played as an animation.
 /// </summary>
 public partial class AnalysisViewModel : ViewModelBase {
   private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
@@ -51,12 +52,9 @@ public partial class AnalysisViewModel : ViewModelBase {
   [ObservableProperty]
   public partial string Status { get; set; } = "";
 
-  /// <summary>How many earlier iterations are drawn (fading) when no range is selected.</summary>
+  /// <summary>How many earlier (and, once finished, later) iterations are drawn when no range is selected.</summary>
   [ObservableProperty]
   public partial decimal Trail { get; set; } = 5;
-
-  [ObservableProperty]
-  public partial bool ShowParents { get; set; } = true;
 
   // ---- chart
 
@@ -97,16 +95,18 @@ public partial class AnalysisViewModel : ViewModelBase {
 
   partial void OnTraceChanged(Trace? value) => OnPropertyChanged(nameof(HasTrace));
   partial void OnTrailChanged(decimal value) => ShowCursor();
-  partial void OnShowParentsChanged(bool value) => ShowCursor();
 
   private bool syncing;
 
   partial void OnSelectionStartChanged(double? value) {
+    PlayCommand.NotifyCanExecuteChanged();
     if (syncing || value is not double x) return;
     GoTo((int)Math.Round(x), best: true);
   }
 
   partial void OnSelectionEndChanged(double? value) {
+    PlayCommand.NotifyCanExecuteChanged();
+    if (value == null) StopAnimation();
     if (syncing) return;
     if (value is double end && SelectionStart is double start) GoTo((int)Math.Round(Math.Min(start, end)), best: true);
     ShowCursor();
@@ -161,13 +161,16 @@ public partial class AnalysisViewModel : ViewModelBase {
     if (Trace is not { } trace) return;
     iterations = trace.Iterations();
     if (iterations.Count == 0) return;
+    // best so far last: on top where the lines coincide (one solution per iteration)
     Series = [
-      Line("Best so far", 3, iterations.Where(i => i.BestSoFar.HasValue).Select(i => new ChartPoint(i.Number, i.BestSoFar!.Value))),
-      Line("Best", 0, iterations.Where(i => i.Best.HasValue).Select(i => new ChartPoint(i.Number, i.Best!.Value))),
+      Line("Worst", 2, iterations.Where(i => i.Worst.HasValue).Select(i => new ChartPoint(i.Number, i.Worst!.Value))),
       Line("Average", 1, iterations.Where(i => i.Average.HasValue).Select(i => new ChartPoint(i.Number, i.Average!.Value))),
-      Line("Worst", 2, iterations.Where(i => i.Worst.HasValue).Select(i => new ChartPoint(i.Number, i.Worst!.Value)))
+      Line("Best", 0, iterations.Where(i => i.Best.HasValue).Select(i => new ChartPoint(i.Number, i.Best!.Value))),
+      Line("Best so far", 3, iterations.Where(i => i.BestSoFar.HasValue).Select(i => new ChartPoint(i.Number, i.BestSoFar!.Value)))
     ];
     TimeAxis = TimeTicks(iterations);
+    OnPropertyChanged(nameof(HasSteps));
+    PlayCommand.NotifyCanExecuteChanged();
     // while recording, follow the newest iteration until the user selects one
     if (SelectionStart == null) GoTo(iterations[^1].Number, best: true);
     else UpdateTexts();
@@ -245,29 +248,117 @@ public partial class AnalysisViewModel : ViewModelBase {
     }
     try {
       var pictures = Visualizations.ForSolution(trace.Problem, current.Solution, current.Quality).ToList();
-      var faded = new List<(Visual, double)>();
-      var window = EarlierIterations();
-      for (int i = 0; i < window.Count; i++) {
-        double opacity = 0.55 * (i + 1) / (window.Count + 1);  // oldest faintest
-        if (trace.Representative(window[i]) is { Solution: { } s } r && r.Id != current.Id)
-          faded.Add((Visualizations.ForSolution(trace.Problem, s, r.Quality)[0], opacity));
-      }
-      if (ShowParents)
-        foreach (var parent in current.Parents.Select(trace.Solution).Where(p => p.Solution != null))
-          faded.Add((Visualizations.ForSolution(trace.Problem, parent.Solution!, parent.Quality)[0], 0.45));
-      pictures[0] = Visualizations.Overlay(pictures[0], faded) with { Title = pictures[0].Title };
+      Visual? Picture(int iteration) =>
+        trace.Representative(iteration) is { Solution: { } solution } r && r.Id != current.Id
+          ? Visualizations.ForSolution(trace.Problem, solution, r.Quality)[0] : null;
+      var baselines = Ancestors(trace, current).Where(a => a.Solution != null)
+        .Select(a => Visualizations.ForSolution(trace.Problem, a.Solution!, a.Quality)[0]).ToList();
+      var layers = new List<SolutionLayer>();
+      foreach (var (number, kind, age) in Layers())
+        if (Picture(number) is { } picture) layers.Add(new SolutionLayer(picture, kind, age));
+      pictures[0] = Composition.Compose(pictures[0], baselines, layers) with { Title = pictures[0].Title };
       Visuals.Show(pictures);
     } catch (Exception e) when (e is InvalidOperationException or ArgumentException or NullReferenceException or IndexOutOfRangeException) {
       Visuals.Show([new TextVisual("Not drawn", e.Message)]);
     }
   }
 
-  /// <summary>Iterations drawn faded: the selected range up to the current one, else the last few before it.</summary>
-  private IReadOnlyList<int> EarlierIterations() {
-    var before = iterations.Where(i => i.Number < CurrentIteration).Select(i => i.Number).ToList();
-    if (Range is var (from, _)) return before.Where(n => n >= from).ToList();
-    return before.TakeLast((int)Trail).ToList();
+  /// <summary>
+  /// What a solution was made from before its iteration began: its parents, through solutions
+  /// created earlier in the same iteration (a mutation of a crossover child goes back to the
+  /// crossover's parents). What it has beyond them changed during the iteration.
+  /// </summary>
+  private static IReadOnlyList<TracedSolution> Ancestors(Trace trace, TracedSolution solution) {
+    var result = new List<TracedSolution>();
+    var seen = new HashSet<int>();
+    var pending = new Stack<int>(solution.Parents);
+    while (pending.Count > 0 && result.Count < 16) {
+      var parent = trace.Solution(pending.Pop());
+      if (!seen.Add(parent.Id)) continue;
+      if (parent.Iteration < solution.Iteration) result.Add(parent);
+      else foreach (var p in parent.Parents) pending.Push(p);
+    }
+    return result;
   }
+
+  private const int MaxLayers = 40;
+
+  /// <summary>
+  /// Iterations drawn with the current one: with a range, all of it (earlier ones blue, later ones
+  /// green, its start and end marked); else the last few before it and - once the run has
+  /// finished - the next few after it. At most MaxLayers on each side, evenly spread.
+  /// </summary>
+  private IEnumerable<(int Number, LayerKind Kind, double Age)> Layers() {
+    var numbers = iterations.Select(i => i.Number).ToList();
+    int at = numbers.IndexOf(CurrentIteration);
+    if (at < 0) yield break;
+    List<int> before, after;
+    if (Range is var (from, to)) {
+      before = numbers.Take(at).Where(n => n >= from).ToList();
+      after = numbers.Skip(at + 1).Where(n => n <= to).ToList();
+      if (before.Count > 0 && before[0] == from) { yield return (from, LayerKind.RangeStart, 0); before.RemoveAt(0); }
+      if (after.Count > 0 && after[^1] == to) { yield return (to, LayerKind.RangeEnd, 0); after.RemoveAt(after.Count - 1); }
+    } else {
+      before = numbers.Take(at).TakeLast((int)Trail).ToList();
+      after = Trace?.IsFinished == true ? numbers.Skip(at + 1).Take((int)Trail).ToList() : [];
+    }
+    before = Spread(before, MaxLayers);
+    after = Spread(after, MaxLayers);
+    for (int i = 0; i < before.Count; i++) yield return (before[i], LayerKind.Earlier, before.Count == 1 ? 0 : 1 - (double)i / (before.Count - 1));
+    for (int i = 0; i < after.Count; i++) yield return (after[i], LayerKind.Later, after.Count == 1 ? 0 : (double)i / (after.Count - 1));
+  }
+
+  private static List<int> Spread(List<int> items, int count) =>
+    items.Count <= count ? items : Enumerable.Range(0, count).Select(i => items[(int)Math.Round(i * (items.Count - 1.0) / (count - 1))]).Distinct().ToList();
+
+  // ---- animation between the two selected iterations
+
+  public IReadOnlyList<double> Speeds { get; } = [0.5, 1, 2, 5, 10, 25];
+
+  /// <summary>Iterations per second.</summary>
+  [ObservableProperty]
+  public partial double Speed { get; set; } = 2;
+
+  [ObservableProperty]
+  [NotifyCanExecuteChangedFor(nameof(PlayCommand), nameof(StopAnimationCommand))]
+  public partial bool IsPlaying { get; set; }
+
+  private Avalonia.Threading.DispatcherTimer? animation;
+
+  partial void OnSpeedChanged(double value) {
+    if (animation != null) animation.Interval = TimeSpan.FromSeconds(1 / Math.Max(0.1, value));
+  }
+
+  private bool CanPlay() => !IsPlaying && Range != null && iterations.Count > 0;
+
+  /// <summary>Plays the selected range iteration by iteration (from its start, or on from the current one inside it).</summary>
+  [RelayCommand(CanExecute = nameof(CanPlay))]
+  private void Play() {
+    if (Range is not var (from, to)) return;
+    if (CurrentIteration < from || CurrentIteration >= to) GoTo(from, best: true);
+    animation = new Avalonia.Threading.DispatcherTimer(TimeSpan.FromSeconds(1 / Math.Max(0.1, Speed)), Avalonia.Threading.DispatcherPriority.Background, (_, _) => AnimationTick());
+    animation.Start();
+    IsPlaying = true;
+  }
+
+  /// <summary>One frame: the next iteration, until the end of the range.</summary>
+  public void AnimationTick() {
+    if (Range is not var (_, to) || CurrentIteration >= to) { StopAnimation(); return; }
+    MoveIteration(+1);
+    if (CurrentIteration >= to) StopAnimation();
+  }
+
+  private bool CanStopAnimation() => IsPlaying;
+
+  [RelayCommand(CanExecute = nameof(CanStopAnimation))]
+  private void StopAnimation() {
+    animation?.Stop();
+    animation = null;
+    IsPlaying = false;
+  }
+
+  /// <summary>Population algorithms create many solutions per iteration; trajectory ones (tabu search, ...) one: then steps are iterations.</summary>
+  public bool HasSteps => iterations.Any(i => i.StepCount > 1);
 
   private void UpdateTexts() {
     if (Trace is not { } trace || IterationAt(CurrentIteration) is not { } it) {

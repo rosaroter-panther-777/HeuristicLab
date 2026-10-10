@@ -65,7 +65,7 @@ internal static class Routes {
     if (points == null) return null;
     var shapes = new List<Shape>();
     if (tour != null && tour.Length == points.Length)
-      shapes.Add(new PathShape(tour.Select(i => points[i]).ToList(), Rgb.Palette(0), 1.5, Closed: true));
+      shapes.Add(new PathShape(tour.Select(i => points[i]).ToList(), Rgb.Palette(0), 1.5, Closed: true) { IsSolution = true });
     for (int i = 0; i < points.Length; i++) {
       double size = probabilities != null && i < probabilities.Length ? 3 + 7 * Math.Clamp(probabilities[i], 0, 1) : 5;
       shapes.Add(new MarkerShape(points[i], Rgb.Palette(1), size, MarkerKind.Square));
@@ -94,7 +94,7 @@ internal static class Routes {
         }
         var route = new List<Point2> { points[depot] };
         route.AddRange(tour.Stops.Select(stop => Location(instance, stop)));
-        shapes.Add(new PathShape(route, Rgb.Palette(t), 1.6, Closed: true));
+        shapes.Add(new PathShape(route, Rgb.Palette(t), 1.6, Closed: true) { IsSolution = true });
       }
     }
     for (int city = 1; city <= instance.Cities.Value; city++)
@@ -118,7 +118,7 @@ internal static class Routes {
     var shapes = new List<Shape>();
     if (tour is { Length: > 1 })
       shapes.Add(new PathShape(tour.Where(i => i >= 0 && i < points.Length).Select(i => points[i]).ToList(),
-        penalized ? Rgb.Red : Rgb.Black, 1.5));
+        penalized ? Rgb.Red : Rgb.Black, 1.5) { IsSolution = true });
     double min = scores is { Length: > 0 } ? scores.Min() : 0, max = scores is { Length: > 0 } ? scores.Max() : 0;
     for (int i = 0; i < points.Length; i++) {
       double score = scores != null && i < scores.Length ? scores[i] : 0;
@@ -164,10 +164,10 @@ internal static class Routes {
         for (int j = i + 1; j < n; j++) {
           double w = weights[i, j] + weights[j, i];
           if (w > 0 && maxWeight > 0)
-            shapes.Add(new LineShape(points[assignment[i]], points[assignment[j]], Rgb.Blue.WithAlpha(170), Math.Ceiling(4 * w / maxWeight)));
+            shapes.Add(new LineShape(points[assignment[i]], points[assignment[j]], Rgb.Blue.WithAlpha(170), Math.Ceiling(4 * w / maxWeight)) { IsSolution = true });
         }
       for (int f = 0; f < n; f++)
-        shapes.Add(new MarkerShape(points[assignment[f]], Rgb.Black, 7, MarkerKind.Square, f.ToString(Invariant)));
+        shapes.Add(new MarkerShape(points[assignment[f]], Rgb.Black, 7, MarkerKind.Square, f.ToString(Invariant)) { IsSolution = true });
       notes.Add("Labels: facilities at their assigned locations; line width: flow between them");
     } else {
       for (int l = 0; l < n; l++) shapes.Add(new MarkerShape(points[l], Rgb.Black, 7, MarkerKind.Square, l.ToString(Invariant)));
@@ -189,7 +189,7 @@ internal static class Routes {
     var shapes = new List<Shape> { new RasterShape(0, 0, columns, rows, rows, columns, pixels) };
     if (assignment != null)
       for (int r = 0; r < Math.Min(rows, assignment.Length); r++)
-        shapes.Add(new RectShape(assignment[r], r, 1, 1, null, Rgb.Black));
+        shapes.Add(new RectShape(assignment[r], r, 1, 1, null, Rgb.Black) { IsSolution = true });
     if (rows <= 40)
       for (int r = 0; r < rows; r++)
         shapes.Add(new TextShape(new Point2(-0.2, r + 0.5), rowNames != null && r < rowNames.Length ? rowNames[r] : $"{r}", Rgb.Black, TextAnchor.Right));
@@ -210,7 +210,7 @@ internal static class Routes {
     double y = 0;
     foreach (var i in items) {
       var color = new Rgb(0, (byte)(60 * values[i] / Math.Max(1, maxValue)), (byte)(Math.Round(255.0 * values[i] / Math.Max(1, maxValue))));
-      shapes.Add(new RectShape(0.05, y, 0.9, weights[i], color, new Rgb(255, 255, 255), $"{i}: w {weights[i]}, v {values[i]}"));
+      shapes.Add(new RectShape(0.05, y, 0.9, weights[i], color, new Rgb(255, 255, 255), $"{i}: w {weights[i]}, v {values[i]}") { IsSolution = true });
       y += weights[i];
     }
     return new SceneVisual(title, shapes, YUp: true, Uniform: false) {

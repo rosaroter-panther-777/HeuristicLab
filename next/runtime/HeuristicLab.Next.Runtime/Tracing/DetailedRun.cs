@@ -99,10 +99,16 @@ public sealed class Trace {
   /// <summary>The best solution created in an iteration (by quality), else its last one.</summary>
   public TracedSolution? Representative(int iteration) {
     lock (sync) {
-      var created = solutions.Where(s => s.Iteration == iteration).ToList();
-      var rated = created.Where(s => s.Quality.HasValue).ToList();
-      if (rated.Count > 0) return Maximization ? rated.MaxBy(s => s.Quality) : rated.MinBy(s => s.Quality);
-      return created.LastOrDefault();
+      int index = iterations.FindIndex(i => i.Number == iteration);
+      if (index < 0) return null;
+      int first = iterations[index].FirstStep, next = index + 1 < iterations.Count ? iterations[index + 1].FirstStep : solutions.Count;
+      TracedSolution? best = null;
+      for (int i = first; i < next; i++) {
+        var s = solutions[i];
+        if (s.Quality is not double q) continue;
+        if (best == null || (Maximization ? q > best.Quality!.Value : q < best.Quality!.Value)) best = s;
+      }
+      return best ?? (next > first ? solutions[next - 1] : null);
     }
   }
 
