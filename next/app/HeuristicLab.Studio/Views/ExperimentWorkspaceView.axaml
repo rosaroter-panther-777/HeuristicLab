@@ -178,6 +178,7 @@
                             <MenuFlyout>
                                 <MenuItem Header="New experiment" Command="{Binding CreateExperimentCommand}" />
                                 <MenuItem Header="Open..." Command="{Binding OpenExperimentCommand}" />
+                                <MenuItem Header="Samples..." Command="{Binding ShowSamplesCommand}" />
                             </MenuFlyout>
                         </Button.Flyout>
                     </Button>

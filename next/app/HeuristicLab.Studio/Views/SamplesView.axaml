@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             xmlns:runtime="using:HeuristicLab.Next.Runtime"
+             x:Class="HeuristicLab.Studio.Views.SamplesView"
+             x:DataType="vm:SamplesViewModel">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
+            <TextBlock Text="Samples" FontSize="20" FontWeight="SemiBold" />
+            <TextBlock Text="HeuristicLab's ready-made algorithm and problem setups. Open one to add it as an experiment (scripts open in the Scripts tab)."
+                       TextWrapping="Wrap" Opacity="0.75" />
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Content="Open sample" Command="{Binding OpenCommand}" Background="#F2C94C" Foreground="#1E2A1F" />
+                <TextBlock Text="Loading samples ..." IsVisible="{Binding IsLoading}" VerticalAlignment="Center" Opacity="0.7" />
+                <TextBlock Text="{Binding Message}" VerticalAlignment="Center" Foreground="#B0563A" />
+            </StackPanel>
+        </StackPanel>
+        <ScrollViewer>
+            <ItemsControl ItemsSource="{Binding Groups}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SampleGroup">
+                        <StackPanel Spacing="2" Margin="0,0,0,12">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,4" />
+                            <ListBox ItemsSource="{Binding Samples}" SelectionChanged="OnSelectionChanged" DoubleTapped="OnDoubleTapped">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="runtime:SampleInfo">
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="12" Opacity="0.75" />
+                                            <TextBlock Text="{Binding Limitation}" IsVisible="{Binding Limitation, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                                       TextWrapping="Wrap" FontSize="12" Foreground="#B0563A" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             x:Class="HeuristicLab.Studio.Views.ScriptsView"
+             x:DataType="vm:ScriptsViewModel">
+    <Grid ColumnDefinitions="240,4,*">
+        <DockPanel Margin="8">
+            <Button DockPanel.Dock="Top" Content="+ New script" Command="{Binding NewScriptCommand}" Margin="0,0,0,8"
+                    Background="#F2C94C" Foreground="#1E2A1F" />
+            <TextBlock DockPanel.Dock="Top" Text="Open a script sample from the Experiments tab (Samples), or a .hl file with a script."
+                       TextWrapping="Wrap" FontSize="12" Opacity="0.7" IsVisible="{Binding !HasScripts}" />
+            <ListBox ItemsSource="{Binding Scripts}" SelectedItem="{Binding Selected}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ScriptViewModel">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="×" Padding="6,0" Background="Transparent" ToolTip.Tip="Close"
+                                    Command="{Binding $parent[UserControl].((vm:ScriptsViewModel)DataContext).CloseCommand}" CommandParameter="{Binding}" />
+                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+        <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+        <ContentControl Grid.Column="2" Margin="12" Content="{Binding Selected}" />
+    </Grid>
+</UserControl>

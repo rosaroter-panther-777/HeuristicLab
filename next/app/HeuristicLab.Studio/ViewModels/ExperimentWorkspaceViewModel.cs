@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using HeuristicLab.Common;
 using HeuristicLab.Next.Runtime;
 using HeuristicLab.Optimization;
+using HeuristicLab.Scripting;
 using HeuristicLab.Studio.Services;
 
 namespace HeuristicLab.Studio.ViewModels;
@@ -27,16 +28,22 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
   private readonly Func<string?> resultsFolder;
   private readonly Func<bool> busyElsewhere;
   private readonly Action<IOptimizer, string?> showInRunTab;
+  private readonly Action<CSharpScript> openScript;
   private CancellationTokenSource? stopSource;
   private int experimentCounter, batchCounter, timeLimitCounter;
 
   public ExperimentWorkspaceViewModel(IDialogService? dialogs = null, IFileDialogService? fileDialogs = null,
-      Func<string?>? resultsFolder = null, Func<bool>? busyElsewhere = null, Action<IOptimizer, string?>? showInRunTab = null) {
+      Func<string?>? resultsFolder = null, Func<bool>? busyElsewhere = null, Action<IOptimizer, string?>? showInRunTab = null,
+      Action<CSharpScript>? openScript = null) {
     this.dialogs = dialogs;
     this.fileDialogs = fileDialogs;
     this.resultsFolder = resultsFolder ?? (() => null);
     this.busyElsewhere = busyElsewhere ?? (() => false);
     this.showInRunTab = showInRunTab ?? ((_, _) => { });
+    this.openScript = openScript ?? (_ => { });
+    Samples = new SamplesViewModel(OpenSampleAsync);
+    Detail = Samples;
+    _ = Samples.LoadAsync();
     liveTimer = new Avalonia.Threading.DispatcherTimer(TimeSpan.FromMilliseconds(500), Avalonia.Threading.DispatcherPriority.Background, (_, _) => RefreshLive());
   }
 
@@ -53,11 +60,16 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
     Detail = newValue switch {
       AlgorithmBlockViewModel a => a.ShowDetail(AlgorithmDetailViewModel.AlgorithmTab),
       ProblemBlockViewModel p => p.Owner.ShowDetail(AlgorithmDetailViewModel.ProblemTab),
+      null => Samples,
       _ => newValue
     };
+    if (newValue == null) _ = Samples.LoadAsync();
   }
 
-  /// <summary>What the right-hand side shows: an algorithm's detail (tabs) or a container's settings.</summary>
+  /// <summary>
+  /// What the right-hand side shows: an algorithm's detail (tabs), a container's settings, or - with
+  /// nothing selected - the samples (HeuristicLab's start page).
+  /// </summary>
   [ObservableProperty]
   public partial ViewModelBase? Detail { get; set; }
 
@@ -112,6 +124,28 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
 
   // ---- creating and opening experiments
 
+  /// <summary>HeuristicLab's start page samples.</summary>
+  public SamplesViewModel Samples { get; }
+
+  [RelayCommand]
+  private void ShowSamples() {
+    Selected = null;
+    Detail = Samples;
+    _ = Samples.LoadAsync();
+  }
+
+  /// <summary>An algorithm sample becomes an experiment; a script sample opens in the Scripts tab.</summary>
+  public async Task OpenSampleAsync(SampleInfo sample) {
+    try {
+      Status = $"Opening {sample.Name} ...";
+      var content = await Task.Run(() => HeuristicLab.Next.Runtime.Samples.Load(sample.Id));
+      Open(content, sample.Name, null);
+      if (sample.Limitation != null) Status += $" Note: {sample.Limitation}";
+    } catch (Exception e) {
+      Status = $"Could not open {sample.Name}: {e.Message}";
+    }
+  }
+
   [RelayCommand]
   private void CreateExperiment() => NewExperiment();
 
@@ -129,22 +163,31 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
   public async Task<ExperimentBlockViewModel?> OpenExperimentAsync(string path) {
     try {
       var content = await Task.Run(() => Documents.Load(path));
-      switch (content) {
-        case Experiment experiment:
-          Status = $"Opened {Path.GetFileName(path)}";
-          return AddExperiment(experiment, path);
-        case IOptimizer optimizer:
-          var wrapper = new Experiment { Name = Path.GetFileNameWithoutExtension(path) };
-          wrapper.Optimizers.Add(optimizer);
-          Status = $"Opened {Path.GetFileName(path)} ({optimizer.ItemName}) as a new experiment";
-          return AddExperiment(wrapper, null);
-        default:
-          Status = $"{Path.GetFileName(path)} does not contain an experiment, batch run or algorithm.";
-          return null;
-      }
+      return Open(content, Path.GetFileName(path), path);
     } catch (Exception e) {
       Status = $"Could not open {Path.GetFileName(path)}: {e.Message}";
       return null;
+    }
+  }
+
+  /// <summary>An experiment as it is, any other optimizer inside a new experiment, a script in the Scripts tab.</summary>
+  private ExperimentBlockViewModel? Open(object content, string name, string? path) {
+    switch (content) {
+      case Experiment experiment:
+        Status = $"Opened {name}";
+        return AddExperiment(experiment, path);
+      case IOptimizer optimizer:
+        var wrapper = new Experiment { Name = path != null ? Path.GetFileNameWithoutExtension(path) : name };
+        wrapper.Optimizers.Add(optimizer);
+        Status = $"Opened {name} ({optimizer.ItemName}) as a new experiment.";
+        return AddExperiment(wrapper, null);
+      case CSharpScript script:
+        openScript(script);
+        Status = $"Opened {name} in the Scripts tab.";
+        return null;
+      default:
+        Status = $"{name} does not contain an experiment, batch run, algorithm or script.";
+        return null;
     }
   }
 

@@ -55,6 +55,14 @@
   SceneView (zoom/pan) and BoxesView (software 3D, drag to rotate) in VisualsView; a picker chooses
   among several pictures and keeps the choice while results update. Orienteering has no crossover or
   mutation: run it with Variable Neighborhood Search.
+  Samples (HeuristicLab's start page): runtime Samples embeds the 37 .hl files of
+  HeuristicLab.Optimizer/3.3/Documents (linked) in the start page's groups; Studio lists them on the
+  Experiments tab when nothing is selected ("Samples..."): algorithms open as experiments, scripts in
+  the Scripts tab (code, run on a thread, output, compile errors, variables drawn like results; no
+  kill - .NET has no thread abort). All run except SGP_Robocode (needs Robocode) and
+  GUI_Automation_Script (WinForms MainForm, does not compile). Older .hl files lost the tree
+  length analyzer's lookup on load (upstream #3139): fixed by a replacement
+  SymbolicExpressionTreeLengthAnalyzer.cs in next/core (keeps the parameter's ActualName).
   HeuristicLab facts behind it: only the Debug Engine honors breakpoints; Prepare() gives an
   algorithm a new Results collection (never cache it); an algorithm's valid operators (move
   generators, ...) come from its problem, so rebuild parameter views after a problem change.

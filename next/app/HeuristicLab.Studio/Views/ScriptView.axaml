@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             x:Class="HeuristicLab.Studio.Views.ScriptView"
+             x:DataType="vm:ScriptViewModel">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
+            <TextBox Text="{Binding Name}" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" />
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Content="▶ Run" Command="{Binding RunCommand}" Background="#F2C94C" Foreground="#1E2A1F" />
+                <TextBlock Text="{Binding Status}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Elapsed}" VerticalAlignment="Center" FontFamily="monospace" IsVisible="{Binding IsRunning}" />
+            </StackPanel>
+            <TextBlock Text="A running script cannot be stopped (.NET cannot abort threads); it ends when its Main() returns."
+                       FontSize="12" Opacity="0.6" IsVisible="{Binding IsRunning}" />
+        </StackPanel>
+        <Grid RowDefinitions="*,4,260">
+            <TextBox Text="{Binding Code}" FontFamily="monospace" FontSize="13" AcceptsReturn="True" AcceptsTab="True"
+                     TextWrapping="NoWrap" IsReadOnly="{Binding IsRunning}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+            <GridSplitter Grid.Row="1" ResizeDirection="Rows" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTab}" Padding="0,4,0,0">
+                <TabItem Header="Output">
+                    <TextBox Text="{Binding Output}" IsReadOnly="True" FontFamily="monospace" FontSize="12" TextWrapping="NoWrap"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                </TabItem>
+                <TabItem Header="Errors">
+                    <ListBox ItemsSource="{Binding Errors}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CompileErrorEntry">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <TextBlock Text="{Binding Location}" Opacity="0.7" FontFamily="monospace" />
+                                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </TabItem>
+                <TabItem Header="Variables">
+                    <Grid ColumnDefinitions="320,4,*">
+                        <ListBox ItemsSource="{Binding Variables}" SelectedItem="{Binding SelectedVariable}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:VariableEntry">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Type}" Opacity="0.6" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Value}" FontFamily="monospace" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+                        <ContentControl Grid.Column="2" Margin="8,0,0,0" Content="{Binding VariableDetail}" />
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </DockPanel>
+</UserControl>

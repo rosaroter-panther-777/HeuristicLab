@@ -18,6 +18,12 @@
     <ProjectReference Update="..\..\extlibs\ALGLIB-3.7.0\ALGLIB-3.7.0.csproj" Aliases="alglib_3_7" />
   </ItemGroup>
 
+  <!-- The samples of HeuristicLab's start page (see Samples.cs), linked from the legacy tree. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\HeuristicLab.Optimizer\3.3\Documents\*.hl" LogicalName="Samples.%(Filename)%(Extension)"
+                      Link="Samples\%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- 5.x: column API (6.x replaced it with low-level typed reads/writes) -->
     <PackageReference Include="Parquet.Net" Version="5.6.1" />

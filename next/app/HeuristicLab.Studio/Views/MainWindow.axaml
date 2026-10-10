@@ -200,6 +200,9 @@
                     </ScrollViewer>
                 </DockPanel>
             </TabItem>
+            <TabItem Header="Scripts">
+                <ContentControl Content="{Binding Scripts}" />
+            </TabItem>
         </TabControl>
     </DockPanel>
 </Window>

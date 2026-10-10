@@ -45,6 +45,9 @@ public partial class MainViewModel : ViewModelBase {
     Workspace = new ExperimentWorkspaceViewModel(dialogs, fileDialogs, () => ResultsFolder, () => IsRunning, (o, path) => {
       ShowOptimizer(o, path);
       SelectedTab = RunTab;
+    }, script => {
+      Scripts.Open(script);
+      SelectedTab = ScriptsTab;
     });
     Workspace.PropertyChanged += (_, e) => {
       if (e.PropertyName == nameof(ExperimentWorkspaceViewModel.IsRunning)) {
@@ -92,6 +95,10 @@ public partial class MainViewModel : ViewModelBase {
   public ExperimentWorkspaceViewModel Workspace { get; }
 
   public const int RunTab = 1;
+  public const int ScriptsTab = 4;
+
+  /// <summary>C# scripts (HeuristicLab's script samples, or new ones).</summary>
+  public ScriptsViewModel Scripts { get; } = new();
 
   [ObservableProperty]
   public partial int SelectedTab { get; set; }
