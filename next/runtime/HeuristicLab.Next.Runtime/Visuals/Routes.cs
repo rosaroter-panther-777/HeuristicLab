@@ -94,7 +94,7 @@ internal static class Routes {
         }
         var route = new List<Point2> { points[depot] };
         route.AddRange(tour.Stops.Select(stop => Location(instance, stop)));
-        shapes.Add(new PathShape(route, Rgb.Palette(t), 1.6, Closed: true) { IsSolution = true });
+        shapes.Add(new PathShape(route, Rgb.Palette(t), 1.6, Closed: true) { IsSolution = true, Group = $"Route {t + 1}" });
       }
     }
     for (int city = 1; city <= instance.Cities.Value; city++)

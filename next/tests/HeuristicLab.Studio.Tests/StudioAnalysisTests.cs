@@ -1,4 +1,5 @@
 using Avalonia.Headless;
+using Avalonia.VisualTree;
 using HeuristicLab.Next.Runtime;
 using HeuristicLab.Next.Runtime.Visuals;
 using HeuristicLab.Optimization;
@@ -94,7 +95,10 @@ public class StudioAnalysisTests {
       Assert.AreEqual(8.0, ranged.Single(p => p.Color == Composition.RangeStart).Thickness);
       Assert.AreEqual(4.5, ranged.Single(p => p.Color == Composition.RangeEnd).Thickness);
       Assert.IsTrue(ranged.FindIndex(p => p.Color == Composition.RangeStart) < ranged.FindIndex(p => p.Color == Composition.Current), "start under the current tour");
-      Assert.AreEqual(9 + 9 + 3, ranged.Count, "iterations 11-19 and 21-29, start, end and the current one");
+      Assert.AreEqual(5 + 5 + 3, ranged.Count, "five earlier (15-19) and five later (21-25) iterations, start, end and the current one");
+      analysis.EarlierShown = 2;
+      analysis.LaterShown = 0;
+      Assert.AreEqual(2 + 0 + 3, ((SceneVisual)analysis.Visuals.Current!).Shapes.OfType<PathShape>().Count(), "the two inputs apply within the range");
       Shot(window, "range");
 
       // play the range as an animation: iteration by iteration up to its end
@@ -103,11 +107,60 @@ public class StudioAnalysisTests {
       analysis.PlayCommand.Execute(null);
       Assert.IsTrue(analysis.IsPlaying);
       Assert.IsFalse(analysis.PlayCommand.CanExecute(null));
-      for (int i = 0; i < 20 && analysis.IsPlaying; i++) analysis.AnimationTick();
+      for (int i = 0; i < 20 && analysis.IsPlaying; i++) {
+        analysis.AnimationTick();
+        int earlier = ((SceneVisual)analysis.Visuals.Current!).Shapes.OfType<PathShape>().Count(p => p.Group == "Earlier iterations");
+        Assert.IsTrue(earlier <= 2, $"the earlier-iterations input applies while playing (iteration {analysis.CurrentIteration}: " +
+          string.Join(", ", ((SceneVisual)analysis.Visuals.Current!).Shapes.OfType<PathShape>().Select(p => $"{p.Color} {p.Thickness} {p.Group}")) + ")");
+      }
       Assert.IsFalse(analysis.IsPlaying, "stops at the end of the range");
       Assert.AreEqual(30, analysis.CurrentIteration);
       analysis.SelectionEnd = null;
       Assert.IsFalse(analysis.PlayCommand.CanExecute(null), "playing needs a range");
+      window.Close();
+      return 0;
+    }, CancellationToken.None);
+  }
+
+  [TestMethod]
+  [Timeout(300_000)]
+  public async Task LegendTogglesAndFullscreen() {
+    await session.Dispatch(async () => {
+      var (window, detail) = await Open("GeneticAlgorithm", "TravelingSalesmanProblem", "TSPLIB (symmetric TSP)/ch130", "PopulationSize=30", "MaximumGenerations=20");
+      var analysis = detail.Analysis;
+      await analysis.StartAsync();
+      analysis.SelectionStart = 10;
+      Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+      // every picture and chart: clicking a legend entry hides that group or series
+      var scene = window.GetVisualDescendants().OfType<HeuristicLab.Studio.Controls.SceneView>().Single(v => v.IsEffectivelyVisible);
+      CollectionAssert.IsSubsetOf(new[] { "Current", "Earlier iterations", "Later iterations", "Points" },
+        HeuristicLab.Studio.Controls.SceneView.Entries(scene.Scene!).Select(e => e.Label).ToList());
+      scene.Toggle("Earlier iterations");
+      scene.Toggle("Points");
+      CollectionAssert.AreEquivalent(new[] { "Earlier iterations", "Points" }, analysis.Visuals.Hidden.ToList(), "kept in the view model, shared with fullscreen");
+      var chart = window.GetVisualDescendants().OfType<HeuristicLab.Studio.Controls.LineChart>().Single(c => c.IsEffectivelyVisible && c.CanSelect);
+      chart.Toggle("Worst");
+      CollectionAssert.Contains(analysis.HiddenSeries.ToList(), "Worst");
+      Shot(window, "toggled");
+
+      // fullscreen: the picture fills the window, the controls float in a movable panel; Esc leaves
+      var view = window.GetVisualDescendants().OfType<AnalysisView>().Single();
+      var full = view.OpenFullscreen()!;
+      full.Width = 1600; full.Height = 1000;
+      Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+      Assert.AreEqual(Avalonia.Controls.WindowState.FullScreen, full.WindowState);
+      Assert.IsTrue(full.Panel.GetVisualDescendants().OfType<AnalysisControlsView>().Any(), "navigation and chart in the floating panel");
+      var fullScene = full.GetVisualDescendants().OfType<HeuristicLab.Studio.Controls.SceneView>().Single();
+      Assert.IsTrue(fullScene.HiddenGroups.Contains("Points"), "the same groups stay hidden");
+      full.CaptureRenderedFrame()!.Save(Path.Combine(AppContext.BaseDirectory, "studio-analysis-fullscreen.png"));
+      full.RaiseEvent(new Avalonia.Input.KeyEventArgs { RoutedEvent = Avalonia.Input.InputElement.KeyDownEvent, Key = Avalonia.Input.Key.Escape });
+      Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+      Assert.IsNull(view.Fullscreen, "Esc leaves fullscreen");
+      Assert.IsNotNull(view.OpenFullscreen());
+      view.Fullscreen!.RaiseEvent(new Avalonia.Input.KeyEventArgs { RoutedEvent = Avalonia.Input.InputElement.KeyDownEvent, Key = Avalonia.Input.Key.F11 });
+      Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+      Assert.IsNull(view.Fullscreen, "so does F11");
       window.Close();
       return 0;
     }, CancellationToken.None);
@@ -140,7 +193,7 @@ public class StudioAnalysisTests {
       var (window, detail) = await Open("GeneticAlgorithm", "SingleObjectiveTestFunctionProblem", null, "PopulationSize=40", "MaximumGenerations=30");
       await detail.Analysis.StartAsync();
       detail.Analysis.SelectionStart = 6;
-      detail.Analysis.Trail = 6;
+      detail.Analysis.EarlierShown = 6;
       Assert.AreEqual("Landscape", detail.Analysis.Visuals.Title);
       Shot(window, "landscape");
       window.Close();

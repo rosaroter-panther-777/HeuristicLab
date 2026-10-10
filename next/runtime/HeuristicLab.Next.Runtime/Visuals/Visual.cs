@@ -65,8 +65,18 @@ public enum TextAnchor { Center, Left, Right }
 /// Part of the solution (a tour, the routes, the placed items) rather than of the problem's data
 /// (locations, grids, landscapes): compositions of several solutions recolor only these.
 /// </param>
+/// <param name="Group">What the shape shows, as named in the picture's legend (e.g. "Job 3"); viewers can hide groups.</param>
 public abstract record Shape {
   public bool IsSolution { get; init; }
+  public string? Group { get; init; }
+
+  /// <summary>The group a viewer toggles: the shape's own, else one by kind (solution, points, labels, background).</summary>
+  public string GroupName => Group ?? (IsSolution ? "Solution" : this switch {
+    RasterShape => "Background",
+    MarkerShape => "Points",
+    TextShape => "Labels",
+    _ => "Outline"
+  });
 }
 
 public sealed record LineShape(Point2 From, Point2 To, Rgb Color, double Thickness = 1) : Shape;

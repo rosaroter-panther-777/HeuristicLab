@@ -17,15 +17,15 @@
             <ContentControl Content="{Binding Current}" MinHeight="120" ClipToBounds="True">
                 <ContentControl.DataTemplates>
                     <DataTemplate DataType="vm:ChartPanel">
-                        <controls:LineChart Series="{Binding Series}" XAxisTitle="{Binding XAxisTitle}" YAxisTitle="{Binding YAxisTitle}"
+                        <controls:LineChart Series="{Binding Series}" HiddenSet="{Binding $parent[UserControl].((vm:VisualsViewModel)DataContext).Hidden}" XAxisTitle="{Binding XAxisTitle}" YAxisTitle="{Binding YAxisTitle}"
                                             SecondYAxisTitle="{Binding SecondYAxisTitle}" Markers="{Binding Markers}" EmptyText="No values yet."
                                             Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
                     </DataTemplate>
                     <DataTemplate DataType="visuals:SceneVisual">
-                        <controls:SceneView Scene="{Binding}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                        <controls:SceneView Scene="{Binding}" HiddenSet="{Binding $parent[UserControl].((vm:VisualsViewModel)DataContext).Hidden}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
                     </DataTemplate>
                     <DataTemplate DataType="visuals:BoxesVisual">
-                        <controls:BoxesView Boxes="{Binding}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                        <controls:BoxesView Boxes="{Binding}" HiddenSet="{Binding $parent[UserControl].((vm:VisualsViewModel)DataContext).Hidden}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
                     </DataTemplate>
                     <DataTemplate DataType="visuals:TextVisual">
                         <ScrollViewer HorizontalScrollBarVisibility="Auto">

@@ -40,8 +40,33 @@ public class BoxesView : Control {
 
   public BoxesView() => ClipToBounds = true;
 
+  // ---- legend: the container and every item can be hidden (to look inside) and shown again
+
+  private readonly HashSet<string> ownHidden = [];
+
+  /// <summary>Optional set of hidden entries shared with others (e.g. the same picture in fullscreen); else the control keeps its own.</summary>
+  public static readonly StyledProperty<HashSet<string>?> HiddenSetProperty =
+    AvaloniaProperty.Register<BoxesView, HashSet<string>?>(nameof(HiddenSet));
+
+  public HashSet<string>? HiddenSet { get => GetValue(HiddenSetProperty); set => SetValue(HiddenSetProperty, value); }
+
+  private HashSet<string> hidden => HiddenSet ?? ownHidden;
+  private readonly List<(Rect Area, string Name)> legendAreas = [];
+
+  public IReadOnlyCollection<string> HiddenGroups => hidden;
+
+  public void Toggle(string name) {
+    if (!hidden.Remove(name)) hidden.Add(name);
+    InvalidateVisual();
+  }
+
+  private static string NameOf(Box3 box, int index) => $"Item {box.Label ?? (index + 1).ToString(CultureInfo.InvariantCulture)}";
+
   protected override void OnPointerPressed(PointerPressedEventArgs e) {
     base.OnPointerPressed(e);
+    var at = e.GetPosition(this);
+    foreach (var (area, name) in legendAreas)
+      if (area.Contains(at)) { Toggle(name); e.Handled = true; return; }
     if (e.ClickCount == 2) { yaw = DefaultYaw; pitch = DefaultPitch; zoom = 1; InvalidateVisual(); return; }
     dragStart = e.GetPosition(this);
     atDragStart = (yaw, pitch);
@@ -119,8 +144,10 @@ public class BoxesView : Control {
         faces.Add(new Face(indices.Select(i => Project(corners[i])).ToArray(), indices.Average(i => corners[i].Z), fill, isContainer));
       }
     }
-    AddBox(container, true);
-    foreach (var box in visual.Boxes) AddBox(box, false);
+    bool showContainer = !hidden.Contains("Container");
+    if (showContainer) AddBox(container, true);
+    for (int i = 0; i < visual.Boxes.Count; i++)
+      if (!hidden.Contains(NameOf(visual.Boxes[i], i))) AddBox(visual.Boxes[i], false);
 
     var edge = new Pen(new SolidColorBrush(Color.FromArgb(150, 30, 30, 30)), 0.8);
     foreach (var face in faces.OrderBy(f => f.Container ? double.MinValue : f.Depth)) {
@@ -138,7 +165,24 @@ public class BoxesView : Control {
       container.Z + u.Z * container.Depth) - center))).ToArray();
     var outline = new Pen(foreground, 1.2);
     int[][] edges = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
-    foreach (var e in edges) context.DrawLine(outline, containerCorners[e[0]], containerCorners[e[1]]);
+    if (showContainer) foreach (var e in edges) context.DrawLine(outline, containerCorners[e[0]], containerCorners[e[1]]);
+
+    // legend along the top
+    legendAreas.Clear();
+    double lx = 8, ly = 6;
+    var entries = new List<(string Name, Color Color)> { ("Container", Color.FromRgb(0x90, 0x90, 0x90)) };
+    entries.AddRange(visual.Boxes.Select((b, i) => (NameOf(b, i), Color.FromRgb(b.Color.R, b.Color.G, b.Color.B))));
+    foreach (var (name, color) in entries) {
+      bool off = hidden.Contains(name);
+      var text = new FormattedText(name, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface(FontFamily.Default), 11,
+        off ? new SolidColorBrush(Colors.Gray, 0.6) : foreground);
+      double w = 16 + text.Width + 12;
+      if (lx + w > Bounds.Width - 8 && lx > 8) { lx = 8; ly += 17; }
+      context.DrawRectangle(off ? null : new SolidColorBrush(color), new Pen(new SolidColorBrush(color), 1.5), new Rect(lx, ly + 3, 11, 11));
+      context.DrawText(text, new Point(lx + 16, ly + 8 - text.Height / 2));
+      legendAreas.Add((new Rect(lx, ly, w, 16), name));
+      lx += w;
+    }
 
     var hint = new FormattedText("Drag to rotate, scroll to zoom, double-click to reset", CultureInfo.InvariantCulture,
       FlowDirection.LeftToRight, new Typeface(FontFamily.Default), 11, foreground);

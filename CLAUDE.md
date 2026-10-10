@@ -74,7 +74,12 @@
   it has beyond its ancestors from before its iteration yellow, earlier iterations blue shades,
   later ones (finished runs) green shades, a selected range's start/end as wide/medium strokes
   under it; no transparency. Only shapes marked IsSolution are recolored (builders mark them;
-  trees and the lawn are not layered). A selected range plays as an animation (iterations/s). Not for
+  trees and the lawn are not layered). A selected range plays as an animation (iterations/s);
+  "Earlier/Later iterations" inputs always apply (within a range too). Every chart, picture and 3D
+  view has a clickable legend: series / shape groups (Shape.Group, else by kind) / items can be
+  hidden; the hidden set can be shared via HiddenSet (VisualsViewModel.Hidden, analysis series).
+  Fullscreen (button or F11; Esc or F11 leaves): AnalysisFullscreenWindow, picture fills the
+  screen, AnalysisControlsView (navigation + chart) in a movable, resizable floating panel. Not for
   BasicAlgorithms or data analysis (GPR): no candidate solutions in scopes. HeuristicLab's GA
   default crossover for real vectors is CopyCrossover: only mutations create new solutions there.
   HeuristicLab facts behind it: only the Debug Engine honors breakpoints; Prepare() gives an

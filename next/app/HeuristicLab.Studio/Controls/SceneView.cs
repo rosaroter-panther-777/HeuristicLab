@@ -69,8 +69,60 @@ public class SceneView : Control {
     e.Handled = true;
   }
 
+  // ---- legend: every group of shapes can be hidden and shown again by clicking its entry
+
+  private readonly HashSet<string> ownHidden = [];
+
+  /// <summary>Optional set of hidden entries shared with others (e.g. the same picture in fullscreen); else the control keeps its own.</summary>
+  public static readonly StyledProperty<HashSet<string>?> HiddenSetProperty =
+    AvaloniaProperty.Register<SceneView, HashSet<string>?>(nameof(HiddenSet));
+
+  public HashSet<string>? HiddenSet { get => GetValue(HiddenSetProperty); set => SetValue(HiddenSetProperty, value); }
+
+  private HashSet<string> hidden => HiddenSet ?? ownHidden;
+  private readonly List<(Rect Area, string Group)> legendAreas = [];
+
+  /// <summary>Groups hidden by the user (kept while the picture updates).</summary>
+  public IReadOnlyCollection<string> HiddenGroups => hidden;
+
+  public void Toggle(string group) {
+    if (!hidden.Remove(group)) hidden.Add(group);
+    InvalidateVisual();
+  }
+
+  /// <summary>The picture's legend, plus an entry for every other group it contains.</summary>
+  public static IReadOnlyList<LegendEntry> Entries(SceneVisual scene) {
+    var entries = scene.Legend.ToList();
+    foreach (var group in scene.Shapes.GroupBy(s => s.GroupName)) {
+      if (entries.Any(e => e.Label == group.Key)) continue;
+      var color = group.Select(ShapeColor).FirstOrDefault(c => c != null) ?? Rgb.Gray;
+      entries.Add(new LegendEntry(group.Key, color));
+    }
+    return entries;
+  }
+
+  private static Rgb? ShapeColor(Shape shape) => shape switch {
+    PathShape p => p.Color, LineShape l => l.Color, MarkerShape m => m.Color,
+    RectShape r => r.Fill ?? r.Stroke, EllipseShape e => e.Fill ?? e.Stroke, TextShape t => t.Color, _ => null
+  };
+
+  private List<(Rect Area, LegendEntry Entry)> LayoutLegend(SceneVisual scene, IBrush foreground) {
+    var result = new List<(Rect, LegendEntry)>();
+    double x = 16, y = 6, max = Math.Max(120, Bounds.Width - 16);
+    foreach (var entry in Entries(scene)) {
+      double w = 16 + Text(entry.Label, foreground).Width + 14;
+      if (x + w > max && x > 16) { x = 16; y += 18; }
+      result.Add((new Rect(x, y, w, 16), entry));
+      x += w;
+    }
+    return result;
+  }
+
   protected override void OnPointerPressed(PointerPressedEventArgs e) {
     base.OnPointerPressed(e);
+    var at = e.GetPosition(this);
+    foreach (var (area, group) in legendAreas)
+      if (area.Contains(at)) { Toggle(group); e.Handled = true; return; }
     if (e.ClickCount == 2) { ResetView(); return; }
     dragStart = e.GetPosition(this);
     panAtDragStart = pan;
@@ -152,7 +204,9 @@ public class SceneView : Control {
     double rightAnchored = scene.Shapes.OfType<TextShape>().Where(t => t.Anchor == TextAnchor.Right)
       .Select(t => Text(t.Text, foreground, t.Size).Width).DefaultIfEmpty(0).Max();
     double left = 16 + Math.Max(rightAnchored, scene.Axes ? 56 : 0);
-    double top = 16 + (scene.Legend.Count > 0 ? 20 : 0) + (scene.Shapes.OfType<TextShape>().Any() ? 12 : 0);
+    var legend = LayoutLegend(scene, foreground);
+    double legendBottom = legend.Count > 0 ? legend.Max(l => l.Area.Bottom) + 4 : 0;
+    double top = 16 + legendBottom + (scene.Shapes.OfType<TextShape>().Any(t => !hidden.Contains(t.GroupName)) ? 12 : 0);
     double bottom = scene.Axes ? 44 : 16, right = 24;
     var plot = new Rect(left, top, Math.Max(1, Bounds.Width - left - right), Math.Max(1, Bounds.Height - top - bottom));
 
@@ -170,6 +224,7 @@ public class SceneView : Control {
 
     using (context.PushClip(new Rect(Bounds.Size))) {
       foreach (var shape in scene.Shapes) {
+        if (hidden.Contains(shape.GroupName)) continue;
         switch (shape) {
           case RasterShape raster:
             // cells stay crisp: a lawn tile or cost cell is one color, not a blur
@@ -244,12 +299,15 @@ public class SceneView : Control {
 
     if (scene.Axes) DrawAxes(context, scene, foreground, plot, Map, sx, sy, screenCenter, cx, cy);
 
-    double lx = left;
-    foreach (var entry in scene.Legend) {
-      context.FillRectangle(new SolidColorBrush(ColorOf(entry.Color)), new Rect(lx, 10, 12, 10));
-      var text = Text(entry.Label, foreground);
-      context.DrawText(text, new Point(lx + 16, 15 - text.Height / 2));
-      lx += 16 + text.Width + 16;
+    legendAreas.Clear();
+    foreach (var (area, entry) in legend) {
+      bool off = hidden.Contains(entry.Label);
+      var box = new Rect(area.X, area.Y + 3, 11, 11);
+      // a filled box: shown; an empty one: hidden (click toggles)
+      context.DrawRectangle(off ? null : new SolidColorBrush(ColorOf(entry.Color)), new Pen(new SolidColorBrush(ColorOf(entry.Color)), 1.5), box);
+      var text = Text(entry.Label, off ? new SolidColorBrush(Colors.Gray, 0.6) : foreground);
+      context.DrawText(text, new Point(area.X + 16, area.Y + 8 - text.Height / 2));
+      legendAreas.Add((area, entry.Label));
     }
   }
 

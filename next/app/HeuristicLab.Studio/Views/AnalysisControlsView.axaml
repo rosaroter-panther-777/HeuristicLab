@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             xmlns:controls="using:HeuristicLab.Studio.Controls"
+             x:Class="HeuristicLab.Studio.Views.AnalysisControlsView"
+             x:DataType="vm:AnalysisViewModel">
+    <!-- navigation, what is shown, and the quality chart: below the picture, or floating over it in fullscreen -->
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Spacing="3" Margin="0,6,0,4">
+            <WrapPanel ItemSpacing="6" LineSpacing="4">
+                <Button Content="◀◀ Iteration" Command="{Binding PreviousIterationCommand}" ToolTip.Tip="Previous iteration" />
+                <Button Content="Iteration ▶▶" Command="{Binding NextIterationCommand}" ToolTip.Tip="Next iteration" />
+                <Button Content="◀ Step" Command="{Binding PreviousStepCommand}" Margin="12,0,0,0" IsVisible="{Binding HasSteps}"
+                        ToolTip.Tip="Previous step: the solution created before this one" />
+                <Button Content="Step ▶" Command="{Binding NextStepCommand}" IsVisible="{Binding HasSteps}"
+                        ToolTip.Tip="Next step: the solution created after this one" />
+                <Button Content="▶ Play" Command="{Binding PlayCommand}" Margin="12,0,0,0" Background="#F2C94C" Foreground="#1E2A1F"
+                        ToolTip.Tip="Play the selected range iteration by iteration (shift+click a second iteration in the chart)" />
+                <Button Content="■ Stop" Command="{Binding StopAnimationCommand}" />
+                <ComboBox ItemsSource="{Binding Speeds}" SelectedItem="{Binding Speed}" Width="80" ToolTip.Tip="Iterations per second" />
+                <TextBlock Text="it./s" VerticalAlignment="Center" />
+                <TextBlock Text="Earlier iterations" VerticalAlignment="Center" Margin="16,0,0,0" />
+                <NumericUpDown Value="{Binding EarlierShown}" Minimum="0" Maximum="50" Increment="1" FormatString="0" Width="110"
+                               ToolTip.Tip="Earlier iterations drawn in shades of blue (within the selected range, if any)" />
+                <TextBlock Text="Later iterations" VerticalAlignment="Center" Margin="8,0,0,0" />
+                <NumericUpDown Value="{Binding LaterShown}" Minimum="0" Maximum="50" Increment="1" FormatString="0" Width="110"
+                               ToolTip.Tip="Later iterations drawn in shades of green once the run has finished (within the selected range, if any)" />
+            </WrapPanel>
+            <TextBlock Text="{Binding IterationText}" FontFamily="monospace" FontSize="12" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding StepText}" FontFamily="monospace" FontSize="12" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding RangeText}" FontFamily="monospace" FontSize="12" TextWrapping="Wrap" />
+            <TextBlock Text="Click the chart to select an iteration, shift+click to select a range; click a legend entry to hide or show it."
+                       FontSize="11" Opacity="0.6" TextWrapping="Wrap" />
+        </StackPanel>
+        <controls:LineChart Series="{Binding Series}" Markers="{Binding Markers}" CanSelect="True" MinHeight="140" HiddenSet="{Binding HiddenSeries}"
+                            SelectionStart="{Binding SelectionStart}" SelectionEnd="{Binding SelectionEnd}"
+                            TopAxis="{Binding TimeAxis}" TopAxisTitle="Elapsed time" XAxisTitle="Iteration" YAxisTitle="Quality"
+                            EmptyText="No iterations yet." Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+    </DockPanel>
+</UserControl>

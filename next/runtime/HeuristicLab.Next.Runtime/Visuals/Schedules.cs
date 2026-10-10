@@ -23,7 +23,7 @@ internal static class Schedules {
         jobs.Add(task.JobNr);
         makespan = Math.Max(makespan, task.EndTime);
         shapes.Add(new RectShape(task.StartTime, r + 0.15, task.Duration, 0.7, Rgb.Palette(task.JobNr), Rgb.Black,
-          $"J{task.JobNr.ToString(CultureInfo.InvariantCulture)}") { IsSolution = true });
+          $"J{task.JobNr.ToString(CultureInfo.InvariantCulture)}") { IsSolution = true, Group = $"Job {task.JobNr}" });
       }
     }
     return new SceneVisual(title, shapes, YUp: false, Uniform: false) {

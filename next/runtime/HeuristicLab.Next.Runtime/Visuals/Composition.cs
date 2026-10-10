@@ -46,18 +46,23 @@ public static class Composition {
         LayerKind.RangeStart => (RangeStart, 8.0),
         _ => (RangeEnd, 4.5)
       };
-      shapes.AddRange(((SceneVisual)layer.Visual).Shapes.Where(s => s.IsSolution).Select(s => Restyle(s, color, width)).OfType<Shape>());
+      string group = layer.Kind switch {
+        LayerKind.Earlier => "Earlier iterations", LayerKind.Later => "Later iterations", LayerKind.RangeStart => "Range start", _ => "Range end"
+      };
+      shapes.AddRange(((SceneVisual)layer.Visual).Shapes.Where(s => s.IsSolution).Select(s => Restyle(s, color, width)).OfType<Shape>()
+        .Select(s => s with { Group = group }));
     }
 
     var bases = baselines.OfType<SceneVisual>().Where(b => b.Layered).ToList();
     var changed = bases.Count > 0 ? Changes(solution, bases.SelectMany(b => b.Shapes.Where(s => s.IsSolution)).ToList()) : [];
-    shapes.AddRange(changed.OfType<MarkerShape>());  // halos under the current markers
-    shapes.AddRange(solution.Select(Red));
-    shapes.AddRange(changed.Where(s => s is not MarkerShape));
+    const string changedGroup = "Changed in this iteration";
+    shapes.AddRange(changed.OfType<MarkerShape>().Select(s => s with { Group = changedGroup }));  // halos under the current markers
+    shapes.AddRange(solution.Select(Red).Select(s => s with { Group = "Current" }));
+    shapes.AddRange(changed.Where(s => s is not MarkerShape).Select(s => s with { Group = changedGroup }));
     shapes.AddRange(foreground);
 
     var legend = new List<LegendEntry> { new("Current", Current) };
-    if (changed.Count > 0) legend.Add(new("Changed in this iteration", Changed));
+    if (changed.Count > 0) legend.Add(new(changedGroup, Changed));
     if (layerList.Any(l => l.Kind == LayerKind.Earlier)) legend.Add(new("Earlier iterations", Earlier(0.3)));
     if (layerList.Any(l => l.Kind == LayerKind.Later)) legend.Add(new("Later iterations", Later(0.3)));
     if (layerList.Any(l => l.Kind == LayerKind.RangeStart)) legend.Add(new("Range start", RangeStart));

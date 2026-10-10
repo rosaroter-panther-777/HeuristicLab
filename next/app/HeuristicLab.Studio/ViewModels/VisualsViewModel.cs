@@ -58,6 +58,9 @@ public partial class VisualsViewModel : ViewModelBase {
 
   public IReadOnlyList<Visual> Visuals => visuals;
 
+  /// <summary>Legend entries the user has hidden, shared by every view of these pictures.</summary>
+  public HashSet<string> Hidden { get; } = [];
+
   public void Show(IReadOnlyList<Visual> next) {
     string? selectedTitle = SelectedIndex >= 0 && SelectedIndex < visuals.Count ? visuals[SelectedIndex].Title : null;
     int index = selectedTitle == null ? 0 : next.Select(v => v.Title).ToList().IndexOf(selectedTitle);

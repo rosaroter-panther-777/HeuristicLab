@@ -52,9 +52,13 @@ public partial class AnalysisViewModel : ViewModelBase {
   [ObservableProperty]
   public partial string Status { get; set; } = "";
 
-  /// <summary>How many earlier (and, once finished, later) iterations are drawn when no range is selected.</summary>
+  /// <summary>How many earlier iterations are drawn (blue), within the selected range if there is one.</summary>
   [ObservableProperty]
-  public partial decimal Trail { get; set; } = 5;
+  public partial decimal EarlierShown { get; set; } = 5;
+
+  /// <summary>How many later iterations are drawn (green) once the run has finished, within the selected range if there is one.</summary>
+  [ObservableProperty]
+  public partial decimal LaterShown { get; set; } = 5;
 
   // ---- chart
 
@@ -93,8 +97,12 @@ public partial class AnalysisViewModel : ViewModelBase {
 
   public VisualsViewModel Visuals { get; } = new();
 
+  /// <summary>Chart series the user has hidden (shared by the normal and the fullscreen view).</summary>
+  public HashSet<string> HiddenSeries { get; } = [];
+
   partial void OnTraceChanged(Trace? value) => OnPropertyChanged(nameof(HasTrace));
-  partial void OnTrailChanged(decimal value) => ShowCursor();
+  partial void OnEarlierShownChanged(decimal value) => ShowCursor();
+  partial void OnLaterShownChanged(decimal value) => ShowCursor();
 
   private bool syncing;
 
@@ -284,26 +292,24 @@ public partial class AnalysisViewModel : ViewModelBase {
   private const int MaxLayers = 40;
 
   /// <summary>
-  /// Iterations drawn with the current one: with a range, all of it (earlier ones blue, later ones
-  /// green, its start and end marked); else the last few before it and - once the run has
-  /// finished - the next few after it. At most MaxLayers on each side, evenly spread.
+  /// Iterations drawn with the current one: the EarlierShown iterations before it (blue) and - once
+  /// the run has finished - the LaterShown after it (green); with a range, only those inside it, and
+  /// its start and end always (also while it plays).
   /// </summary>
   private IEnumerable<(int Number, LayerKind Kind, double Age)> Layers() {
     var numbers = iterations.Select(i => i.Number).ToList();
     int at = numbers.IndexOf(CurrentIteration);
     if (at < 0) yield break;
-    List<int> before, after;
+    var before = numbers.Take(at).ToList();
+    var after = Trace?.IsFinished == true ? numbers.Skip(at + 1).ToList() : [];
     if (Range is var (from, to)) {
-      before = numbers.Take(at).Where(n => n >= from).ToList();
-      after = numbers.Skip(at + 1).Where(n => n <= to).ToList();
+      before = before.Where(n => n >= from).ToList();
+      after = after.Where(n => n <= to).ToList();
       if (before.Count > 0 && before[0] == from) { yield return (from, LayerKind.RangeStart, 0); before.RemoveAt(0); }
       if (after.Count > 0 && after[^1] == to) { yield return (to, LayerKind.RangeEnd, 0); after.RemoveAt(after.Count - 1); }
-    } else {
-      before = numbers.Take(at).TakeLast((int)Trail).ToList();
-      after = Trace?.IsFinished == true ? numbers.Skip(at + 1).Take((int)Trail).ToList() : [];
     }
-    before = Spread(before, MaxLayers);
-    after = Spread(after, MaxLayers);
+    before = Spread(before.TakeLast((int)EarlierShown).ToList(), MaxLayers);
+    after = Spread(after.Take((int)LaterShown).ToList(), MaxLayers);
     for (int i = 0; i < before.Count; i++) yield return (before[i], LayerKind.Earlier, before.Count == 1 ? 0 : 1 - (double)i / (before.Count - 1));
     for (int i = 0; i < after.Count; i++) yield return (after[i], LayerKind.Later, after.Count == 1 ? 0 : (double)i / (after.Count - 1));
   }

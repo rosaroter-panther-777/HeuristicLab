@@ -90,8 +90,43 @@ public class LineChart : Control {
   private Rect lastPlot;
   private double lastXMin, lastXMax;
 
+  // ---- legend: clicking an entry hides or shows its series (the axes follow the visible ones)
+
+  private readonly HashSet<string> ownHiddenSeries = [];
+
+  /// <summary>Optional set of hidden entries shared with others (e.g. the same picture in fullscreen); else the control keeps its own.</summary>
+  public static readonly StyledProperty<HashSet<string>?> HiddenSetProperty =
+    AvaloniaProperty.Register<LineChart, HashSet<string>?>(nameof(HiddenSet));
+
+  public HashSet<string>? HiddenSet { get => GetValue(HiddenSetProperty); set => SetValue(HiddenSetProperty, value); }
+
+  private HashSet<string> hiddenSeries => HiddenSet ?? ownHiddenSeries;
+  private readonly List<(Rect Area, string Name)> legendAreas = [];
+
+  public IReadOnlyCollection<string> HiddenSeries => hiddenSeries;
+
+  public void Toggle(string series) {
+    if (!hiddenSeries.Remove(series)) hiddenSeries.Add(series);
+    InvalidateVisual();
+  }
+
+  private List<(Rect Area, ChartSeries Series)> LayoutLegend(IReadOnlyList<ChartSeries> all, IBrush foreground, double width) {
+    var result = new List<(Rect, ChartSeries)>();
+    double x = LeftMargin, y = 2, max = Math.Max(LeftMargin + 100, width - 150);  // room for the axis titles on the right
+    foreach (var s in all) {
+      double w = 18 + MakeText(s.Name + (s.SecondYAxis ? " (right)" : ""), foreground).Width + 16;
+      if (x + w > max && x > LeftMargin) { x = LeftMargin; y += 16; }
+      result.Add((new Rect(x, y, w, 15), s));
+      x += w;
+    }
+    return result;
+  }
+
   protected override void OnPointerPressed(Avalonia.Input.PointerPressedEventArgs e) {
     base.OnPointerPressed(e);
+    var at0 = e.GetPosition(this);
+    foreach (var (area, name) in legendAreas)
+      if (area.Contains(at0)) { Toggle(name); e.Handled = true; return; }
     if (!CanSelect || lastPlot.Width <= 1 || lastXMax <= lastXMin) return;
     var at = e.GetPosition(this);
     double x = lastXMin + (Math.Clamp(at.X, lastPlot.Left, lastPlot.Right) - lastPlot.Left) / lastPlot.Width * (lastXMax - lastXMin);
@@ -144,19 +179,24 @@ public class LineChart : Control {
     if (Background != null) context.FillRectangle(Background, bounds);
     bool topAxis = TopAxis is { Count: > 0 };
     var foreground = Foreground ?? Brushes.Gray;
-    var series = (Series ?? []).Where(s => s.Points.Count > 0).ToList();
+    var all = (Series ?? []).Where(s => s.Points.Count > 0).ToList();
+    var legend = LayoutLegend(all, foreground, bounds.Width);
+    double legendExtra = legend.Count > 0 ? legend.Max(l => l.Area.Bottom) - 17 : 0;
+    var series = all.Where(s => !hiddenSeries.Contains(s.Name)).ToList();
     var first = series.Where(s => !s.SecondYAxis).ToList();
     var second = series.Where(s => s.SecondYAxis).ToList();
     if (first.Count == 0) { first = second; second = []; }
     double right = second.Count > 0 ? SecondAxisMargin : RightMargin;
-    double plotTop = TopMargin + (topAxis ? 22 : 0);
+    double plotTop = TopMargin + Math.Max(0, legendExtra) + (topAxis ? 22 : 0);
     var plot = new Rect(LeftMargin, plotTop,
       Math.Max(1, bounds.Width - LeftMargin - right), Math.Max(1, bounds.Height - plotTop - BottomMargin));
     var gridPen = new Pen(new SolidColorBrush(Colors.Gray, 0.25), 1);
     var axisPen = new Pen(foreground, 1);
 
     if (series.Count == 0 || !series.SelectMany(s => s.Points).Any(p => double.IsFinite(p.Y))) {
-      DrawText(context, EmptyText, foreground, new Point(plot.Center.X, plot.Center.Y), center: true);
+      DrawText(context, all.Count > 0 && series.Count == 0 ? "All series are hidden - click the legend to show them." : EmptyText,
+        foreground, new Point(plot.Center.X, plot.Center.Y), center: true);
+      DrawLegend(context, legend, foreground);
       return;
     }
 
@@ -267,13 +307,20 @@ public class LineChart : Control {
       }
     }
 
-    // legend above the plot
-    double lx = plot.Left;
-    foreach (var s in series) {
-      context.DrawRectangle(new SolidColorBrush(s.Color), null, s.IsColumns ? new Rect(lx, 6, 12, 9) : new Rect(lx, 9, 14, 3));
-      var text = MakeText(s.Name + (s.SecondYAxis && y2 != null ? " (right)" : ""), foreground);
-      context.DrawText(text, new Point(lx + 18, 10 - text.Height / 2 + 1));
-      lx += 18 + text.Width + 18;
+    DrawLegend(context, legend, foreground);
+  }
+
+  /// <summary>Legend above the plot: a filled mark for shown series, an outlined one for hidden ones.</summary>
+  private void DrawLegend(DrawingContext context, List<(Rect Area, ChartSeries Series)> legend, IBrush foreground) {
+    legendAreas.Clear();
+    foreach (var (area, s) in legend) {
+      bool off = hiddenSeries.Contains(s.Name);
+      var brush = new SolidColorBrush(s.Color);
+      if (off) context.DrawRectangle(null, new Pen(brush, 1.2), new Rect(area.X, area.Y + 3, 12, 9));
+      else context.DrawRectangle(brush, null, s.IsColumns ? new Rect(area.X, area.Y + 3, 12, 9) : new Rect(area.X, area.Y + 6, 14, 3));
+      var text = MakeText(s.Name + (s.SecondYAxis ? " (right)" : ""), off ? new SolidColorBrush(Colors.Gray, 0.6) : foreground);
+      context.DrawText(text, new Point(area.X + 18, area.Y + 8 - text.Height / 2));
+      legendAreas.Add((area, s.Name));
     }
   }
 
