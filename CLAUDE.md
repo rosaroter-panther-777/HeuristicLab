@@ -37,7 +37,11 @@
   events: no problem, not run / stopped by the user, waiting (in a running experiment, paused),
   working, finished (also stopped by a time limit), failed. Unsaved = changed since opened/saved
   (BlockViewModel.MarkModified; detail edits via EditContext.BeginEdit; runs count as changes).
-  Click: details/parameters, double-click: rename, right-click: menu. Start all / start selected (ticked) experiments, enabled only
+  Click: details/parameters, double-click: rename, right-click: menu.
+  Parameter lists show the parameter kind's pictogram before the name (constrained = choice,
+  optional = may be empty, else value). Checked operator lists (analyzers) are numbered: a
+  MultiAnalyzer runs its ticked operators in list order. Nested editors below a list get a
+  "<name> selected. Details/Options:" heading. Start all / start selected (ticked) experiments, enabled only
   when complete; no seed is imposed (a fixed seed would make batch repetitions identical).
   Legacy algorithms crash on Problem = null (OnProblemChanged): clone problems instead of
   detaching them; "Remove problem" tolerates exactly that crash.

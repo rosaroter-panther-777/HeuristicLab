@@ -76,12 +76,18 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:CheckedEntryViewModel">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="{Binding Number}" MinWidth="22" TextAlignment="Right" VerticalAlignment="Center" Opacity="0.75" />
                                     <CheckBox IsChecked="{Binding IsChecked}" ToolTip.Tip="Enabled" />
                                     <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+                    <TextBlock Text="Ticked operators run in this order, from 1 down." FontSize="12" Opacity="0.7" />
+                    <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                            Padding="0,8,0,0" Margin="0,4,0,0" IsVisible="{Binding SelectedEntry, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="{Binding SelectedEntryText}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    </Border>
                     <ContentControl Content="{Binding SelectedEntry.Parameters, FallbackValue={x:Null}}" />
                 </StackPanel>
             </TabItem>

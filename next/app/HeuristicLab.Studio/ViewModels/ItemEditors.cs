@@ -47,7 +47,11 @@ public partial class ParameterListViewModel : ViewModelBase {
   public double ListMaxHeight => Nested ? 220 : double.PositiveInfinity;
 
   [ObservableProperty]
+  [NotifyPropertyChangedFor(nameof(SelectedText))]
   public partial ParameterNodeViewModel? Selected { get; set; }
+
+  /// <summary>Between a nested list and the editor below it: what the editor shows.</summary>
+  public string SelectedText => Selected == null ? "" : $"{Selected.Name} selected. Details/Options:";
 
   public void RefreshSummaries() { foreach (var p in Parameters) p.RefreshSummary(); }
 }
@@ -69,6 +73,25 @@ public partial class ParameterNodeViewModel : ViewModelBase {
 
   public ParameterListViewModel Owner { get; }
   public string Name => parameter.Name;
+
+  /// <summary>
+  /// Pictogram of the parameter's kind: a choice among given values (constrained), a value that may
+  /// be empty (optional), or a value (value, fixed value, value lookup).
+  /// </summary>
+  public string KindPictogram {
+    get {
+      string type = parameter.GetType().Name;
+      return type.Contains("ConstrainedValueParameter", StringComparison.Ordinal) ? "constrained_value_parameter"
+        : type.StartsWith("OptionalValueParameter", StringComparison.Ordinal) ? "optional_value_parameter"
+        : "value_parameter";
+    }
+  }
+
+  public string KindTip => KindPictogram switch {
+    "constrained_value_parameter" => $"{ItemInspector.TypeName(parameter.GetType())}: one of the offered values",
+    "optional_value_parameter" => $"{ItemInspector.TypeName(parameter.GetType())}: may have no value",
+    _ => ItemInspector.TypeName(parameter.GetType())
+  };
   public string Description => parameter.Description;
   public string DataType => ItemInspector.TypeName(parameter.DataType) +
     (ItemInspector.Value(parameter) is IItem v && v.GetType() != parameter.DataType ? $" ({ItemInspector.TypeName(v.GetType())})" : "");
@@ -152,6 +175,8 @@ public partial class CellViewModel(IItem value, int row, int column, string text
 /// <summary>One item of a checked list (e.g. an analyzer): enabled or not, with its own parameters.</summary>
 public partial class CheckedEntryViewModel(CheckedList list, int index, EditContext context) : ViewModelBase {
   public int Index { get; } = index;
+  /// <summary>Position in the execution order, from 1.</summary>
+  public string Number => $"{Index + 1}.";
   public string Name => list[Index] is INamedItem n ? n.Name : list[Index].ItemName;
   public string Kind => list[Index].ItemName;
 
@@ -274,7 +299,13 @@ public partial class ValueEditorViewModel : ViewModelBase {
 
   [ObservableProperty]
   [NotifyCanExecuteChangedFor(nameof(MoveUpCommand), nameof(MoveDownCommand), nameof(RemoveCommand))]
+  [NotifyPropertyChangedFor(nameof(SelectedEntryText))]
   public partial CheckedEntryViewModel? SelectedEntry { get; set; }
+
+  /// <summary>Between the list and the selected operator's options.</summary>
+  public string SelectedEntryText => SelectedEntry == null ? ""
+    : SelectedEntry.Parameters == null ? $"{SelectedEntry.Name} selected. It has no options."
+    : $"{SelectedEntry.Name} selected. Details/Options:";
 
   private void RebuildEntries(int? select = null) {
     Entries.Clear();

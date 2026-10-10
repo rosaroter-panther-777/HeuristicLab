@@ -57,6 +57,62 @@ public class StudioBlockDesignTests {
   }
 
   [TestMethod]
+  public async Task ParameterKindsAndNumberedAnalyzers() {
+    var shot = await session.Dispatch(async () => {
+      var vm = new MainViewModel(null);
+      var ws = vm.Workspace;
+      var experiment = ws.NewExperiment();
+      var block = ws.AddAlgorithm(experiment, TabuSearch);
+      ws.SetProblem(block, Tsp());
+      var context = new EditContext(_ => { }, () => true);
+
+      var algorithm = new ParameterListViewModel(block.Algorithm, context);
+      Assert.AreEqual("value_parameter", algorithm.Parameters.First(p => p.Name == "MaximumIterations").KindPictogram);
+      Assert.AreEqual("constrained_value_parameter", algorithm.Parameters.First(p => p.Name == "MoveGenerator").KindPictogram);
+      var problem = new ParameterListViewModel((HeuristicLab.Core.IParameterizedItem)block.Algorithm.Problem!, context);
+      Assert.AreEqual("optional_value_parameter", problem.Parameters.First(p => p.Name == "BestKnownSolution").KindPictogram);
+
+      // the analyzers: numbered in execution order, a heading above the selected one's options
+      var analyzers = algorithm.Parameters.First(p => p.Name == "Analyzer").Editor;
+      Assert.IsTrue(analyzers.IsCheckedList);
+      CollectionAssert.AreEqual(Enumerable.Range(1, analyzers.Entries.Count).Select(i => $"{i}.").ToList(), analyzers.Entries.Select(e => e.Number).ToList());
+      foreach (var entry in analyzers.Entries) {
+        analyzers.SelectedEntry = entry;
+        Assert.AreEqual($"{entry.Name} selected. " + (entry.Parameters == null ? "It has no options." : "Details/Options:"), analyzers.SelectedEntryText);
+      }
+      var second = analyzers.Entries.Skip(1).First(e => e.Parameters != null);
+      analyzers.SelectedEntry = second;
+      string moved = second.Name;
+      while (analyzers.MoveUpCommand.CanExecute(null) && analyzers.SelectedEntry!.Index > 1) analyzers.MoveUpCommand.Execute(null);
+      analyzers.MoveUpCommand.Execute(null);
+      Assert.AreEqual(moved, analyzers.Entries[0].Name, "moved to the top");
+      Assert.AreEqual("1.", analyzers.Entries[0].Number);
+      var nested = analyzers.SelectedEntry!.Parameters!;
+      StringAssert.EndsWith(nested.SelectedText, " selected. Details/Options:");
+
+      // the algorithm tab with the analyzer selected
+      var window = new MainWindow { DataContext = vm, Width = 1400, Height = 900 };
+      window.Show();
+      ws.Selected = block;
+      block.Detail.SelectedTab = AlgorithmDetailViewModel.AlgorithmTab;
+      Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+      var list = window.GetVisualDescendantsOf<ParameterListView>().First();
+      var shown = (ParameterListViewModel)list.DataContext!;
+      shown.Selected = shown.Parameters.First(p => p.Name == "Analyzer");
+      Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+      shown.Selected.Editor.SelectedEntry = shown.Selected.Editor.Entries[0];
+      Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+      Assert.IsTrue(window.GetVisualDescendantsOf<Pictogram>().Any(p => p.Symbol == "constrained_value_parameter"));
+      var file = Path.Combine(AppContext.BaseDirectory, "studio-analyzers.png");
+      window.CaptureRenderedFrame()!.Save(file);
+      window.Close();
+      await Task.CompletedTask;
+      return file;
+    }, CancellationToken.None);
+    Assert.IsTrue(new FileInfo(shot).Length > 5_000);
+  }
+
+  [TestMethod]
   public async Task SavedStateFollowsChanges() {
     await session.Dispatch(async () => {
       var ws = new ExperimentWorkspaceViewModel();

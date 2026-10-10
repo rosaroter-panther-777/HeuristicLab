@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             xmlns:c="using:HeuristicLab.Studio.Controls"
              x:Class="HeuristicLab.Studio.Views.ParameterListView"
              x:DataType="vm:ParameterListViewModel">
     <DockPanel>
@@ -10,14 +11,19 @@
                  IsVisible="{Binding !IsEmpty}">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="vm:ParameterNodeViewModel">
-                    <Grid ColumnDefinitions="*,Auto" ToolTip.Tip="{Binding Description}">
-                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Grid.Column="1" Text="{Binding Summary}" Opacity="0.65" MaxWidth="150"
+                    <Grid ColumnDefinitions="Auto,*,Auto" ToolTip.Tip="{Binding Description}">
+                        <c:Pictogram Symbol="{Binding KindPictogram}" Width="16" Height="16" Margin="0,0,8,0"
+                                     VerticalAlignment="Center" ToolTip.Tip="{Binding KindTip}"
+                                     Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="{Binding Summary}" Opacity="0.65" MaxWidth="150" VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis" Margin="8,0,0,0" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+        <TextBlock DockPanel.Dock="Top" Text="{Binding SelectedText}" FontWeight="SemiBold" Margin="0,0,0,6"
+                   IsVisible="{Binding Nested}" TextWrapping="Wrap" />
         <ContentControl Content="{Binding Selected}" />
     </DockPanel>
 </UserControl>
