@@ -41,7 +41,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                     <ComboBox ItemsSource="{Binding Owner.AllColumns}" SelectedItem="{Binding Column}" Width="220" />
                                     <ComboBox ItemsSource="{Binding Operators}" SelectedItem="{Binding Op}" Width="90" />
-                                    <TextBox Text="{Binding Value}" Width="120" Watermark="value" />
+                                    <TextBox Text="{Binding Value}" Width="120" PlaceholderText="value" />
                                     <Button Content="✕" Command="{Binding Owner.RemoveFilterCommand}" CommandParameter="{Binding}" ToolTip.Tip="Remove this filter" />
                                 </StackPanel>
                             </DataTemplate>

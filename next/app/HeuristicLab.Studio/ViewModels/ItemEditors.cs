@@ -12,9 +12,16 @@ using HeuristicLab.Next.Runtime;
 namespace HeuristicLab.Studio.ViewModels;
 
 /// <summary>Context shared by nested editors: where to report errors and whether editing is allowed now.</summary>
-public sealed class EditContext(Action<string> report, Func<bool> canEdit) {
+public sealed class EditContext(Action<string> report, Func<bool> canEdit, Action? changed = null) {
   public void Report(string message) => report(message);
   public bool CanEdit => canEdit();
+
+  /// <summary>An edit is about to happen if allowed: true and the owner learns that its content changes (e.g. "unsaved").</summary>
+  public bool BeginEdit() {
+    if (!canEdit()) return false;
+    changed?.Invoke();
+    return true;
+  }
 }
 
 /// <summary>
@@ -72,7 +79,7 @@ public partial class ParameterNodeViewModel : ViewModelBase {
   public bool ShowInRun {
     get => (parameter as IValueParameter)?.GetsCollected ?? false;
     set {
-      if (parameter is IValueParameter vp && context.CanEdit) vp.GetsCollected = value;
+      if (parameter is IValueParameter vp && context.BeginEdit()) vp.GetsCollected = value;
       OnPropertyChanged();
     }
   }
@@ -84,7 +91,7 @@ public partial class ParameterNodeViewModel : ViewModelBase {
     get => Choices.FirstOrDefault(c => ReferenceEquals(c.Item, ItemInspector.Value(parameter)));
     set {
       if (value == null || parameter is not IValueParameter vp || ReferenceEquals(vp.Value, value.Item)) return;
-      if (!context.CanEdit) { OnPropertyChanged(); return; }
+      if (!context.BeginEdit()) { OnPropertyChanged(); return; }
       vp.Value = value.Item;
       ValueChanged();
     }
@@ -98,7 +105,7 @@ public partial class ParameterNodeViewModel : ViewModelBase {
 
   [RelayCommand]
   private void Clear() {
-    if (parameter is not IValueParameter vp || !context.CanEdit) return;
+    if (parameter is not IValueParameter vp || !context.BeginEdit()) return;
     try {
       vp.Value = null;
     } catch (Exception e) when (e is ArgumentException or InvalidOperationException) {
@@ -133,7 +140,7 @@ public partial class CellViewModel(IItem value, int row, int column, string text
     get => text;
     set {
       if (value == text) return;
-      var error = context.CanEdit ? ItemInspector.SetCell(valueItem, row, column, value) : "Not editable now.";
+      var error = context.BeginEdit() ? ItemInspector.SetCell(valueItem, row, column, value) : "Not editable now.";
       if (error == null) { text = value; edited(); }
       else context.Report($"Cell [{row}, {column}]: {error}");
       OnPropertyChanged();
@@ -151,7 +158,7 @@ public partial class CheckedEntryViewModel(CheckedList list, int index, EditCont
   public bool IsChecked {
     get => list.IsChecked(Index);
     set {
-      if (context.CanEdit) list.SetChecked(Index, value);
+      if (context.BeginEdit()) list.SetChecked(Index, value);
       OnPropertyChanged();
     }
   }
@@ -203,7 +210,7 @@ public partial class ValueEditorViewModel : ViewModelBase {
   public bool Breakpoint {
     get => (Value as IOperator)?.Breakpoint ?? false;
     set {
-      if (Value is IOperator op && context.CanEdit) op.Breakpoint = value;
+      if (Value is IOperator op && context.BeginEdit()) op.Breakpoint = value;
       OnPropertyChanged();
     }
   }
@@ -211,7 +218,7 @@ public partial class ValueEditorViewModel : ViewModelBase {
   public bool Bool {
     get => (Value as BoolValue)?.Value ?? false;
     set {
-      if (Value is BoolValue b && !ReadOnly && context.CanEdit && !b.ReadOnly) { b.Value = value; edited(); }
+      if (Value is BoolValue b && !ReadOnly && !b.ReadOnly && context.BeginEdit()) { b.Value = value; edited(); }
       OnPropertyChanged();
     }
   }
@@ -220,7 +227,7 @@ public partial class ValueEditorViewModel : ViewModelBase {
     get => Value is IStringConvertibleValue v ? v.GetValue() : Value?.ToString() ?? "";
     set {
       if (Value is null || value == Text) return;
-      var error = ReadOnly || !context.CanEdit ? "Not editable now." : ItemInspector.SetText(Value, value);
+      var error = ReadOnly || !context.BeginEdit() ? "Not editable now." : ItemInspector.SetText(Value, value);
       if (error != null) context.Report(error); else edited();
       OnPropertyChanged();
     }
@@ -277,16 +284,16 @@ public partial class ValueEditorViewModel : ViewModelBase {
   }
 
   [RelayCommand(CanExecute = nameof(CanMoveUp))]
-  private void MoveUp() { int i = SelectedEntry!.Index; checkedList!.Move(i, i - 1); RebuildEntries(i - 1); }
+  private void MoveUp() { if (!context.BeginEdit()) return; int i = SelectedEntry!.Index; checkedList!.Move(i, i - 1); RebuildEntries(i - 1); }
   private bool CanMoveUp() => !ReadOnly && SelectedEntry is { Index: > 0 };
 
   [RelayCommand(CanExecute = nameof(CanMoveDown))]
-  private void MoveDown() { int i = SelectedEntry!.Index; checkedList!.Move(i, i + 1); RebuildEntries(i + 1); }
+  private void MoveDown() { if (!context.BeginEdit()) return; int i = SelectedEntry!.Index; checkedList!.Move(i, i + 1); RebuildEntries(i + 1); }
   private bool CanMoveDown() => !ReadOnly && SelectedEntry != null && SelectedEntry.Index < Entries.Count - 1;
 
   [RelayCommand(CanExecute = nameof(CanRemove))]
   private void Remove() {
-    if (!context.CanEdit) return;
+    if (!context.BeginEdit()) return;
     int i = SelectedEntry!.Index;
     checkedList!.RemoveAt(i);
     RebuildEntries(Math.Min(i, checkedList.Count - 1));
@@ -294,7 +301,7 @@ public partial class ValueEditorViewModel : ViewModelBase {
   private bool CanRemove() => !ReadOnly && SelectedEntry != null;
 
   private void Add(CatalogEntry type) {
-    if (!context.CanEdit || ReadOnly) return;
+    if (ReadOnly || !context.BeginEdit()) return;
     try {
       checkedList!.Add(type);
       RebuildEntries(checkedList.Count - 1);

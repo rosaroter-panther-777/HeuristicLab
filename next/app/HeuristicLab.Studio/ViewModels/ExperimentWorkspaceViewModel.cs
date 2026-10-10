@@ -113,7 +113,12 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
       case AlgorithmDetailViewModel a: a.Refresh(); break;
       case ContainerBlockViewModel c: c.RefreshRuns(); break;
     }
-    foreach (var a in AllBlocks(Experiments).OfType<AlgorithmBlockViewModel>()) a.RefreshCounts();
+    foreach (var block in AllBlocks(Experiments)) {
+      switch (block) {
+        case AlgorithmBlockViewModel a: a.RefreshCounts(); a.RefreshStatus(); break;
+        case ContainerBlockViewModel c: c.RefreshBadge(); break;
+      }
+    }
   }
 
   /// <summary>Building blocks cannot change while experiments run.</summary>
@@ -206,6 +211,7 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
     if (path == null) return;
     await Task.Run(() => Documents.Save(block.Experiment, path));
     block.FilePath = path;
+    block.IsModified = false;
     Status = $"Saved {block.Name} to {Path.GetFileName(path)}";
   }
 
@@ -255,6 +261,7 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
 
   private void AddChild(ContainerBlockViewModel container, BlockViewModel block) {
     container.Children.Add(block);
+    container.MarkModified();
     container.ChildrenChanged();
     Selected = block;
     RefreshState();
@@ -294,6 +301,7 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
       default:
         var parent = block.Parent!;
         ExperimentTree.Remove(parent.Optimizer, (IOptimizer)block.Item);
+        parent.MarkModified();
         parent.Children.Remove(block);
         parent.ChildrenChanged();
         break;
@@ -328,7 +336,11 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
     !IsRunning && !busyElsewhere() && experiments.Count > 0 && experiments.All(e => e.IsReady);
 
   [RelayCommand(CanExecute = nameof(IsRunningExperiments))]
-  private void Stop() => stopSource?.Cancel();
+  private void Stop() {
+    // what is stopped now did not finish (status "stopped before it finished", not "finished")
+    foreach (var a in AllBlocks(Experiments.Where(e => e.IsRunning)).OfType<AlgorithmBlockViewModel>()) a.StopRequested();
+    stopSource?.Cancel();
+  }
 
   /// <summary>
   /// Runs the experiments at the same time, each through OptimizerRunner. No seed is imposed:
@@ -347,12 +359,15 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
       int concurrent = Resources.Current.ConcurrentExperiments;
       using var slots = new SemaphoreSlim(concurrent > 0 ? concurrent : Math.Max(1, experiments.Count));
       var token = stopSource.Token;
+      foreach (var e in experiments) e.IsRunning = true;
+      RefreshLive();
       var started = await Task.WhenAll(experiments.Select(async e => {
         e.RunStatus = "Waiting for a free slot ...";
         try {
           await slots.WaitAsync(token);
         } catch (OperationCanceledException) {
           e.RunStatus = "Not started (stopped)";
+          e.IsRunning = false;
           return null;
         }
         try {
@@ -373,6 +388,7 @@ public partial class ExperimentWorkspaceViewModel : ViewModelBase {
           Resources.Tag(Resources.RunsOf(e.Experiment));
           return report;
         } finally {
+          e.IsRunning = false;
           slots.Release();
         }
       }));

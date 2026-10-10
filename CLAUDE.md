@@ -28,9 +28,16 @@
   Experiments tab (first): several experiments in one workspace, each a tree of building blocks
   (algorithm + its problem, batch run, time-limit run) over plain HeuristicLab objects via
   runtime ExperimentTree (a batch run with several children wraps them in an inner Experiment
-  named "Batch content"; a time-limit run takes one algorithm). Colors from the user's mockups:
-  yellow = button, grey = disabled, green = existing block (click: details/parameters, double-
-  click: rename, right-click: menu). Start all / start selected (ticked) experiments, enabled only
+  named "Batch content"; a time-limit run takes one algorithm). Block design (user's request,
+  no rounded corners, no green/yellow): orange (#F7931D) square with the kind's pictogram, a dark
+  square with the state (experiment: saved/unsaved; algorithm: status), the name; batch/time-limit
+  runs end in an orange field (repetitions / time limit; while running "3 / 10" or "01:23 / 05:00").
+  Pictograms are the user's SVGs in Assets/Pictograms (Controls.Pictogram reads the paths; the
+  working status turns as its animateTransform says). Algorithm status from the algorithm's
+  events: no problem, not run / stopped by the user, waiting (in a running experiment, paused),
+  working, finished (also stopped by a time limit), failed. Unsaved = changed since opened/saved
+  (BlockViewModel.MarkModified; detail edits via EditContext.BeginEdit; runs count as changes).
+  Click: details/parameters, double-click: rename, right-click: menu. Start all / start selected (ticked) experiments, enabled only
   when complete; no seed is imposed (a fixed seed would make batch repetitions identical).
   Legacy algorithms crash on Problem = null (OnProblemChanged): clone problems instead of
   detaching them; "Remove problem" tolerates exactly that crash.

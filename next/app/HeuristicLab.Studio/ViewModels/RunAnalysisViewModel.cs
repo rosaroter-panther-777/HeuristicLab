@@ -125,7 +125,7 @@ public partial class RunAnalysisViewModel : ViewModelBase {
   /// <summary>Re-reads the workspace (new experiments, finished runs); ticked sources stay ticked.</summary>
   [RelayCommand]
   public void RefreshSources() {
-    var ticked = AllSources(Sources).Where(s => s.IsChecked).Select(s => (object?)s.Optimizer ?? s.Folder).ToHashSet();
+    var ticked = AllSources(Sources).Where(s => s.IsChecked).Select(s => (object?)s.Optimizer ?? s.Folder).OfType<object>().ToHashSet();
     rebuilding = true;
     Sources.Clear();
     foreach (var experiment in workspace.Experiments) Sources.Add(Node(experiment, null, ticked));

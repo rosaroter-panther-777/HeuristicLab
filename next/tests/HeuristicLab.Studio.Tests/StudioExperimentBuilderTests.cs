@@ -69,7 +69,8 @@ public class StudioExperimentBuilderTests {
       Shot("d-problem");
       // E: empty batch next to the algorithm
       var batch = ws.AddContainer(experiment, Container<BatchRun>());
-      Assert.AreEqual("Batch run 1 (10×)", batch.Label);
+      Assert.AreEqual("Batch run 1", batch.Label);
+      Assert.AreEqual("10×", batch.Badge);
       Assert.IsFalse(ws.StartAllCommand.CanExecute(null), "empty batch");
       Shot("e-batch");
       // F: three independent algorithms inside the batch, the middle one without problem

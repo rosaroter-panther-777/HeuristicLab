@@ -33,7 +33,7 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
 
   public AlgorithmDetailViewModel(AlgorithmBlockViewModel block) {
     this.block = block;
-    context = new EditContext(m => Message = m, () => CanEdit);
+    context = new EditContext(m => Message = m, () => CanEdit, block.MarkModified);
     Engines = ItemInspector.Engines();
     Results = new ResultsViewModel(() => Algorithm.Results, context);
     Runs = new RunsViewModel(Algorithm.Runs);
@@ -129,7 +129,7 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
     get => Algorithm is EngineAlgorithm { Engine: IEngine e } ? Engines.FirstOrDefault(x => x.Type == e.GetType()) : null;
     set {
       if (value != null && Algorithm is EngineAlgorithm a && a.Engine?.GetType() != value.Type) {
-        if (CanEdit) { a.Engine = (IEngine)value.CreateInstance(); RefreshLog(); }
+        if (CanEdit) { a.Engine = (IEngine)value.CreateInstance(); block.MarkModified(); RefreshLog(); }
         else Message = "The engine can be changed when the algorithm is not running.";
       }
       OnPropertyChanged();
@@ -182,7 +182,10 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
   private bool IsStarted() => Algorithm.ExecutionState == ExecutionState.Started && !block.Workspace.IsRunningExperiments;
 
   [RelayCommand(CanExecute = nameof(CanStop))]
-  private void Stop() => Algorithm.Stop();
+  private void Stop() {
+    block.StopRequested();
+    Algorithm.Stop();
+  }
   private bool CanStop() => Algorithm.ExecutionState is ExecutionState.Started or ExecutionState.Paused && !block.Workspace.IsRunningExperiments;
 
   [RelayCommand(CanExecute = nameof(CanPrepare))]
