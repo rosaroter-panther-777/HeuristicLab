@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HeuristicLab.Studio.ViewModels"
+             xmlns:visuals="using:HeuristicLab.Next.Runtime.Visuals"
+             xmlns:controls="using:HeuristicLab.Studio.Controls"
+             x:Class="HeuristicLab.Studio.Views.VisualsView"
+             x:DataType="vm:VisualsViewModel">
+    <Panel>
+        <TextBlock Text="Nothing to draw for this item." Opacity="0.6" IsVisible="{Binding !HasAny}" />
+        <DockPanel IsVisible="{Binding HasAny}">
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10" Margin="0,0,0,4">
+                <ComboBox ItemsSource="{Binding Titles}" SelectedIndex="{Binding SelectedIndex}" IsVisible="{Binding HasChoice}" MinWidth="180" />
+                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" IsVisible="{Binding !HasChoice}" />
+            </StackPanel>
+            <TextBlock DockPanel.Dock="Bottom" Text="{Binding Notes}" IsVisible="{Binding HasNotes}" TextWrapping="Wrap"
+                       FontSize="12" Opacity="0.75" Margin="0,4,0,0" />
+            <ContentControl Content="{Binding Current}" MinHeight="300">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="vm:ChartPanel">
+                        <controls:LineChart Series="{Binding Series}" XAxisTitle="{Binding XAxisTitle}" YAxisTitle="{Binding YAxisTitle}"
+                                            SecondYAxisTitle="{Binding SecondYAxisTitle}" Markers="{Binding Markers}" EmptyText="No values yet."
+                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                    </DataTemplate>
+                    <DataTemplate DataType="visuals:SceneVisual">
+                        <controls:SceneView Scene="{Binding}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                    </DataTemplate>
+                    <DataTemplate DataType="visuals:BoxesVisual">
+                        <controls:BoxesView Boxes="{Binding}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                    </DataTemplate>
+                    <DataTemplate DataType="visuals:TextVisual">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                            <SelectableTextBlock Text="{Binding Text}" FontFamily="monospace" TextWrapping="Wrap" />
+                        </ScrollViewer>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+        </DockPanel>
+    </Panel>
+</UserControl>

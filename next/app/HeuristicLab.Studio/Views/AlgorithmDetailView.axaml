@@ -56,14 +56,7 @@
                                 </ScrollViewer>
                             </TabItem>
                             <TabItem Header="Visualization">
-                                <Panel>
-                                    <TextBlock Text="No visualization for this problem." Opacity="0.6" IsVisible="{Binding !HasProblemChart}" />
-                                    <DockPanel IsVisible="{Binding HasProblemChart}">
-                                        <TextBlock DockPanel.Dock="Top" Text="{Binding ProblemChartTitle}" FontWeight="SemiBold" Margin="0,0,0,4" />
-                                        <controls:LineChart Series="{Binding ProblemChart}" MinHeight="300" XAxisTitle="x" YAxisTitle="y"
-                                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                                    </DockPanel>
-                                </Panel>
+                                <ContentControl Content="{Binding ProblemVisuals}" />
                             </TabItem>
                         </TabControl>
                     </DockPanel>

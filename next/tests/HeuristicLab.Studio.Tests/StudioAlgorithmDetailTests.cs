@@ -1,6 +1,7 @@
 using Avalonia.Headless;
 using HeuristicLab.Core;
 using HeuristicLab.Next.Runtime;
+using HeuristicLab.Next.Runtime.Visuals;
 using HeuristicLab.Optimization;
 using HeuristicLab.Studio.ViewModels;
 using HeuristicLab.Studio.Views;
@@ -49,7 +50,8 @@ public class StudioAlgorithmDetailTests {
       await Until(() => detail.Results.Entries.Any(e => e.Name == "Best TSP Solution") && Value("Iterations") != "0", "results");
       var best = detail.Results.Entries.Single(e => e.Name == "Best TSP Solution");
       detail.Results.Selected = best;
-      Assert.AreEqual(131, detail.Results.Detail!.Chart[0].Points.Count, "closed tour through 130 cities");
+      var tour = (SceneVisual)detail.Results.Detail!.Visuals.Current!;
+      Assert.AreEqual(130, tour.Shapes.OfType<PathShape>().Single(p => p.Closed).Points.Count, "closed tour through 130 cities");
 
       // counters move on; the selection and its detail follow the live data
       var iterations = Value("Iterations");
@@ -144,8 +146,10 @@ public class StudioAlgorithmDetailTests {
       Assert.AreEqual(130, bestSolution.Editor.Rows.Count);
       Assert.AreEqual("Type: RelativeUndirected", bestSolution.Editor.Details);
       Assert.IsTrue(bestSolution.HasShowInRun);
-      Assert.AreEqual("Best known quality: 6110", detail.ProblemChartTitle);
-      Assert.AreEqual(2, detail.ProblemChart.Count, "tour and locations");
+      Assert.AreEqual("Best known solution (quality 6110)", detail.ProblemVisuals.Title);
+      var known = (SceneVisual)detail.ProblemVisuals.Current!;
+      Assert.AreEqual(130, known.Shapes.OfType<PathShape>().Single().Points.Count, "best known tour");
+      Assert.AreEqual(130, known.Shapes.OfType<MarkerShape>().Count(), "locations");
       Shot("problem");
 
       // algorithm: typed parameters, choices with nested settings, analyzers
@@ -215,7 +219,7 @@ public class StudioAlgorithmDetailTests {
       detail.SelectedTab = AlgorithmDetailViewModel.ResultsTab;
       detail.Results.Selected = detail.Results.Entries.First(e => e.Name == "Qualities");
       Assert.IsTrue(detail.Results.Detail!.HasVisualization);
-      Assert.AreEqual("Index", detail.Results.Detail.XAxisTitle, "Qualities has no axis title of its own");
+      Assert.AreEqual("Index", ((ChartPanel)detail.Results.Detail.Visuals.Current!).XAxisTitle, "Qualities has no axis title of its own");
       Shot("results");
       detail.SelectedTab = AlgorithmDetailViewModel.RunsTab;
       detail.Runs.Selected = detail.Runs.Rows[0];

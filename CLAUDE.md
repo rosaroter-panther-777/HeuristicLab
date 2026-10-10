@@ -46,6 +46,15 @@
   (selection stays), the selected result's quality/visualization/value (tours via
   ItemInspector.TourOf, tables as charts, structured values via ItemInspector.Members), runs
   tables and tree counters. Reads tolerate the running algorithm changing the data.
+  Visualizations (results and the Problem tab) come from runtime Visuals.Visualizations, a toolkit-
+  free picture model mirroring HeuristicLab's default views: ChartVisual (DataTable chart types incl.
+  histograms with HeuristicLab's binning, second y axis, scatter plots), SceneVisual (2D: tours, VRP
+  routes, orienteering, QAP via multidimensional scaling, LAP, knapsack, 2D packing, Gantt charts,
+  test function landscapes, expression trees, ant trail replayed with the ant interpreter, lawn),
+  BoxesVisual (3D packing) and TextVisual (formulas, robot code). Studio renders them with LineChart,
+  SceneView (zoom/pan) and BoxesView (software 3D, drag to rotate) in VisualsView; a picker chooses
+  among several pictures and keeps the choice while results update. Orienteering has no crossover or
+  mutation: run it with Variable Neighborhood Search.
   HeuristicLab facts behind it: only the Debug Engine honors breakpoints; Prepare() gives an
   algorithm a new Results collection (never cache it); an algorithm's valid operators (move
   generators, ...) come from its problem, so rebuild parameter views after a problem change.

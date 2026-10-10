@@ -1,7 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:HeuristicLab.Studio.ViewModels"
-             xmlns:controls="using:HeuristicLab.Studio.Controls"
              x:Class="HeuristicLab.Studio.Views.ResultDetailView"
              x:DataType="vm:ResultDetailViewModel">
     <DockPanel>
@@ -21,8 +20,7 @@
         </StackPanel>
         <TabControl SelectedIndex="{Binding SelectedTab}" Padding="0,6,0,0">
             <TabItem Header="Visualization" IsEnabled="{Binding HasVisualization}">
-                <controls:LineChart Series="{Binding Chart}" XAxisTitle="{Binding XAxisTitle}" YAxisTitle="{Binding YAxisTitle}" MinHeight="300"
-                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                <ContentControl Content="{Binding Visuals}" />
             </TabItem>
             <TabItem Header="Value">
                 <ScrollViewer>

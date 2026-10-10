@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using HeuristicLab.Core;
 using HeuristicLab.Data;
 using HeuristicLab.Next.Runtime;
+using HeuristicLab.Next.Runtime.Visuals;
 using HeuristicLab.Optimization;
 using HeuristicLab.Studio.Controls;
 
@@ -69,15 +70,8 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
   [ObservableProperty]
   public partial string ProblemDescription { get; set; } = "";
 
-  [ObservableProperty]
-  public partial IReadOnlyList<ChartSeries> ProblemChart { get; set; } = [];
-
-  [ObservableProperty]
-  public partial string ProblemChartTitle { get; set; } = "";
-
-  public bool HasProblemChart => ProblemChart.Count > 0;
-
-  partial void OnProblemChartChanged(IReadOnlyList<ChartSeries> value) => OnPropertyChanged(nameof(HasProblemChart));
+  /// <summary>Locations, best known solutions, landscapes or data of the problem instance.</summary>
+  public VisualsViewModel ProblemVisuals { get; } = new();
 
   [RelayCommand]
   private Task ChooseProblemAsync() => block.Workspace.ChooseProblemAsync(block);
@@ -93,32 +87,19 @@ public partial class AlgorithmDetailViewModel : ViewModelBase {
     var problem = Algorithm.Problem;
     if (problem == null) {
       ProblemParameters = null;
-      ProblemSource = ProblemDescription = ProblemChartTitle = "";
-      ProblemChart = [];
+      ProblemSource = ProblemDescription = "";
+      ProblemVisuals.Show([]);
       return;
     }
     ProblemParameters = new ParameterListViewModel(problem, context);
     var origin = ProblemInstances.Origin(problem);
     ProblemSource = origin != null ? $"Library: {origin.Provider}    Instance: {origin.Name}" : "Not from an instance library";
     ProblemDescription = problem.Description;
-    BuildProblemChart(problem);
-  }
-
-  /// <summary>Problems with coordinates (TSP, VRP, ...): the locations and, if known, the best known tour.</summary>
-  private void BuildProblemChart(IProblem problem) {
-    ProblemChart = [];
-    ProblemChartTitle = "";
-    if (!problem.Parameters.TryGetValue("Coordinates", out var cp) || ItemInspector.Value(cp) is not DoubleMatrix { Columns: >= 2 } xy) return;
-    var points = Enumerable.Range(0, xy.Rows).Select(r => new ChartPoint(xy[r, 0], xy[r, 1])).ToList();
-    var series = new List<ChartSeries>();
-    if (problem.Parameters.TryGetValue("BestKnownSolution", out var sp) && ItemInspector.Value(sp) is IntArray tour && tour.Length == points.Count) {
-      var route = tour.Select(i => points[i]).Append(points[tour[0]]).ToList();
-      series.Add(new ChartSeries("Best known solution", ChartSeries.PaletteColor(0), route));
+    try {
+      ProblemVisuals.Show(Visualizations.ForProblem(problem));
+    } catch (Exception e) when (e is InvalidOperationException or ArgumentException or IndexOutOfRangeException or NullReferenceException) {
+      ProblemVisuals.Show([new TextVisual("Visualization", "This problem could not be drawn: " + e.Message)]);
     }
-    series.Add(new ChartSeries("Locations", ChartSeries.PaletteColor(1), points, PointsOnly: true));
-    ProblemChart = series;
-    ProblemChartTitle = problem.Parameters.TryGetValue("BestKnownQuality", out var qp) && ItemInspector.Value(qp) is DoubleValue q
-      ? $"Best known quality: {q.Value.ToString("G10", CultureInfo.InvariantCulture)}" : "";
   }
 
   // ---- algorithm, results, runs, graph
@@ -307,9 +288,10 @@ public partial class ResultsViewModel(Func<ResultCollection> results, EditContex
 }
 
 /// <summary>
-/// The selected result by data type: a quality and a visualization for solutions (a tour is drawn
-/// through its coordinates), a chart for tables, and the underlying value (its members for
-/// structured results, a table or text otherwise). Rebuilt from the live item on every refresh,
+/// The selected result by data type: a quality and type-specific pictures (see the runtime's
+/// Visualizations: tours, routes, packings in 2D and 3D, expression trees, ant trails, schedules,
+/// landscapes, tables with their chart types, data analysis plots), and the underlying value (its
+/// members for structured results, a table or text otherwise). Rebuilt from the live item on every refresh,
 /// so visualization and quality always belong to the same solution.
 /// </summary>
 public partial class ResultDetailViewModel : ViewModelBase {
@@ -331,16 +313,10 @@ public partial class ResultDetailViewModel : ViewModelBase {
 
   public bool HasQuality => Quality != null;
 
-  [ObservableProperty]
-  public partial IReadOnlyList<ChartSeries> Chart { get; set; } = [];
+  /// <summary>Type-specific pictures: tours, routes, packings, trees, trails, charts, ...</summary>
+  public VisualsViewModel Visuals { get; } = new();
 
-  [ObservableProperty]
-  public partial string XAxisTitle { get; set; } = "";
-
-  [ObservableProperty]
-  public partial string YAxisTitle { get; set; } = "";
-
-  public bool HasVisualization => Chart.Count > 0;
+  public bool HasVisualization => Visuals.HasAny;
 
   /// <summary>Visualization or Value, kept across refreshes.</summary>
   [ObservableProperty]
@@ -351,31 +327,21 @@ public partial class ResultDetailViewModel : ViewModelBase {
   public partial IReadOnlyList<MemberViewModel> Members { get; set; } = [];
 
   partial void OnQualityChanged(string? value) => OnPropertyChanged(nameof(HasQuality));
-  partial void OnChartChanged(IReadOnlyList<ChartSeries> value) => OnPropertyChanged(nameof(HasVisualization));
 
   public void Refresh() {
     if (Item == null) { Members = [new MemberViewModel("Value", new ValueEditorViewModel(null, context, readOnly: true))]; return; }
     try {
       Quality = ItemInspector.QualityOf(Item)?.ToString("G10", CultureInfo.InvariantCulture);
-      if (ItemInspector.TourOf(Item) is { } tour) {
-        Chart = [
-          new ChartSeries("Tour", ChartSeries.PaletteColor(0), tour.Select(p => new ChartPoint(p.X, p.Y)).ToList()),
-          new ChartSeries("Locations", ChartSeries.PaletteColor(1), ItemInspector.PointsOf(Item)!.Select(p => new ChartPoint(p.X, p.Y)).ToList(), PointsOnly: true)
-        ];
-        XAxisTitle = "x";
-        YAxisTitle = "y";
-      } else if (Item is HeuristicLab.Analysis.DataTable && ItemValues.From(Item).Value is TableValue table) {
-        Chart = table.Rows.Select((r, i) => new ChartSeries(r.Key, ChartSeries.PaletteColor(i), r.Value.Select((y, x) => new ChartPoint(x, y)).ToList())).ToList();
-        // tables without an axis title (e.g. Qualities) are indexed by row position
-        XAxisTitle = string.IsNullOrEmpty(table.XAxisTitle) ? "Index" : table.XAxisTitle;
-        YAxisTitle = table.YAxisTitle;
-      } else Chart = [];
+      bool had = HasVisualization;
+      Visuals.Show(Visualizations.For(Item, Name));
+      if (had != HasVisualization) OnPropertyChanged(nameof(HasVisualization));
       var members = ItemInspector.KindOf(Item) is ValueKind.Other or ValueKind.Parameterized ? ItemInspector.Members(Item) : [];
       Members = members.Count > 0
         ? members.Select(m => new MemberViewModel(m.Name, new ValueEditorViewModel(m.Value, context, readOnly: true))).ToList()
         : [new MemberViewModel("Value", new ValueEditorViewModel(Item, context, readOnly: true))];
       if (!HasVisualization) SelectedTab = 1;
-    } catch (Exception e) when (e is InvalidOperationException or ArgumentException or IndexOutOfRangeException) {
+    } catch (Exception e) when (e is InvalidOperationException or ArgumentException or IndexOutOfRangeException
+                                       or NullReferenceException or System.Collections.Generic.KeyNotFoundException) {
       // the running algorithm changed the value while it was read; the next refresh shows it
     }
   }
